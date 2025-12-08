@@ -104,10 +104,17 @@ jobs:
           CLICKHOUSE_USER: ${{ secrets.CLICKHOUSE_USER }}
           CLICKHOUSE_PASSWORD: ${{ secrets.CLICKHOUSE_PASSWORD }}
         run: |
+          # Use today's date for "latest" notebooks
+          TODAY=$(date -u +%Y-%m-%d)
           mkdir -p ../latest
           for notebook in peerdas/*.ipynb; do
-            uv run jupyter nbconvert --to html --execute --no-input "$notebook" --output-dir ../latest
+            BASENAME=$(basename "$notebook" .ipynb)
+            uv run papermill "$notebook" "../latest/$BASENAME.ipynb" \
+              -p TARGET_DATE "$TODAY" \
+              -p FORCE_QUERY true
+            uv run jupyter nbconvert --to html --no-input "../latest/$BASENAME.ipynb"
           done
+          rm ../latest/*.ipynb
 
       - name: Prune old daily reports (keep 90 days)
         run: |
