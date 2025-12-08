@@ -133,3 +133,16 @@ def get_client_optional():
     )
 
 
+# =============================================================================
+# PLOTLY DISPLAY
+# =============================================================================
+def show_fig(fig) -> None:
+    """Display a Plotly figure as interactive HTML.
+
+    Uses IPython HTML display which nbconvert can properly render,
+    unlike fig.show() which outputs JSON that nbconvert ignores.
+    """
+    from IPython.display import display, HTML
+
+    html = fig.to_html(include_plotlyjs="cdn", full_html=False)
+    display(HTML(html))

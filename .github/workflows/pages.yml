@@ -33,7 +33,7 @@ jobs:
         run: |
           mkdir -p _site
           for notebook in peerdas/*.ipynb; do
-            uv run jupyter nbconvert --to html --no-input "$notebook" --output-dir _site
+            uv run jupyter nbconvert --to html --execute --no-input "$notebook" --output-dir _site
           done
 
       - name: Create index page
