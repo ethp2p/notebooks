@@ -6,7 +6,7 @@ default:
 
 # Start Quarto development server
 dev:
-    quarto preview
+    uv run quarto preview
 
 # Fetch yesterday's data from ClickHouse
 fetch:
@@ -18,7 +18,7 @@ fetch-date date:
 
 # Render the site (latest notebooks only)
 render:
-    quarto render
+    uv run quarto render
 
 # Render historical notebooks
 render-historical:
@@ -26,7 +26,7 @@ render-historical:
 
 # Full publish build: render latest + historical
 publish:
-    quarto render
+    uv run quarto render
     uv run python scripts/render_historical.py
 
 # Daily CI workflow: fetch yesterday's data + publish

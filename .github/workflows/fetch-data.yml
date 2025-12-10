@@ -16,17 +16,17 @@ jobs:
   fetch-data:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout data branch
-        uses: actions/checkout@v4
-        with:
-          ref: data
-          fetch-depth: 0
-
-      - name: Checkout main for scripts
+      - name: Checkout main branch
         uses: actions/checkout@v4
         with:
           ref: main
-          path: main-checkout
+
+      - name: Checkout or create data branch
+        run: |
+          git fetch origin data:data 2>/dev/null || git checkout -b data
+          git checkout data
+          # Merge any structural changes from main (scripts, etc)
+          git checkout main -- scripts/ queries/ pyproject.toml uv.lock
 
       - name: Install uv
         uses: astral-sh/setup-uv@v4
@@ -37,8 +37,7 @@ jobs:
         run: uv python install 3.13
 
       - name: Install dependencies
-        run: |
-          uv pip install --system clickhouse-connect pandas pyarrow python-dotenv
+        run: uv sync
 
       - name: Determine target date
         id: date
@@ -57,7 +56,7 @@ jobs:
           CLICKHOUSE_USER: ${{ secrets.CLICKHOUSE_USER }}
           CLICKHOUSE_PASSWORD: ${{ secrets.CLICKHOUSE_PASSWORD }}
         run: |
-          python main-checkout/scripts/fetch_data.py \
+          uv run python scripts/fetch_data.py \
             --date "${{ steps.date.outputs.target }}" \
             --output-dir . \
             --max-days 30
@@ -66,6 +65,8 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add -A
+          # Only add data files, not scripts
+          git add manifest.json
+          git add 20*/ 2>/dev/null || true
           git commit -m "Data for ${{ steps.date.outputs.target }}" || echo "No changes to commit"
           git push origin data

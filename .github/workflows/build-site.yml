@@ -1,0 +1,80 @@
+name: Build and Deploy Quarto Site
+
+on:
+  push:
+    branches: [main]
+  workflow_run:
+    workflows: ["Fetch Daily Data"]
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
+    steps:
+      - name: Checkout main branch
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Checkout data branch
+        uses: actions/checkout@v4
+        with:
+          ref: data
+          path: data-checkout
+        continue-on-error: true
+
+      - name: Setup data directory
+        run: |
+          mkdir -p notebooks/data
+          if [ -d "data-checkout" ] && [ -f "data-checkout/manifest.json" ]; then
+            cp -r data-checkout/* notebooks/data/
+          else
+            echo '{"dates": [], "latest": null}' > notebooks/data/manifest.json
+          fi
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+
+      - name: Set up Python
+        run: uv python install 3.13
+
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Set up Quarto
+        uses: quarto-dev/quarto-actions/setup@v2
+
+      - name: Install just
+        uses: extractions/setup-just@v2
+
+      - name: Build site
+        run: just publish
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
