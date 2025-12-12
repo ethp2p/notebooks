@@ -29,6 +29,7 @@ from queries import (
     fetch_slot_in_epoch,
     fetch_proposer_blobs,
     fetch_col_first_seen,
+    fetch_client_versions,
 )
 
 # List of (name, fetcher) tuples
@@ -39,6 +40,7 @@ FETCHERS = [
     ("slot_in_epoch", fetch_slot_in_epoch),
     ("proposer_blobs", fetch_proposer_blobs),
     ("col_first_seen", fetch_col_first_seen),
+    ("client_versions", fetch_client_versions),
 ]
 
 

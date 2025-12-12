@@ -14,6 +14,7 @@ NOTEBOOKS = [
     "01-blob-inclusion",
     "02-blob-flow",
     "03-column-propagation",
+    "04-client-versions",
 ]
 
 DATA_ROOT = Path("notebooks/data")
