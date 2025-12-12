@@ -2,7 +2,7 @@
 title: "Client Versions"
 ---
 
-Analysis of consensus client versions connected to xatu nodes on Ethereum mainnet.
+Analysis of consensus client versions connected to Xatu nodes on Ethereum mainnet.
 
 ```{python}
 #| tags: [parameters]
@@ -149,35 +149,6 @@ for client in top_clients:
         xaxis_tickangle=-45,
     )
     fig.show()
-```
-
-## Geographic Distribution
-
-Distribution of connections by country for known client implementations.
-
-```{python}
-# Filter for known countries
-df_geo = df_known[df_known["node_country"].notna() & (df_known["node_country"] != "")]
-
-if len(df_geo) > 0:
-    country_counts = df_geo.groupby("node_country").size().reset_index(name="count")
-    country_counts = country_counts.sort_values("count", ascending=False).head(20)
-    
-    fig = px.bar(
-        country_counts,
-        x="node_country",
-        y="count",
-        title="Connections by Country (Top 20)",
-        labels={"node_country": "Country", "count": "Connections"},
-        color_discrete_sequence=["#636EFA"],
-    )
-    fig.update_layout(
-        height=500,
-        xaxis_tickangle=-45,
-    )
-    fig.show()
-else:
-    print("No geographic data available")
 ```
 
 ## Summary Statistics
