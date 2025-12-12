@@ -29,6 +29,7 @@ def generate_index(date: str, output_dir: Path):
     <li><a href="01-blob-inclusion.html">Blob Inclusion</a></li>
     <li><a href="02-blob-flow.html">Blob Flow</a></li>
     <li><a href="03-column-propagation.html">Column Propagation</a></li>
+    <li><a href="04-client-versions.html">Client Versions</a></li>
   </ul>
 </body>
 </html>

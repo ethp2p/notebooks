@@ -12,6 +12,10 @@ A collection of notebooks analyzing P2P dynamics in Ethereum networks. Currently
 - [Blob flow](notebooks/02-blob-flow.qmd): Flow diagrams tracing blob packing per entities, builders, and relays.
 - [Column propagation](notebooks/03-column-propagation.qmd): Column propagation timing across 128 data columns subnets.
 
+**Network**
+
+- [Client versions](notebooks/04-client-versions.qmd): Consensus client version distribution across the network.
+
 ## Generation
 
 **Frequency: daily at 1am UTC, archiving the last 30 days.**

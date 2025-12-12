@@ -12,6 +12,7 @@ from queries.blob_inclusion import (
 )
 from queries.blob_flow import fetch_proposer_blobs
 from queries.column_propagation import fetch_col_first_seen, NUM_COLUMNS
+from queries.client_versions import fetch_client_versions
 
 __all__ = [
     # Blob inclusion
@@ -24,4 +25,6 @@ __all__ = [
     # Column propagation
     "fetch_col_first_seen",
     "NUM_COLUMNS",
+    # Client versions
+    "fetch_client_versions",
 ]

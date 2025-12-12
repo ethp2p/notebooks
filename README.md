@@ -30,6 +30,7 @@ quarto preview
 | [01-blob-inclusion](notebooks/01-blob-inclusion.qmd)        | Blob inclusion patterns per block and epoch       |
 | [02-blob-flow](notebooks/02-blob-flow.qmd)                  | Blob flow across validators, builders, and relays |
 | [03-column-propagation](notebooks/03-column-propagation.qmd)| Column propagation timing across 128 data columns |
+| [04-client-versions](notebooks/04-client-versions.qmd)      | Consensus client version distribution             |
 
 ## Architecture
 
@@ -41,7 +42,8 @@ quarto preview
 ├── queries/                   # Query layer (fetch + write to Parquet)
 │   ├── blob_inclusion.py      # fetch_blobs_per_slot(), fetch_blocks_blob_epoch(), ...
 │   ├── blob_flow.py           # fetch_proposer_blobs()
-│   └── column_propagation.py  # fetch_col_first_seen()
+│   ├── column_propagation.py  # fetch_col_first_seen()
+│   └── client_versions.py     # fetch_client_versions()
 ├── scripts/
 │   ├── fetch_data.py          # CLI for data fetching
 │   ├── generate_archive.py    # Generates archive.qmd for site
