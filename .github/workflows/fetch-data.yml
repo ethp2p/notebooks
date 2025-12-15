@@ -59,8 +59,7 @@ jobs:
           mkdir -p data
           uv run python scripts/fetch_data.py \
             --date "${{ steps.date.outputs.target }}" \
-            --output-dir data \
-            --max-days 30
+            --output-dir data
 
       - name: Commit data to data branch
         run: |

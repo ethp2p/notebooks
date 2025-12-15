@@ -1,0 +1,245 @@
+---
+import yaml from 'js-yaml';
+import fs from 'node:fs';
+import path from 'node:path';
+
+// Load notebooks config
+const configPath = path.join(process.cwd(), 'config', 'notebooks.yaml');
+const configContent = fs.readFileSync(configPath, 'utf-8');
+const config = yaml.load(configContent) as {
+  notebooks: Array<{
+    id: string;
+    title: string;
+    description: string;
+    order: number;
+  }>;
+};
+
+// Load manifest for available dates
+let manifest: { latest_date: string; dates: Record<string, unknown> } = { latest_date: '', dates: {} };
+const manifestPath = path.join(process.cwd(), 'public', 'rendered', 'manifest.json');
+if (fs.existsSync(manifestPath)) {
+  manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'));
+}
+
+const notebooks = config.notebooks.sort((a, b) => a.order - b.order);
+const latestDate = manifest.latest_date || 'No data';
+const historicalDates = Object.keys(manifest.dates || {})
+  .filter(d => d !== manifest.latest_date)
+  .sort((a, b) => b.localeCompare(a)); // Newest first
+
+const currentPath = Astro.url.pathname;
+const base = import.meta.env.BASE_URL;
+
+// Helper to format dates nicely
+const formatDate = (dateStr: string) => {
+  const date = new Date(dateStr + 'T00:00:00Z');
+  return date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    timeZone: 'UTC'
+  });
+};
+---
+
+<nav class="sidebar-nav">
+  <!-- Latest Section -->
+  <div class="sidebar-section">
+    <div class="sidebar-section-header">
+      <span class="sidebar-section-title">Latest</span>
+      <span class="sidebar-section-badge">{formatDate(latestDate)}</span>
+    </div>
+    <ul class="sidebar-list">
+      {notebooks.map(nb => {
+        const href = `${base}notebooks/${nb.id}`;
+        const isActive = currentPath.includes(`/notebooks/${nb.id}`);
+        return (
+          <li>
+            <a
+              href={href}
+              class:list={['sidebar-link', { active: isActive }]}
+              title={nb.description}
+            >
+              <span class="sidebar-link-icon">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                  <polyline points="14 2 14 8 20 8" />
+                  <line x1="16" y1="13" x2="8" y2="13" />
+                  <line x1="16" y1="17" x2="8" y2="17" />
+                </svg>
+              </span>
+              <span class="sidebar-link-text">{nb.title}</span>
+            </a>
+          </li>
+        );
+      })}
+    </ul>
+  </div>
+
+  <!-- Historical Section -->
+  {historicalDates.length > 0 && (
+    <div class="sidebar-section">
+      <div class="sidebar-section-header">
+        <span class="sidebar-section-title">Historical</span>
+        <span class="sidebar-section-count">{historicalDates.length}</span>
+      </div>
+      <ul class="sidebar-list">
+        {historicalDates.slice(0, 7).map(date => {
+          const href = `${base}archive/${date}`;
+          const isActive = currentPath.includes(`/archive/${date}`);
+          return (
+            <li>
+              <a
+                href={href}
+                class:list={['sidebar-link sidebar-link-date', { active: isActive }]}
+              >
+                <span class="sidebar-link-icon">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                    <line x1="16" y1="2" x2="16" y2="6" />
+                    <line x1="8" y1="2" x2="8" y2="6" />
+                    <line x1="3" y1="10" x2="21" y2="10" />
+                  </svg>
+                </span>
+                <span class="sidebar-link-text">{formatDate(date)}</span>
+                <span class="sidebar-link-year">{date.slice(0, 4)}</span>
+              </a>
+            </li>
+          );
+        })}
+        {historicalDates.length > 7 && (
+          <li>
+            <a href={`${base}archive`} class="sidebar-link sidebar-link-more">
+              <span class="sidebar-link-icon">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="1" />
+                  <circle cx="19" cy="12" r="1" />
+                  <circle cx="5" cy="12" r="1" />
+                </svg>
+              </span>
+              <span class="sidebar-link-text">View all dates</span>
+            </a>
+          </li>
+        )}
+      </ul>
+    </div>
+  )}
+</nav>
+
+<style>
+  .sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .sidebar-section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+  }
+
+  .sidebar-section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 0.5rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .sidebar-section-title {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--muted-foreground);
+  }
+
+  .sidebar-section-badge {
+    font-size: 0.625rem;
+    font-weight: 500;
+    padding: 0.125rem 0.375rem;
+    background: var(--muted);
+    border-radius: 0.25rem;
+    color: var(--muted-foreground);
+  }
+
+  .sidebar-section-count {
+    font-size: 0.625rem;
+    font-weight: 500;
+    color: var(--muted-foreground);
+  }
+
+  .sidebar-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+  }
+
+  .sidebar-link {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    color: var(--muted-foreground);
+    text-decoration: none;
+    border-radius: 0.375rem;
+    font-size: 0.8125rem;
+    transition: all 0.15s ease;
+  }
+
+  .sidebar-link:hover {
+    color: var(--foreground);
+    background: var(--muted);
+  }
+
+  .sidebar-link.active {
+    color: var(--foreground);
+    background: var(--mauve-4);
+    font-weight: 500;
+  }
+
+  .sidebar-link-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    opacity: 0.6;
+  }
+
+  .sidebar-link:hover .sidebar-link-icon,
+  .sidebar-link.active .sidebar-link-icon {
+    opacity: 1;
+  }
+
+  .sidebar-link-text {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .sidebar-link-date .sidebar-link-text {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.75rem;
+  }
+
+  .sidebar-link-year {
+    font-size: 0.625rem;
+    color: var(--muted-foreground);
+    opacity: 0.7;
+  }
+
+  .sidebar-link-more {
+    color: var(--muted-foreground);
+    font-style: normal;
+  }
+
+  .sidebar-link-more:hover {
+    color: var(--foreground);
+  }
+</style>

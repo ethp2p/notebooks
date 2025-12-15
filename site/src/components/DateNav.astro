@@ -1,0 +1,189 @@
+---
+// Sticky date navigation with prev/next arrows
+import fs from 'node:fs';
+import path from 'node:path';
+
+interface Props {
+  currentDate: string;
+  notebookId: string;
+  isLatest?: boolean;
+}
+
+const { currentDate, notebookId, isLatest = false } = Astro.props;
+
+// Load manifest to get available dates
+const manifestPath = path.join(process.cwd(), 'public', 'rendered', 'manifest.json');
+let dates: string[] = [];
+let latestDate = '';
+
+if (fs.existsSync(manifestPath)) {
+  const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'));
+  dates = Object.keys(manifest.dates || {}).sort().reverse();
+  latestDate = manifest.latest_date || dates[0] || '';
+}
+
+// Find prev/next dates
+const currentIndex = dates.indexOf(currentDate);
+const prevDate = currentIndex < dates.length - 1 ? dates[currentIndex + 1] : null;
+const nextDate = currentIndex > 0 ? dates[currentIndex - 1] : null;
+
+// Build URLs
+const base = import.meta.env.BASE_URL;
+const buildUrl = (date: string | null) => {
+  if (!date) return null;
+  if (date === latestDate) {
+    return `${base}notebooks/${notebookId}`;
+  }
+  return `${base}archive/${date}/${notebookId}`;
+};
+
+const prevUrl = buildUrl(prevDate);
+const nextUrl = buildUrl(nextDate);
+
+// Format date for display
+const formatDate = (dateStr: string) => {
+  const date = new Date(dateStr + 'T00:00:00Z');
+  return date.toLocaleDateString('en-US', {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    timeZone: 'UTC'
+  });
+};
+---
+
+<div class="date-nav">
+  <a
+    href={prevUrl || '#'}
+    class:list={['date-nav-arrow', 'prev', { disabled: !prevUrl }]}
+    aria-label="Previous date"
+    aria-disabled={!prevUrl}
+  >
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <polyline points="15 18 9 12 15 6"></polyline>
+    </svg>
+    {prevDate && <span class="date-nav-hint">{prevDate}</span>}
+  </a>
+
+  <div class="date-nav-current">
+    <span class="date-nav-label">Viewing data for</span>
+    <span class="date-nav-date">
+      {formatDate(currentDate)}
+      {isLatest && <span class="latest-badge">Latest</span>}
+    </span>
+  </div>
+
+  <a
+    href={nextUrl || '#'}
+    class:list={['date-nav-arrow', 'next', { disabled: !nextUrl }]}
+    aria-label="Next date"
+    aria-disabled={!nextUrl}
+  >
+    {nextDate && <span class="date-nav-hint">{nextDate}</span>}
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </a>
+</div>
+
+<style>
+  .date-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.75rem 1rem;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    margin-bottom: 1.5rem;
+    position: sticky;
+    top: 1rem;
+    z-index: 40;
+    backdrop-filter: blur(8px);
+    background: rgba(255, 255, 255, 0.95);
+  }
+
+  .date-nav-arrow {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.375rem;
+    color: var(--muted-foreground);
+    text-decoration: none;
+    font-size: 0.75rem;
+    transition: all 0.15s ease;
+    min-width: 100px;
+  }
+
+  .date-nav-arrow.prev {
+    justify-content: flex-start;
+  }
+
+  .date-nav-arrow.next {
+    justify-content: flex-end;
+  }
+
+  .date-nav-arrow:not(.disabled):hover {
+    background: var(--muted);
+    color: var(--foreground);
+  }
+
+  .date-nav-arrow.disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+
+  .date-nav-hint {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.6875rem;
+  }
+
+  .date-nav-current {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.125rem;
+  }
+
+  .date-nav-label {
+    font-size: 0.6875rem;
+    color: var(--muted-foreground);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .date-nav-date {
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: var(--foreground);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .latest-badge {
+    font-size: 0.625rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 0.125rem 0.375rem;
+    background: var(--foreground);
+    color: var(--background);
+    border-radius: 0.25rem;
+  }
+
+  @media (max-width: 640px) {
+    .date-nav-hint {
+      display: none;
+    }
+
+    .date-nav-arrow {
+      min-width: auto;
+      padding: 0.5rem;
+    }
+  }
+</style>

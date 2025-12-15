@@ -56,8 +56,13 @@ def fetch_all(client, target_date: str, output_dir: Path, network: str = "mainne
             print(f"    -> ERROR: {e}")
 
 
-def update_manifest(output_dir: Path, max_days: int = 30) -> None:
-    """Update manifest.json with available dates, prune old data."""
+def update_manifest(output_dir: Path, max_days: int | None = None) -> None:
+    """Update manifest.json with available dates, optionally prune old data.
+
+    Args:
+        output_dir: Directory containing date-organized data.
+        max_days: Maximum days to keep. None means no limit (keep all data).
+    """
     manifest_path = output_dir / "manifest.json"
 
     # Find all date directories
@@ -66,22 +71,28 @@ def update_manifest(output_dir: Path, max_days: int = 30) -> None:
         reverse=True,
     )
 
-    # Prune dates older than max_days
-    cutoff = (datetime.now(timezone.utc) - timedelta(days=max_days)).strftime("%Y-%m-%d")
-    dates_to_keep = [d for d in dates if d >= cutoff]
-    dates_to_remove = [d for d in dates if d < cutoff]
+    dates_to_keep = dates
+    dates_to_remove = []
 
-    for date in dates_to_remove:
-        shutil.rmtree(output_dir / date)
-        print(f"  Pruned old data: {date}")
+    # Only prune if max_days is specified
+    if max_days is not None:
+        cutoff = (datetime.now(timezone.utc) - timedelta(days=max_days)).strftime("%Y-%m-%d")
+        dates_to_keep = [d for d in dates if d >= cutoff]
+        dates_to_remove = [d for d in dates if d < cutoff]
+
+        for date in dates_to_remove:
+            shutil.rmtree(output_dir / date)
+            print(f"  Pruned old data: {date}")
 
     # Write manifest
     manifest = {
         "dates": dates_to_keep,
         "latest": dates_to_keep[0] if dates_to_keep else None,
         "updated_at": datetime.now(timezone.utc).isoformat(),
-        "max_days": max_days,
     }
+    if max_days is not None:
+        manifest["max_days"] = max_days
+
     manifest_path.write_text(json.dumps(manifest, indent=2))
     print(f"  Manifest updated: {len(dates_to_keep)} dates available")
 
@@ -100,8 +111,8 @@ def main() -> None:
     parser.add_argument(
         "--max-days",
         type=int,
-        default=30,
-        help="Maximum days of data to keep (default: 30)",
+        default=None,
+        help="Maximum days of data to keep (default: no limit)",
     )
     parser.add_argument(
         "--network",

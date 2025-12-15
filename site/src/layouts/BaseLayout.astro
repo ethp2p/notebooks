@@ -1,0 +1,159 @@
+---
+import '../styles/global.css';
+import Sidebar from '../components/Sidebar.astro';
+import TableOfContents from '../components/TableOfContents.astro';
+
+interface Props {
+  title: string;
+  description?: string;
+  showToc?: boolean;
+}
+
+const { title, description = 'Ethereum P2P network analysis notebooks', showToc = false } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content={description} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>{title} | Eth P2P Notebooks</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  </head>
+  <body class="min-h-screen">
+    <div class="layout-container">
+      <!-- Left Sidebar -->
+      <aside class="left-sidebar">
+        <div class="sidebar-inner">
+          <a href="/" class="site-title">
+            <span class="title-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 2L2 7l10 5 10-5-10-5z" />
+                <path d="M2 17l10 5 10-5" />
+                <path d="M2 12l10 5 10-5" />
+              </svg>
+            </span>
+            <span class="title-text">Eth P2P Notebooks</span>
+          </a>
+          <Sidebar />
+        </div>
+      </aside>
+
+      <!-- Main Content -->
+      <main class="main-content">
+        <div class="content-wrapper">
+          <slot />
+        </div>
+      </main>
+
+      <!-- Right TOC -->
+      {showToc && (
+        <aside class="right-sidebar">
+          <TableOfContents />
+        </aside>
+      )}
+    </div>
+  </body>
+</html>
+
+<style is:global>
+  .layout-container {
+    display: flex;
+    min-height: 100vh;
+  }
+
+  .left-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: 16rem;
+    border-right: 1px solid var(--border);
+    background: var(--background);
+    overflow-y: auto;
+    z-index: 50;
+  }
+
+  .sidebar-inner {
+    padding: 1.25rem;
+  }
+
+  .site-title {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--foreground);
+    text-decoration: none;
+    margin-bottom: 1.5rem;
+    padding: 0.5rem;
+    margin: -0.5rem;
+    margin-bottom: 1.5rem;
+    border-radius: 0.5rem;
+    transition: background 0.15s ease;
+  }
+
+  .site-title:hover {
+    background: var(--muted);
+  }
+
+  .title-icon {
+    display: flex;
+    color: var(--mauve-11);
+  }
+
+  .main-content {
+    flex: 1;
+    margin-left: 16rem;
+    min-width: 0;
+  }
+
+  .content-wrapper {
+    max-width: 52rem;
+    margin: 0 auto;
+    padding: 2rem 2.5rem;
+  }
+
+  .right-sidebar {
+    position: fixed;
+    top: 0;
+    right: 0;
+    height: 100vh;
+    width: 14rem;
+    padding: 2rem 1rem;
+    overflow-y: auto;
+    z-index: 40;
+  }
+
+  /* When TOC is shown, add right padding to prevent overlap */
+  @media (min-width: 1280px) {
+    .layout-container:has(.right-sidebar) .main-content {
+      margin-right: 14rem;
+    }
+  }
+
+  @media (max-width: 1024px) {
+    .left-sidebar {
+      display: none;
+    }
+
+    .main-content {
+      margin-left: 0;
+    }
+
+    .content-wrapper {
+      padding: 1.5rem;
+    }
+  }
+
+  @media (max-width: 1280px) {
+    .right-sidebar {
+      display: none;
+    }
+  }
+</style>

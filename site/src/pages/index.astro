@@ -1,0 +1,81 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import yaml from 'js-yaml';
+import fs from 'node:fs';
+import path from 'node:path';
+
+// Load notebooks config
+const configPath = path.join(process.cwd(), 'config', 'notebooks.yaml');
+const configContent = fs.readFileSync(configPath, 'utf-8');
+const config = yaml.load(configContent) as {
+  notebooks: Array<{
+    id: string;
+    title: string;
+    description: string;
+    order: number;
+  }>;
+};
+
+// Load manifest
+let latestDate = 'No data yet';
+const manifestPath = path.join(process.cwd(), 'public', 'rendered', 'manifest.json');
+if (fs.existsSync(manifestPath)) {
+  const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'));
+  latestDate = manifest.latest_date || latestDate;
+}
+
+const notebooks = config.notebooks.sort((a, b) => a.order - b.order);
+---
+
+<BaseLayout title="Home">
+  <div class="max-w-3xl">
+    <h1>Eth P2P Notebooks</h1>
+    <p class="text-lg text-[var(--muted-foreground)] mb-8">
+      A collection of notebooks analyzing P2P dynamics in Ethereum networks.
+      Currently focused on mainnet PeerDAS analysis.
+    </p>
+
+    <section class="mb-12">
+      <h2>Latest Analysis ({latestDate})</h2>
+      <div class="grid gap-4">
+        {notebooks.map(nb => (
+          <a
+            href={`/notebooks/${nb.id}`}
+            class="block p-4 border border-[var(--border)] rounded-lg hover:border-[var(--mauve-8)] hover:bg-[var(--mauve-2)] transition-colors no-underline"
+          >
+            <h3 class="text-lg font-medium text-[var(--foreground)] mb-1 mt-0">
+              {nb.title}
+            </h3>
+            <p class="text-sm text-[var(--muted-foreground)] m-0">
+              {nb.description}
+            </p>
+          </a>
+        ))}
+      </div>
+    </section>
+
+    <section class="mb-12">
+      <h2>About</h2>
+      <ul class="space-y-2 text-[var(--muted-foreground)]">
+        <li>
+          <strong class="text-[var(--foreground)]">Frequency:</strong> Notebooks regenerate daily at 1am UTC
+        </li>
+        <li>
+          <strong class="text-[var(--foreground)]">Data source:</strong> EthPandaOps Xatu ClickHouse infrastructure
+        </li>
+        <li>
+          <strong class="text-[var(--foreground)]">Historical data:</strong> All dates are retained and accessible via the sidebar
+        </li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>Data Pipeline</h2>
+      <p class="text-[var(--muted-foreground)]">
+        Data flows from ClickHouse queries through Parquet files into Jupyter notebooks,
+        which generate interactive Plotly and Altair visualizations. The entire pipeline
+        is automated via GitHub Actions.
+      </p>
+    </section>
+  </div>
+</BaseLayout>

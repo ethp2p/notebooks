@@ -1,0 +1,55 @@
+# Notebook Registry
+# Each notebook defines its metadata, schedule, queries, and parameters.
+
+notebooks:
+  - id: blob-inclusion
+    title: "Blob Inclusion"
+    description: "Analysis of blob inclusion patterns in Ethereum mainnet blocks"
+    source: notebooks/01-blob-inclusion.qmd
+    schedule: daily
+    queries:
+      - blobs_per_slot
+      - blocks_blob_epoch
+      - blob_popularity
+      - slot_in_epoch
+    parameters:
+      - name: target_date
+        type: date
+        required: true
+    order: 1
+
+  - id: blob-flow
+    title: "Blob Flow"
+    description: "Flow diagrams tracing blob packing per entities, builders, and relays"
+    source: notebooks/02-blob-flow.qmd
+    schedule: daily
+    queries:
+      - proposer_blobs
+    parameters:
+      - name: target_date
+        type: date
+        required: true
+    order: 2
+
+  - id: column-propagation
+    title: "Column Propagation"
+    description: "Column propagation timing across 128 data columns subnets"
+    source: notebooks/03-column-propagation.qmd
+    schedule: daily
+    queries:
+      - col_first_seen
+    parameters:
+      - name: target_date
+        type: date
+        required: true
+    order: 3
+
+# Schedule options: hourly, daily, weekly, manual
+# - hourly: Runs every hour, accumulating data throughout the day
+# - daily: Runs once per day at 1am UTC
+# - weekly: Runs once per week on Sundays at 2am UTC
+# - manual: Only runs on manual dispatch
+
+settings:
+  timezone: UTC
+  default_network: mainnet

@@ -1,0 +1,47 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import DatePicker from '../../components/DatePicker.astro';
+import fs from 'node:fs';
+import path from 'node:path';
+
+// Load manifest for available dates
+let dates: string[] = [];
+const manifestPath = path.join(process.cwd(), 'public', 'rendered', 'manifest.json');
+if (fs.existsSync(manifestPath)) {
+  const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'));
+  dates = Object.keys(manifest.dates || {}).sort((a, b) => b.localeCompare(a));
+}
+---
+
+<BaseLayout title="Archive">
+  <div class="max-w-3xl">
+    <h1>Historical Archive</h1>
+    <p class="text-lg text-[var(--muted-foreground)] mb-8">
+      Browse all historical notebook analyses by date.
+    </p>
+
+    <div class="mb-8 max-w-xs">
+      <DatePicker />
+    </div>
+
+    <section>
+      <h2>All Dates ({dates.length})</h2>
+      {dates.length > 0 ? (
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+          {dates.map(date => (
+            <a
+              href={`/archive/${date}`}
+              class="block p-3 text-center border border-[var(--border)] rounded-lg hover:border-[var(--mauve-8)] hover:bg-[var(--mauve-2)] transition-colors no-underline text-sm"
+            >
+              {date}
+            </a>
+          ))}
+        </div>
+      ) : (
+        <p class="text-[var(--muted-foreground)]">
+          No historical data available yet. Run the render pipeline to generate notebook archives.
+        </p>
+      )}
+    </section>
+  </div>
+</BaseLayout>

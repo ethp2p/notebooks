@@ -1,0 +1,370 @@
+---
+import fs from 'node:fs';
+import path from 'node:path';
+import CodeToggle from './CodeToggle.astro';
+
+interface Props {
+  htmlPath: string;
+  title: string;
+}
+
+const { htmlPath, title } = Astro.props;
+
+// Read the pre-rendered HTML at build time
+const fullPath = path.join(process.cwd(), 'public', 'rendered', htmlPath);
+
+let content = '';
+let error = '';
+let headContent = '';
+
+if (fs.existsSync(fullPath)) {
+  const html = fs.readFileSync(fullPath, 'utf-8');
+
+  // Extract head content for styles
+  const headMatch = html.match(/<head[^>]*>([\s\S]*?)<\/head>/i);
+  if (headMatch) {
+    // Extract only style tags from head
+    const styleMatches = headMatch[1].match(/<style[^>]*>[\s\S]*?<\/style>/gi);
+    if (styleMatches) {
+      headContent = styleMatches.join('\n');
+    }
+  }
+
+  // Extract body content from the HTML
+  const bodyMatch = html.match(/<body[^>]*>([\s\S]*)<\/body>/i);
+  if (bodyMatch) {
+    content = bodyMatch[1];
+
+    // Remove Quarto navigation elements we don't need
+    content = content
+      .replace(/<nav[^>]*class="[^"]*quarto-secondary-nav[^"]*"[^>]*>[\s\S]*?<\/nav>/gi, '')
+      .replace(/<header[^>]*id="quarto-header"[^>]*>[\s\S]*?<\/header>/gi, '')
+      .replace(/<nav[^>]*id="quarto-sidebar"[^>]*>[\s\S]*?<\/nav>/gi, '')
+      .replace(/<footer[^>]*>[\s\S]*?<\/footer>/gi, '');
+  } else {
+    content = html;
+  }
+} else {
+  error = `Notebook not found: ${htmlPath}`;
+}
+---
+
+{error ? (
+  <div class="error-container">
+    <h2>Error Loading Notebook</h2>
+    <p>{error}</p>
+  </div>
+) : (
+  <>
+    <article class="notebook-content">
+      <header class="notebook-header">
+        <h1 class="notebook-title">{title}</h1>
+        <div class="notebook-controls">
+          <CodeToggle />
+        </div>
+      </header>
+      <Fragment set:html={headContent} />
+      <div class="notebook-body" set:html={content} />
+    </article>
+  </>
+)}
+
+<style is:global>
+  .error-container {
+    padding: 2rem;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 0.5rem;
+    color: #991b1b;
+  }
+
+  .error-container h2 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+  }
+
+  /* Notebook header */
+  .notebook-header {
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .notebook-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--foreground);
+    margin: 0 0 1rem 0;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+  }
+
+  .notebook-controls {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  /* Section headings */
+  .notebook-content h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--foreground);
+    margin: 3rem 0 1.25rem 0;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border);
+    letter-spacing: -0.01em;
+    line-height: 1.3;
+  }
+
+  .notebook-content h2:first-of-type {
+    margin-top: 0;
+  }
+
+  .notebook-content h3 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--foreground);
+    margin: 2rem 0 1rem 0;
+    letter-spacing: -0.01em;
+    line-height: 1.4;
+  }
+
+  .notebook-content h4 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--foreground);
+    margin: 1.5rem 0 0.75rem 0;
+  }
+
+  /* Paragraphs and text */
+  .notebook-content p {
+    margin: 0 0 1rem 0;
+    line-height: 1.7;
+    color: var(--foreground);
+  }
+
+  .notebook-content a {
+    color: var(--mauve-11);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  .notebook-content a:hover {
+    color: var(--foreground);
+  }
+
+  /* Lists */
+  .notebook-content ul,
+  .notebook-content ol {
+    margin: 0 0 1rem 0;
+    padding-left: 1.5rem;
+  }
+
+  .notebook-content li {
+    margin-bottom: 0.375rem;
+    line-height: 1.6;
+  }
+
+  /* Syntax highlighting - refined GitHub-inspired theme */
+  .sourceCode {
+    background: var(--mauve-2) !important;
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    overflow-x: auto;
+    font-size: 0.8125rem;
+    line-height: 1.6;
+  }
+
+  .sourceCode pre {
+    margin: 0;
+    padding: 1rem 1.25rem;
+    background: transparent !important;
+  }
+
+  .sourceCode code {
+    font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 0.8125rem;
+    background: transparent !important;
+    padding: 0;
+  }
+
+  /* Token colors - refined */
+  .sourceCode .kw { color: #cf222e; font-weight: 500; } /* Keywords */
+  .sourceCode .dt { color: #0550ae; } /* Data types */
+  .sourceCode .dv { color: #0550ae; } /* Decimal values */
+  .sourceCode .bn { color: #0550ae; } /* Base N */
+  .sourceCode .fl { color: #0550ae; } /* Float */
+  .sourceCode .ch { color: #0a3069; } /* Char */
+  .sourceCode .st { color: #0a3069; } /* String */
+  .sourceCode .co { color: #6e7781; font-style: italic; } /* Comment */
+  .sourceCode .ot { color: #cf222e; } /* Other */
+  .sourceCode .al { color: #cf222e; font-weight: bold; } /* Alert */
+  .sourceCode .fu { color: #8250df; } /* Function */
+  .sourceCode .er { color: #cf222e; font-weight: bold; } /* Error */
+  .sourceCode .wa { color: #9a6700; font-style: italic; } /* Warning */
+  .sourceCode .cn { color: #0550ae; } /* Constant */
+  .sourceCode .sc { color: #0a3069; } /* Special char */
+  .sourceCode .vs { color: #0a3069; } /* Verbatim string */
+  .sourceCode .ss { color: #0a3069; } /* Special string */
+  .sourceCode .im { color: #cf222e; } /* Import */
+  .sourceCode .va { color: #24292f; } /* Variable */
+  .sourceCode .cf { color: #cf222e; font-weight: 500; } /* Control flow */
+  .sourceCode .op { color: #24292f; } /* Operator */
+  .sourceCode .bu { color: #0550ae; } /* Built-in */
+  .sourceCode .ex { color: #8250df; } /* Extension */
+  .sourceCode .pp { color: #cf222e; } /* Preprocessor */
+  .sourceCode .at { color: #0550ae; } /* Attribute */
+  .sourceCode .do { color: #6e7781; font-style: italic; } /* Documentation */
+  .sourceCode .an { color: #6e7781; font-weight: bold; font-style: italic; } /* Annotation */
+  .sourceCode .cv { color: #6e7781; font-weight: bold; font-style: italic; } /* Comment var */
+  .sourceCode .in { color: #6e7781; font-weight: bold; font-style: italic; } /* Information */
+
+  /* Code folding - refined style */
+  .notebook-content details.code-fold {
+    margin-bottom: 1.25rem;
+  }
+
+  .notebook-content details.code-fold > summary {
+    cursor: pointer;
+    font-size: 0.75rem;
+    font-family: 'Inter', system-ui, sans-serif;
+    color: var(--muted-foreground);
+    padding: 0.375rem 0.75rem;
+    background: var(--muted);
+    border: none;
+    border-radius: 0.375rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    transition: all 0.15s ease;
+    user-select: none;
+    list-style: none;
+  }
+
+  .notebook-content details.code-fold > summary:hover {
+    color: var(--foreground);
+    background: var(--mauve-3);
+  }
+
+  .notebook-content details.code-fold > summary::marker,
+  .notebook-content details.code-fold > summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .notebook-content details.code-fold > summary::before {
+    content: '\25B6';
+    font-size: 0.5rem;
+    transition: transform 0.15s ease;
+    opacity: 0.7;
+  }
+
+  .notebook-content details.code-fold[open] > summary::before {
+    transform: rotate(90deg);
+  }
+
+  .notebook-content details.code-fold[open] > summary {
+    margin-bottom: 0.75rem;
+  }
+
+  /* Charts */
+  .notebook-content .js-plotly-plot,
+  .notebook-content .plotly-graph-div {
+    width: 100% !important;
+    margin: 1rem 0;
+  }
+
+  .notebook-content .vega-embed {
+    width: 100%;
+    margin: 1rem 0;
+  }
+
+  /* Code cells */
+  .notebook-content .cell {
+    margin-bottom: 2rem;
+  }
+
+  .notebook-content .cell-code {
+    margin-bottom: 0.75rem;
+  }
+
+  /* Cell output */
+  .notebook-content .cell-output-display {
+    margin-top: 1rem;
+  }
+
+  /* Tables */
+  .notebook-content table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0;
+    font-size: 0.875rem;
+  }
+
+  .notebook-content th,
+  .notebook-content td {
+    padding: 0.625rem 0.875rem;
+    border: 1px solid var(--border);
+    text-align: left;
+  }
+
+  .notebook-content th {
+    background: var(--muted);
+    font-weight: 600;
+    color: var(--foreground);
+  }
+
+  .notebook-content tr:hover td {
+    background: var(--mauve-2);
+  }
+
+  /* Hide Quarto elements */
+  .notebook-content .code-copy-button {
+    display: none;
+  }
+
+  /* Line numbers */
+  .sourceCode pre code span.line-number {
+    color: var(--mauve-9);
+    margin-right: 1rem;
+    user-select: none;
+    opacity: 0.6;
+  }
+
+  /* Blockquotes */
+  .notebook-content blockquote {
+    margin: 1.5rem 0;
+    padding: 1rem 1.25rem;
+    border-left: 3px solid var(--mauve-7);
+    background: var(--mauve-2);
+    border-radius: 0 0.375rem 0.375rem 0;
+  }
+
+  .notebook-content blockquote p:last-child {
+    margin-bottom: 0;
+  }
+
+  /* Inline code */
+  .notebook-content :not(pre) > code {
+    background: var(--muted);
+    padding: 0.125rem 0.375rem;
+    border-radius: 0.25rem;
+    font-size: 0.875em;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+  }
+
+  /* Images */
+  .notebook-content img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 0.5rem;
+  }
+
+  /* Horizontal rules */
+  .notebook-content hr {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 2rem 0;
+  }
+</style>

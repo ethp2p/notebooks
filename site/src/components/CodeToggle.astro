@@ -1,0 +1,145 @@
+---
+// Code toggle component - shows a checkbox to expand/collapse all code blocks
+// Persists state to localStorage
+---
+
+<div class="code-toggle-container">
+  <label class="code-toggle">
+    <input type="checkbox" id="show-all-code" />
+    <span class="checkmark"></span>
+    <span class="label-text">Show all code</span>
+  </label>
+</div>
+
+<script>
+  const STORAGE_KEY = 'notebook-show-all-code';
+
+  function initCodeToggle() {
+    const checkbox = document.getElementById('show-all-code') as HTMLInputElement;
+    if (!checkbox) return;
+
+    // Get all code details elements
+    const getCodeBlocks = () => document.querySelectorAll('.notebook-content details.code-fold');
+
+    // Load saved preference
+    const savedState = localStorage.getItem(STORAGE_KEY);
+    if (savedState === 'true') {
+      checkbox.checked = true;
+      // Apply saved state to code blocks
+      const codeBlocks = getCodeBlocks();
+      codeBlocks.forEach(block => {
+        block.setAttribute('open', '');
+      });
+    }
+
+    checkbox.addEventListener('change', () => {
+      const codeBlocks = getCodeBlocks();
+      codeBlocks.forEach(block => {
+        if (checkbox.checked) {
+          block.setAttribute('open', '');
+        } else {
+          block.removeAttribute('open');
+        }
+      });
+      // Save preference
+      localStorage.setItem(STORAGE_KEY, checkbox.checked.toString());
+    });
+
+    // Update checkbox state based on current state of code blocks
+    const updateCheckboxState = () => {
+      const codeBlocks = getCodeBlocks();
+      if (codeBlocks.length === 0) return;
+
+      const allOpen = Array.from(codeBlocks).every(block => block.hasAttribute('open'));
+      checkbox.checked = allOpen;
+      // Don't save on manual individual toggles - only on bulk toggle
+    };
+
+    // Listen for individual toggle changes
+    document.addEventListener('toggle', (e) => {
+      if ((e.target as HTMLElement)?.closest('.code-fold')) {
+        updateCheckboxState();
+      }
+    }, true);
+  }
+
+  // Run on initial load
+  initCodeToggle();
+
+  // Re-run on Astro page transitions
+  document.addEventListener('astro:page-load', initCodeToggle);
+</script>
+
+<style>
+  .code-toggle-container {
+    display: inline-block;
+  }
+
+  .code-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    font-size: 0.8125rem;
+    color: var(--muted-foreground);
+    user-select: none;
+    padding: 0.375rem 0.75rem;
+    background: var(--muted);
+    border-radius: 0.375rem;
+    transition: all 0.15s ease;
+  }
+
+  .code-toggle:hover {
+    color: var(--foreground);
+    background: var(--mauve-3);
+  }
+
+  .code-toggle input {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+    height: 0;
+    width: 0;
+  }
+
+  .checkmark {
+    position: relative;
+    height: 0.875rem;
+    width: 0.875rem;
+    background-color: var(--background);
+    border: 1px solid var(--border);
+    border-radius: 0.25rem;
+    transition: all 0.15s ease;
+    flex-shrink: 0;
+  }
+
+  .code-toggle:hover .checkmark {
+    border-color: var(--mauve-8);
+  }
+
+  .code-toggle input:checked ~ .checkmark {
+    background-color: var(--foreground);
+    border-color: var(--foreground);
+  }
+
+  .checkmark:after {
+    content: "";
+    position: absolute;
+    display: none;
+    left: 0.25rem;
+    top: 0.0625rem;
+    width: 0.25rem;
+    height: 0.45rem;
+    border: solid var(--background);
+    border-width: 0 1.5px 1.5px 0;
+    transform: rotate(45deg);
+  }
+
+  .code-toggle input:checked ~ .checkmark:after {
+    display: block;
+  }
+
+  .label-text {
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+</style>

@@ -1,4 +1,4 @@
-name: Build and Deploy Quarto Site
+name: Build and Deploy Astro Site
 
 on:
   push:
@@ -7,9 +7,20 @@ on:
     workflows: ["Fetch Daily Data"]
     types: [completed]
   workflow_dispatch:
+    inputs:
+      force_render:
+        description: 'Force re-render all notebooks'
+        type: boolean
+        default: false
+      render_date:
+        description: 'Specific date to re-render (YYYY-MM-DD)'
+        required: false
+      render_notebook:
+        description: 'Specific notebook ID to re-render'
+        required: false
 
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
@@ -18,7 +29,7 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  build:
+  render-notebooks:
     runs-on: ubuntu-latest
     if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     steps:
@@ -34,15 +45,30 @@ jobs:
           path: data-checkout
         continue-on-error: true
 
-      - name: Setup data directory
+      - name: Checkout rendered branch
+        uses: actions/checkout@v4
+        with:
+          ref: rendered
+          path: rendered-checkout
+        continue-on-error: true
+
+      - name: Setup directories
         run: |
-          mkdir -p notebooks/data
+          mkdir -p notebooks/data site/public/rendered
+
+          # Copy data from data branch
           if [ -d "data-checkout/data" ] && [ -f "data-checkout/data/manifest.json" ]; then
             cp -r data-checkout/data/* notebooks/data/
           else
             echo '{"dates": [], "latest": null}' > notebooks/data/manifest.json
           fi
-          rm -rf data-checkout
+
+          # Copy existing rendered artifacts
+          if [ -d "rendered-checkout" ] && [ -f "rendered-checkout/manifest.json" ]; then
+            cp -r rendered-checkout/* site/public/rendered/
+          fi
+
+          rm -rf data-checkout rendered-checkout
 
       - name: Install uv
         uses: astral-sh/setup-uv@v4
@@ -52,29 +78,87 @@ jobs:
       - name: Set up Python
         run: uv python install 3.13
 
-      - name: Install dependencies
+      - name: Install Python dependencies
         run: uv sync
 
       - name: Set up Quarto
         uses: quarto-dev/quarto-actions/setup@v2
 
-      - name: Install just
-        uses: extractions/setup-just@v2
+      - name: Render notebooks
+        run: |
+          ARGS=""
+          if [ "${{ github.event.inputs.force_render }}" = "true" ]; then
+            ARGS="$ARGS --force"
+          fi
+          if [ -n "${{ github.event.inputs.render_date }}" ]; then
+            ARGS="$ARGS --date ${{ github.event.inputs.render_date }}"
+          fi
+          if [ -n "${{ github.event.inputs.render_notebook }}" ]; then
+            ARGS="$ARGS --notebook ${{ github.event.inputs.render_notebook }}"
+          fi
+          uv run python scripts/render_notebooks.py --output-dir site/public/rendered $ARGS
 
-      - name: Build site
-        run: just publish
+      - name: Commit rendered artifacts
+        run: |
+          cd site/public/rendered
+          git init
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .
+          git commit -m "Rendered notebooks $(date -u +%Y-%m-%dT%H:%M:%SZ)" || echo "No changes"
+          git push --force https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git HEAD:rendered
+
+      - name: Upload rendered artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: rendered-notebooks
+          path: site/public/rendered/
+
+  build-astro:
+    runs-on: ubuntu-latest
+    needs: render-notebooks
+    steps:
+      - name: Checkout main branch
+        uses: actions/checkout@v4
+
+      - name: Download rendered artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: rendered-notebooks
+          path: site/public/rendered/
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+          cache-dependency-path: site/pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: cd site && pnpm install
+
+      - name: Build Astro site
+        env:
+          ASTRO_SITE: https://ethpandaops.github.io
+          ASTRO_BASE: /peerdas-devnet-7
+        run: cd site && pnpm run build
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: _site
+          path: site/dist
 
   deploy:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
-    needs: build
+    needs: build-astro
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
