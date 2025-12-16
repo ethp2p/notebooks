@@ -160,8 +160,19 @@ python -m http.server -d _site
        df.to_parquet(output_path, index=False)
        return len(df)
    ```
+2. **Expose the new method** in `queries/__init__.py` 
+   ```python
+   from queries.my_data import fetch_my_data
+   
+   __all__ = [
+       ...
+       # new entry
+       "fetch_my_data",
+       ...
+   ]
+   ```
 
-2. **Register in `scripts/fetch_data.py`**:
+3. **Register in `scripts/fetch_data.py`**:
    ```python
    FETCHERS = [
        ...
@@ -169,18 +180,28 @@ python -m http.server -d _site
    ]
    ```
 
-3. **Create Quarto notebook** in `notebooks/`:
+4. **Create Quarto notebook** in `notebooks/`:
    ```markdown
    ---
    title: "My Analysis"
    ---
-
+   
    ```{python}
    from loaders import load_parquet
-
+   
    df = load_parquet("my_data")
    # Visualize...
    ```
-   ```
 
-4. **Add to site** in `_quarto.yml` navbar
+5. **Add to site** in `_quarto.yml` navbar
+
+6. **Add new entry to the Index** in `index.qmd`
+
+7. **Add the new notebook to the website** in `scripts/prepare_publish.py`:
+   ```python
+   NOTEBOOKS = [
+        ...
+       ("N-my-data", "My Data"),
+        ...
+   ]
+   ```
