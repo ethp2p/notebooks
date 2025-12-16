@@ -25,57 +25,503 @@ if (fs.existsSync(manifestPath)) {
 }
 
 const notebooks = config.notebooks.sort((a, b) => a.order - b.order);
+
+const formatDate = (dateStr: string) => {
+  if (dateStr === 'No data yet') return dateStr;
+  const date = new Date(dateStr + 'T00:00:00Z');
+  return date.toLocaleDateString('en-US', {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+    timeZone: 'UTC'
+  });
+};
 ---
 
 <BaseLayout title="Home">
-  <div class="max-w-3xl">
-    <h1>Eth P2P Notebooks</h1>
-    <p class="text-lg text-[var(--muted-foreground)] mb-8">
-      A collection of notebooks analyzing P2P dynamics in Ethereum networks.
-      Currently focused on mainnet PeerDAS analysis.
-    </p>
+  <div class="home-container">
+    <!-- Hero Section -->
+    <header class="hero">
+      <div class="hero-badge">
+        <span class="badge-dot"></span>
+        <span>Updated {formatDate(latestDate)}</span>
+      </div>
+      <h1 class="hero-title">
+        <span class="hero-title-line">Ethereum P2P</span>
+        <span class="hero-title-accent">Network Analysis</span>
+      </h1>
+      <p class="hero-description">
+        Real-time insights into Ethereum's peer-to-peer layer. Tracking blob propagation,
+        node connectivity, and network health across the mainnet.
+      </p>
+    </header>
 
-    <section class="mb-12">
-      <h2>Latest Analysis ({latestDate})</h2>
-      <div class="grid gap-4">
-        {notebooks.map(nb => (
+    <!-- Notebooks Grid -->
+    <section class="notebooks-section">
+      <div class="section-header">
+        <h2>Latest Analysis</h2>
+        <span class="section-badge">{notebooks.length} notebooks</span>
+      </div>
+      <div class="notebooks-grid reveal-stagger">
+        {notebooks.map((nb, index) => (
           <a
             href={`/notebooks/${nb.id}`}
-            class="block p-4 border border-[var(--border)] rounded-lg hover:border-[var(--mauve-8)] hover:bg-[var(--mauve-2)] transition-colors no-underline"
+            class="notebook-card"
+            style={`--index: ${index}`}
           >
-            <h3 class="text-lg font-medium text-[var(--foreground)] mb-1 mt-0">
-              {nb.title}
-            </h3>
-            <p class="text-sm text-[var(--muted-foreground)] m-0">
-              {nb.description}
-            </p>
+            <div class="card-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                <polyline points="14 2 14 8 20 8" />
+                <line x1="16" y1="13" x2="8" y2="13" />
+                <line x1="16" y1="17" x2="8" y2="17" />
+              </svg>
+            </div>
+            <div class="card-content">
+              <h3>{nb.title}</h3>
+              <p>{nb.description}</p>
+            </div>
+            <div class="card-arrow">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="9 18 15 12 9 6"></polyline>
+              </svg>
+            </div>
           </a>
         ))}
       </div>
     </section>
 
-    <section class="mb-12">
-      <h2>About</h2>
-      <ul class="space-y-2 text-[var(--muted-foreground)]">
-        <li>
-          <strong class="text-[var(--foreground)]">Frequency:</strong> Notebooks regenerate daily at 1am UTC
-        </li>
-        <li>
-          <strong class="text-[var(--foreground)]">Data source:</strong> EthPandaOps Xatu ClickHouse infrastructure
-        </li>
-        <li>
-          <strong class="text-[var(--foreground)]">Historical data:</strong> All dates are retained and accessible via the sidebar
-        </li>
-      </ul>
+    <!-- Info Grid -->
+    <section class="info-section">
+      <div class="info-grid">
+        <div class="info-card">
+          <div class="info-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <circle cx="12" cy="12" r="10"/>
+              <polyline points="12 6 12 12 16 14"/>
+            </svg>
+          </div>
+          <h3>Daily Updates</h3>
+          <p>Notebooks regenerate automatically at 1am UTC with fresh data from the previous day.</p>
+        </div>
+
+        <div class="info-card">
+          <div class="info-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <ellipse cx="12" cy="5" rx="9" ry="3"/>
+              <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/>
+              <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
+            </svg>
+          </div>
+          <h3>Data Source</h3>
+          <p>Powered by EthPandaOps Xatu infrastructure, querying ClickHouse for network-wide metrics.</p>
+        </div>
+
+        <div class="info-card">
+          <div class="info-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M12 20V10"/>
+              <path d="M18 20V4"/>
+              <path d="M6 20v-4"/>
+            </svg>
+          </div>
+          <h3>Historical Archive</h3>
+          <p>All historical snapshots are preserved and accessible. Track trends over time via the sidebar.</p>
+        </div>
+      </div>
     </section>
 
-    <section>
+    <!-- Pipeline Section -->
+    <section class="pipeline-section">
       <h2>Data Pipeline</h2>
-      <p class="text-[var(--muted-foreground)]">
-        Data flows from ClickHouse queries through Parquet files into Jupyter notebooks,
-        which generate interactive Plotly and Altair visualizations. The entire pipeline
-        is automated via GitHub Actions.
-      </p>
+      <div class="pipeline-flow">
+        <div class="pipeline-step">
+          <div class="step-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <ellipse cx="12" cy="5" rx="9" ry="3"/>
+              <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/>
+              <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
+            </svg>
+          </div>
+          <span class="step-label">ClickHouse</span>
+        </div>
+        <div class="pipeline-connector">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M5 12h14"/>
+            <path d="M12 5l7 7-7 7"/>
+          </svg>
+        </div>
+        <div class="pipeline-step">
+          <div class="step-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+            </svg>
+          </div>
+          <span class="step-label">Parquet</span>
+        </div>
+        <div class="pipeline-connector">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M5 12h14"/>
+            <path d="M12 5l7 7-7 7"/>
+          </svg>
+        </div>
+        <div class="pipeline-step">
+          <div class="step-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+              <line x1="8" y1="21" x2="16" y2="21"/>
+              <line x1="12" y1="17" x2="12" y2="21"/>
+            </svg>
+          </div>
+          <span class="step-label">Jupyter</span>
+        </div>
+        <div class="pipeline-connector">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M5 12h14"/>
+            <path d="M12 5l7 7-7 7"/>
+          </svg>
+        </div>
+        <div class="pipeline-step highlight">
+          <div class="step-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+              <path d="M2 17l10 5 10-5"/>
+              <path d="M2 12l10 5 10-5"/>
+            </svg>
+          </div>
+          <span class="step-label">Visualizations</span>
+        </div>
+      </div>
     </section>
   </div>
 </BaseLayout>
+
+<style>
+  .home-container {
+    max-width: 48rem;
+  }
+
+  /* Hero */
+  .hero {
+    margin-bottom: 4rem;
+    animation: fadeUp 0.6s ease-out;
+  }
+
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted-foreground);
+    background: var(--muted);
+    padding: 0.375rem 0.75rem;
+    border-radius: 2rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .badge-dot {
+    width: 6px;
+    height: 6px;
+    background: var(--accent);
+    border-radius: 50%;
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.6; transform: scale(0.9); }
+  }
+
+  .hero-title {
+    font-family: var(--font-serif);
+    font-size: 3rem;
+    font-weight: 400;
+    line-height: 1.1;
+    letter-spacing: -0.03em;
+    margin: 0 0 1.5rem 0;
+  }
+
+  .hero-title-line {
+    display: block;
+    color: var(--foreground);
+  }
+
+  .hero-title-accent {
+    display: block;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .hero-description {
+    font-size: 1.125rem;
+    line-height: 1.7;
+    color: var(--muted-foreground);
+    max-width: 36rem;
+  }
+
+  /* Notebooks Section */
+  .notebooks-section {
+    margin-bottom: 4rem;
+  }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+  }
+
+  .section-header h2 {
+    font-family: var(--font-serif);
+    font-size: 1.5rem;
+    font-weight: 400;
+    letter-spacing: -0.02em;
+    margin: 0;
+  }
+
+  .section-badge {
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--muted-foreground);
+    background: var(--muted);
+    padding: 0.25rem 0.625rem;
+    border-radius: 2rem;
+  }
+
+  .notebooks-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .notebook-card {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.25rem;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    text-decoration: none;
+    transition: all 0.25s ease;
+  }
+
+  .notebook-card:hover {
+    border-color: var(--primary);
+    transform: translateX(4px);
+    box-shadow: -4px 0 0 var(--primary);
+  }
+
+  :global(.dark) .notebook-card:hover {
+    background: oklch(0.16 0.02 260);
+    box-shadow: -4px 0 0 var(--primary), var(--glow);
+  }
+
+  .card-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    background: var(--muted);
+    border-radius: var(--radius);
+    color: var(--muted-foreground);
+    flex-shrink: 0;
+    transition: all 0.25s ease;
+  }
+
+  .notebook-card:hover .card-icon {
+    background: var(--primary);
+    color: var(--primary-foreground);
+  }
+
+  .card-content {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .card-content h3 {
+    font-family: var(--font-sans);
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--foreground);
+    margin: 0 0 0.25rem 0;
+    line-height: 1.3;
+  }
+
+  .card-content p {
+    font-size: 0.8125rem;
+    color: var(--muted-foreground);
+    margin: 0;
+    line-height: 1.5;
+  }
+
+  .card-arrow {
+    color: var(--muted-foreground);
+    opacity: 0;
+    transform: translateX(-8px);
+    transition: all 0.25s ease;
+  }
+
+  .notebook-card:hover .card-arrow {
+    opacity: 1;
+    transform: translateX(0);
+    color: var(--primary);
+  }
+
+  /* Info Section */
+  .info-section {
+    margin-bottom: 4rem;
+  }
+
+  .info-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.25rem;
+  }
+
+  .info-card {
+    padding: 1.5rem;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    transition: all 0.25s ease;
+  }
+
+  .info-card:hover {
+    border-color: var(--mauve-6);
+  }
+
+  :global(.dark) .info-card:hover {
+    background: oklch(0.16 0.02 260);
+  }
+
+  .info-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    background: var(--muted);
+    border-radius: var(--radius);
+    color: var(--primary);
+    margin-bottom: 1rem;
+  }
+
+  .info-card h3 {
+    font-family: var(--font-sans);
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--foreground);
+    margin: 0 0 0.5rem 0;
+  }
+
+  .info-card p {
+    font-size: 0.8125rem;
+    color: var(--muted-foreground);
+    margin: 0;
+    line-height: 1.6;
+  }
+
+  /* Pipeline Section */
+  .pipeline-section {
+    padding: 2rem;
+    background: var(--muted);
+    border-radius: var(--radius);
+  }
+
+  :global(.dark) .pipeline-section {
+    background: oklch(0.14 0.02 260);
+  }
+
+  .pipeline-section h2 {
+    font-family: var(--font-serif);
+    font-size: 1.25rem;
+    font-weight: 400;
+    letter-spacing: -0.02em;
+    margin: 0 0 1.5rem 0;
+    text-align: center;
+  }
+
+  .pipeline-flow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .pipeline-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .step-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    background: var(--background);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--muted-foreground);
+    transition: all 0.25s ease;
+  }
+
+  .pipeline-step.highlight .step-icon {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: var(--primary-foreground);
+  }
+
+  :global(.dark) .pipeline-step.highlight .step-icon {
+    box-shadow: var(--glow);
+  }
+
+  .step-label {
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--muted-foreground);
+  }
+
+  .pipeline-step.highlight .step-label {
+    color: var(--primary);
+    font-weight: 600;
+  }
+
+  .pipeline-connector {
+    color: var(--border);
+  }
+
+  @media (max-width: 768px) {
+    .hero-title {
+      font-size: 2.25rem;
+    }
+
+    .info-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .pipeline-flow {
+      flex-direction: column;
+    }
+
+    .pipeline-connector {
+      transform: rotate(90deg);
+    }
+  }
+</style>

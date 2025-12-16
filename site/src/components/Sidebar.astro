@@ -47,14 +47,17 @@ const formatDate = (dateStr: string) => {
   <div class="sidebar-section">
     <div class="sidebar-section-header">
       <span class="sidebar-section-title">Latest</span>
-      <span class="sidebar-section-badge">{formatDate(latestDate)}</span>
+      <span class="sidebar-section-badge">
+        <span class="badge-dot"></span>
+        {formatDate(latestDate)}
+      </span>
     </div>
     <ul class="sidebar-list">
-      {notebooks.map(nb => {
+      {notebooks.map((nb, index) => {
         const href = `${base}notebooks/${nb.id}`;
         const isActive = currentPath.includes(`/notebooks/${nb.id}`);
         return (
-          <li>
+          <li style={`--index: ${index}`}>
             <a
               href={href}
               class:list={['sidebar-link', { active: isActive }]}
@@ -81,14 +84,14 @@ const formatDate = (dateStr: string) => {
     <div class="sidebar-section">
       <div class="sidebar-section-header">
         <span class="sidebar-section-title">Historical</span>
-        <span class="sidebar-section-count">{historicalDates.length}</span>
+        <span class="sidebar-section-count">{historicalDates.length} dates</span>
       </div>
       <ul class="sidebar-list">
-        {historicalDates.slice(0, 7).map(date => {
+        {historicalDates.slice(0, 7).map((date, index) => {
           const href = `${base}archive/${date}`;
           const isActive = currentPath.includes(`/archive/${date}`);
           return (
-            <li>
+            <li style={`--index: ${index}`}>
               <a
                 href={href}
                 class:list={['sidebar-link sidebar-link-date', { active: isActive }]}
@@ -118,6 +121,11 @@ const formatDate = (dateStr: string) => {
                 </svg>
               </span>
               <span class="sidebar-link-text">View all dates</span>
+              <span class="sidebar-link-arrow">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="9 18 15 12 9 6"></polyline>
+                </svg>
+              </span>
             </a>
           </li>
         )}
@@ -130,13 +138,13 @@ const formatDate = (dateStr: string) => {
   .sidebar-nav {
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
+    gap: 2rem;
   }
 
   .sidebar-section {
     display: flex;
     flex-direction: column;
-    gap: 0.375rem;
+    gap: 0.5rem;
   }
 
   .sidebar-section-header {
@@ -148,26 +156,46 @@ const formatDate = (dateStr: string) => {
   }
 
   .sidebar-section-title {
-    font-size: 0.6875rem;
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
     font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.1em;
     color: var(--muted-foreground);
   }
 
   .sidebar-section-badge {
-    font-size: 0.625rem;
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    font-family: var(--font-mono);
+    font-size: 0.5625rem;
     font-weight: 500;
-    padding: 0.125rem 0.375rem;
+    padding: 0.1875rem 0.5rem;
     background: var(--muted);
-    border-radius: 0.25rem;
+    border-radius: 2rem;
     color: var(--muted-foreground);
   }
 
+  .badge-dot {
+    width: 6px;
+    height: 6px;
+    background: var(--accent);
+    border-radius: 50%;
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+
   .sidebar-section-count {
-    font-size: 0.625rem;
+    font-family: var(--font-mono);
+    font-size: 0.5625rem;
     font-weight: 500;
     color: var(--muted-foreground);
+    opacity: 0.7;
   }
 
   .sidebar-list {
@@ -179,21 +207,55 @@ const formatDate = (dateStr: string) => {
     gap: 0.125rem;
   }
 
+  .sidebar-list li {
+    animation: slideIn 0.3s ease-out backwards;
+    animation-delay: calc(var(--index, 0) * 0.03s);
+  }
+
+  @keyframes slideIn {
+    from {
+      opacity: 0;
+      transform: translateX(-8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
   .sidebar-link {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem;
+    gap: 0.625rem;
+    padding: 0.5rem 0.625rem;
     color: var(--muted-foreground);
     text-decoration: none;
-    border-radius: 0.375rem;
+    border-radius: var(--radius);
     font-size: 0.8125rem;
-    transition: all 0.15s ease;
+    transition: all 0.2s ease;
+    position: relative;
+  }
+
+  .sidebar-link::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    width: 3px;
+    height: 0;
+    background: var(--primary);
+    border-radius: 0 2px 2px 0;
+    transform: translateY(-50%);
+    transition: height 0.2s ease;
   }
 
   .sidebar-link:hover {
     color: var(--foreground);
     background: var(--muted);
+  }
+
+  .sidebar-link:hover::before {
+    height: 50%;
   }
 
   .sidebar-link.active {
@@ -202,17 +264,23 @@ const formatDate = (dateStr: string) => {
     font-weight: 500;
   }
 
+  .sidebar-link.active::before {
+    height: 60%;
+  }
+
   .sidebar-link-icon {
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    opacity: 0.6;
+    opacity: 0.5;
+    transition: all 0.2s ease;
   }
 
   .sidebar-link:hover .sidebar-link-icon,
   .sidebar-link.active .sidebar-link-icon {
     opacity: 1;
+    color: var(--primary);
   }
 
   .sidebar-link-text {
@@ -224,22 +292,39 @@ const formatDate = (dateStr: string) => {
   }
 
   .sidebar-link-date .sidebar-link-text {
-    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-family: var(--font-mono);
     font-size: 0.75rem;
+    letter-spacing: 0.01em;
   }
 
   .sidebar-link-year {
-    font-size: 0.625rem;
+    font-family: var(--font-mono);
+    font-size: 0.5625rem;
     color: var(--muted-foreground);
-    opacity: 0.7;
+    opacity: 0.6;
+    padding: 0.125rem 0.25rem;
+    background: var(--muted);
+    border-radius: 0.25rem;
   }
 
   .sidebar-link-more {
     color: var(--muted-foreground);
     font-style: normal;
+    margin-top: 0.25rem;
   }
 
   .sidebar-link-more:hover {
     color: var(--foreground);
+  }
+
+  .sidebar-link-arrow {
+    opacity: 0;
+    transform: translateX(-4px);
+    transition: all 0.2s ease;
+  }
+
+  .sidebar-link-more:hover .sidebar-link-arrow {
+    opacity: 1;
+    transform: translateX(0);
   }
 </style>

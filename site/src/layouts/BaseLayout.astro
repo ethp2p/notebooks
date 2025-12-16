@@ -18,28 +18,98 @@ const { title, description = 'Ethereum P2P network analysis notebooks', showToc 
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content={description} />
+    <meta name="theme-color" content="#f8f7fc" id="theme-color-meta" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>{title} | Eth P2P Notebooks</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+    <!-- Prevent flash of wrong theme -->
+    <script is:inline>
+      (function() {
+        const stored = localStorage.getItem('theme');
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+        let isDark;
+        if (stored === 'dark') isDark = true;
+        else if (stored === 'light') isDark = false;
+        else isDark = prefersDark; // 'system' or not set
+
+        if (isDark) {
+          document.documentElement.classList.add('dark');
+          document.getElementById('theme-color-meta')?.setAttribute('content', '#1a1625');
+        }
+      })();
+    </script>
   </head>
   <body class="min-h-screen">
     <div class="layout-container">
       <!-- Left Sidebar -->
       <aside class="left-sidebar">
         <div class="sidebar-inner">
-          <a href="/" class="site-title">
-            <span class="title-icon">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M12 2L2 7l10 5 10-5-10-5z" />
-                <path d="M2 17l10 5 10-5" />
-                <path d="M2 12l10 5 10-5" />
+          <a href="/" class="site-title group">
+            <span class="site-logo">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" class="logo-icon">
+                <!-- Ethereum-inspired diamond -->
+                <path d="M12 1L3 12l9 5 9-5L12 1z" stroke="currentColor" stroke-width="1.5" fill="none" class="diamond-top"/>
+                <path d="M12 17l-9-5 9 11 9-11-9 5z" stroke="currentColor" stroke-width="1.5" fill="none" class="diamond-bottom"/>
+                <path d="M12 1v16" stroke="currentColor" stroke-width="1.5" opacity="0.3"/>
               </svg>
             </span>
-            <span class="title-text">Eth P2P Notebooks</span>
+            <span class="site-title-text">
+              <span class="site-title-main">ETH P2P</span>
+              <span class="site-title-sub">Notebooks</span>
+            </span>
           </a>
           <Sidebar />
+        </div>
+
+        <!-- Theme switcher at bottom of sidebar -->
+        <div class="sidebar-footer">
+          <div class="theme-switcher" role="radiogroup" aria-label="Theme selection">
+            <button
+              class="theme-option"
+              data-theme="light"
+              role="radio"
+              aria-checked="false"
+              title="Light theme"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="5"/>
+                <line x1="12" y1="1" x2="12" y2="3"/>
+                <line x1="12" y1="21" x2="12" y2="23"/>
+                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+                <line x1="1" y1="12" x2="3" y2="12"/>
+                <line x1="21" y1="12" x2="23" y2="12"/>
+                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+              </svg>
+            </button>
+            <button
+              class="theme-option"
+              data-theme="system"
+              role="radio"
+              aria-checked="true"
+              title="System theme"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+                <line x1="8" y1="21" x2="16" y2="21"/>
+                <line x1="12" y1="17" x2="12" y2="21"/>
+              </svg>
+            </button>
+            <button
+              class="theme-option"
+              data-theme="dark"
+              role="radio"
+              aria-checked="false"
+              title="Dark theme"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+              </svg>
+            </button>
+            <div class="theme-indicator" id="theme-indicator"></div>
+          </div>
         </div>
       </aside>
 
@@ -57,6 +127,108 @@ const { title, description = 'Ethereum P2P network analysis notebooks', showToc 
         </aside>
       )}
     </div>
+
+    <!-- Theme switcher script -->
+    <script>
+      function initThemeSwitcher() {
+        const buttons = document.querySelectorAll('.theme-option');
+        const indicator = document.getElementById('theme-indicator');
+        const metaThemeColor = document.getElementById('theme-color-meta');
+
+        if (!buttons.length || !indicator) return;
+
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)');
+
+        function getStoredTheme(): string {
+          return localStorage.getItem('theme') || 'system';
+        }
+
+        function setTheme(theme: string) {
+          localStorage.setItem('theme', theme);
+          applyTheme(theme);
+          updateIndicator(theme);
+          updateAriaStates(theme);
+        }
+
+        function applyTheme(theme: string) {
+          let isDark: boolean;
+
+          if (theme === 'dark') isDark = true;
+          else if (theme === 'light') isDark = false;
+          else isDark = prefersDark.matches;
+
+          document.documentElement.classList.toggle('dark', isDark);
+
+          if (metaThemeColor) {
+            metaThemeColor.setAttribute('content', isDark ? '#1a1625' : '#f8f7fc');
+          }
+        }
+
+        function updateIndicator(theme: string) {
+          const activeButton = document.querySelector(`[data-theme="${theme}"]`) as HTMLElement;
+          if (activeButton && indicator) {
+            indicator.style.transform = `translateX(${activeButton.offsetLeft}px)`;
+            indicator.style.width = `${activeButton.offsetWidth}px`;
+          }
+        }
+
+        function updateAriaStates(theme: string) {
+          buttons.forEach(btn => {
+            const isActive = btn.getAttribute('data-theme') === theme;
+            btn.setAttribute('aria-checked', isActive ? 'true' : 'false');
+            btn.classList.toggle('active', isActive);
+          });
+        }
+
+        // Handle button clicks
+        buttons.forEach(btn => {
+          btn.addEventListener('click', () => {
+            const theme = btn.getAttribute('data-theme');
+            if (theme) setTheme(theme);
+          });
+        });
+
+        // Handle system preference changes
+        prefersDark.addEventListener('change', () => {
+          if (getStoredTheme() === 'system') {
+            applyTheme('system');
+          }
+        });
+
+        // Initialize
+        const currentTheme = getStoredTheme();
+        applyTheme(currentTheme);
+
+        // Wait for layout to settle before positioning indicator
+        requestAnimationFrame(() => {
+          updateIndicator(currentTheme);
+          updateAriaStates(currentTheme);
+        });
+      }
+
+      initThemeSwitcher();
+      document.addEventListener('astro:page-load', initThemeSwitcher);
+    </script>
+
+    <!-- Scroll reveal script -->
+    <script>
+      function initScrollReveal() {
+        const reveals = document.querySelectorAll('.reveal, .reveal-stagger');
+
+        const observer = new IntersectionObserver((entries) => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting) {
+              entry.target.classList.add('visible');
+            }
+          });
+        }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
+
+        reveals.forEach(el => observer.observe(el));
+      }
+
+      initScrollReveal();
+      document.addEventListener('astro:page-load', initScrollReveal);
+    </script>
   </body>
 </html>
 
@@ -72,60 +244,187 @@ const { title, description = 'Ethereum P2P network analysis notebooks', showToc 
     left: 0;
     height: 100vh;
     width: 16rem;
-    border-right: 1px solid var(--border);
-    background: var(--background);
+    background: var(--sidebar);
+    border-right: 1px solid var(--sidebar-border);
     overflow-y: auto;
     z-index: 50;
+    display: flex;
+    flex-direction: column;
+    transition: background 0.3s ease, border-color 0.3s ease;
+  }
+
+  /* Sidebar gradient overlay */
+  .left-sidebar::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, transparent 0%, var(--sidebar) 100%);
+    opacity: 0.5;
+    pointer-events: none;
   }
 
   .sidebar-inner {
     padding: 1.25rem;
+    flex: 1;
+    position: relative;
+    z-index: 1;
   }
 
+  .sidebar-footer {
+    padding: 1rem 1.25rem;
+    border-top: 1px solid var(--sidebar-border);
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Site Title/Logo */
   .site-title {
     display: flex;
     align-items: center;
-    gap: 0.625rem;
-    font-size: 0.9375rem;
-    font-weight: 600;
-    color: var(--foreground);
+    gap: 0.75rem;
     text-decoration: none;
-    margin-bottom: 1.5rem;
-    padding: 0.5rem;
-    margin: -0.5rem;
-    margin-bottom: 1.5rem;
-    border-radius: 0.5rem;
-    transition: background 0.15s ease;
+    margin-bottom: 1.75rem;
+    padding: 0.75rem;
+    margin: -0.75rem;
+    margin-bottom: 1.75rem;
+    border-radius: var(--radius);
+    transition: all 0.25s ease;
   }
 
   .site-title:hover {
     background: var(--muted);
   }
 
-  .title-icon {
+  .site-logo {
     display: flex;
-    color: var(--mauve-11);
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius);
+    background: var(--primary);
+    color: var(--primary-foreground);
+    transition: all 0.3s ease;
   }
 
+  .site-title:hover .site-logo {
+    transform: scale(1.05);
+    box-shadow: var(--glow);
+  }
+
+  .logo-icon {
+    transition: transform 0.3s ease;
+  }
+
+  .site-title:hover .logo-icon {
+    transform: rotate(10deg);
+  }
+
+  .diamond-top {
+    transition: opacity 0.3s ease;
+  }
+
+  .site-title:hover .diamond-top {
+    opacity: 0.7;
+  }
+
+  .site-title-text {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    line-height: 1.1;
+  }
+
+  .site-title-main {
+    font-family: var(--font-mono);
+    font-size: 0.8125rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    color: var(--foreground);
+  }
+
+  .site-title-sub {
+    font-family: var(--font-serif);
+    font-size: 0.875rem;
+    color: var(--muted-foreground);
+    letter-spacing: -0.01em;
+  }
+
+  /* Theme Switcher - Segmented Control */
+  .theme-switcher {
+    display: flex;
+    align-items: center;
+    position: relative;
+    background: var(--muted);
+    border-radius: var(--radius);
+    padding: 0.25rem;
+    gap: 0;
+  }
+
+  .theme-option {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2rem;
+    background: transparent;
+    border: none;
+    border-radius: calc(var(--radius) - 2px);
+    color: var(--muted-foreground);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+    z-index: 1;
+  }
+
+  .theme-option:hover {
+    color: var(--foreground);
+  }
+
+  .theme-option.active {
+    color: var(--foreground);
+  }
+
+  .theme-indicator {
+    position: absolute;
+    top: 0.25rem;
+    left: 0.25rem;
+    height: 2rem;
+    background: var(--background);
+    border-radius: calc(var(--radius) - 2px);
+    box-shadow: 0 1px 3px oklch(0 0 0 / 10%);
+    transition: transform 0.25s ease, width 0.25s ease;
+    z-index: 0;
+  }
+
+  .dark .theme-indicator {
+    background: var(--card);
+    box-shadow: 0 1px 3px oklch(0 0 0 / 30%);
+  }
+
+  /* Main Content */
   .main-content {
     flex: 1;
     margin-left: 16rem;
     min-width: 0;
+    transition: margin 0.3s ease;
   }
 
   .content-wrapper {
-    max-width: 52rem;
+    max-width: 56rem;
     margin: 0 auto;
-    padding: 2rem 2.5rem;
+    padding: 2.5rem 3rem;
+    animation: fadeUp 0.5s ease-out;
   }
 
+  /* Right Sidebar (TOC) */
   .right-sidebar {
     position: fixed;
     top: 0;
     right: 0;
     height: 100vh;
-    width: 14rem;
-    padding: 2rem 1rem;
+    width: 15rem;
+    padding: 2.5rem 1.25rem;
     overflow-y: auto;
     z-index: 40;
   }
@@ -133,7 +432,7 @@ const { title, description = 'Ethereum P2P network analysis notebooks', showToc 
   /* When TOC is shown, add right padding to prevent overlap */
   @media (min-width: 1280px) {
     .layout-container:has(.right-sidebar) .main-content {
-      margin-right: 14rem;
+      margin-right: 15rem;
     }
   }
 

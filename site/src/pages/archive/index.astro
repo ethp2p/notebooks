@@ -1,6 +1,5 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import DatePicker from '../../components/DatePicker.astro';
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -11,37 +10,285 @@ if (fs.existsSync(manifestPath)) {
   const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'));
   dates = Object.keys(manifest.dates || {}).sort((a, b) => b.localeCompare(a));
 }
+
+const formatDate = (dateStr: string) => {
+  const date = new Date(dateStr + 'T00:00:00Z');
+  return date.toLocaleDateString('en-US', {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    timeZone: 'UTC'
+  });
+};
+
+// Group dates by month
+const groupedDates = dates.reduce((acc, date) => {
+  const month = date.slice(0, 7); // YYYY-MM
+  if (!acc[month]) acc[month] = [];
+  acc[month].push(date);
+  return acc;
+}, {} as Record<string, string[]>);
+
+const formatMonth = (monthStr: string) => {
+  const date = new Date(monthStr + '-01T00:00:00Z');
+  return date.toLocaleDateString('en-US', {
+    month: 'long',
+    year: 'numeric',
+    timeZone: 'UTC'
+  });
+};
 ---
 
 <BaseLayout title="Archive">
-  <div class="max-w-3xl">
-    <h1>Historical Archive</h1>
-    <p class="text-lg text-[var(--muted-foreground)] mb-8">
-      Browse all historical notebook analyses by date.
-    </p>
-
-    <div class="mb-8 max-w-xs">
-      <DatePicker />
-    </div>
-
-    <section>
-      <h2>All Dates ({dates.length})</h2>
-      {dates.length > 0 ? (
-        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-          {dates.map(date => (
-            <a
-              href={`/archive/${date}`}
-              class="block p-3 text-center border border-[var(--border)] rounded-lg hover:border-[var(--mauve-8)] hover:bg-[var(--mauve-2)] transition-colors no-underline text-sm"
-            >
-              {date}
-            </a>
-          ))}
+  <div class="archive-container">
+    <header class="archive-header">
+      <h1>Historical Archive</h1>
+      <p class="archive-description">
+        Browse all historical notebook snapshots. Each date contains a complete set of analysis
+        notebooks from that day's data.
+      </p>
+      <div class="archive-stats">
+        <div class="stat">
+          <span class="stat-value">{dates.length}</span>
+          <span class="stat-label">Snapshots</span>
         </div>
-      ) : (
-        <p class="text-[var(--muted-foreground)]">
-          No historical data available yet. Run the render pipeline to generate notebook archives.
-        </p>
-      )}
-    </section>
+        <div class="stat">
+          <span class="stat-value">{Object.keys(groupedDates).length}</span>
+          <span class="stat-label">Months</span>
+        </div>
+      </div>
+    </header>
+
+    {dates.length > 0 ? (
+      <div class="archive-content">
+        {Object.entries(groupedDates).map(([month, monthDates]) => (
+          <section class="month-section">
+            <h2 class="month-title">{formatMonth(month)}</h2>
+            <div class="dates-grid">
+              {monthDates.map((date, index) => (
+                <a
+                  href={`/archive/${date}`}
+                  class="date-card"
+                  style={`--index: ${index}`}
+                >
+                  <div class="date-day">
+                    {new Date(date + 'T00:00:00Z').getDate()}
+                  </div>
+                  <div class="date-info">
+                    <span class="date-weekday">
+                      {new Date(date + 'T00:00:00Z').toLocaleDateString('en-US', { weekday: 'short', timeZone: 'UTC' })}
+                    </span>
+                    <span class="date-full">{date}</span>
+                  </div>
+                  <svg class="date-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="9 18 15 12 9 6"></polyline>
+                  </svg>
+                </a>
+              ))}
+            </div>
+          </section>
+        ))}
+      </div>
+    ) : (
+      <div class="empty-state">
+        <div class="empty-icon">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+            <line x1="16" y1="2" x2="16" y2="6" />
+            <line x1="8" y1="2" x2="8" y2="6" />
+            <line x1="3" y1="10" x2="21" y2="10" />
+          </svg>
+        </div>
+        <h2>No Historical Data</h2>
+        <p>Run the render pipeline to generate notebook archives.</p>
+      </div>
+    )}
   </div>
 </BaseLayout>
+
+<style>
+  .archive-container {
+    max-width: 48rem;
+  }
+
+  .archive-header {
+    margin-bottom: 3rem;
+    animation: fadeUp 0.5s ease-out;
+  }
+
+  .archive-header h1 {
+    font-family: var(--font-serif);
+    font-size: 2.5rem;
+    font-weight: 400;
+    letter-spacing: -0.03em;
+    margin: 0 0 1rem 0;
+  }
+
+  .archive-description {
+    font-size: 1.0625rem;
+    line-height: 1.7;
+    color: var(--muted-foreground);
+    max-width: 36rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .archive-stats {
+    display: flex;
+    gap: 2rem;
+  }
+
+  .stat {
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+  }
+
+  .stat-value {
+    font-family: var(--font-mono);
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--primary);
+  }
+
+  .stat-label {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted-foreground);
+  }
+
+  .archive-content {
+    display: flex;
+    flex-direction: column;
+    gap: 2.5rem;
+  }
+
+  .month-section {
+    animation: fadeUp 0.5s ease-out backwards;
+  }
+
+  .month-title {
+    font-family: var(--font-serif);
+    font-size: 1.25rem;
+    font-weight: 400;
+    letter-spacing: -0.02em;
+    margin: 0 0 1rem 0;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border);
+    color: var(--foreground);
+  }
+
+  .dates-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 0.75rem;
+  }
+
+  .date-card {
+    display: flex;
+    align-items: center;
+    gap: 0.875rem;
+    padding: 0.875rem 1rem;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    text-decoration: none;
+    transition: all 0.2s ease;
+    animation: fadeUp 0.3s ease-out backwards;
+    animation-delay: calc(var(--index, 0) * 0.02s);
+  }
+
+  .date-card:hover {
+    border-color: var(--primary);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px oklch(0 0 0 / 8%);
+  }
+
+  :global(.dark) .date-card:hover {
+    background: oklch(0.16 0.02 260);
+    box-shadow: 0 4px 20px oklch(0.55 0.12 280 / 15%);
+  }
+
+  .date-day {
+    font-family: var(--font-mono);
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--foreground);
+    width: 2.5rem;
+    text-align: center;
+  }
+
+  .date-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    min-width: 0;
+  }
+
+  .date-weekday {
+    font-size: 0.75rem;
+    color: var(--muted-foreground);
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+  }
+
+  .date-full {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    color: var(--muted-foreground);
+    opacity: 0.7;
+  }
+
+  .date-arrow {
+    color: var(--muted-foreground);
+    opacity: 0;
+    transform: translateX(-4px);
+    transition: all 0.2s ease;
+  }
+
+  .date-card:hover .date-arrow {
+    opacity: 1;
+    transform: translateX(0);
+    color: var(--primary);
+  }
+
+  /* Empty state */
+  .empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: var(--muted);
+    border-radius: var(--radius);
+  }
+
+  .empty-icon {
+    color: var(--muted-foreground);
+    opacity: 0.5;
+    margin-bottom: 1.5rem;
+  }
+
+  .empty-state h2 {
+    font-family: var(--font-serif);
+    font-size: 1.25rem;
+    font-weight: 400;
+    margin: 0 0 0.5rem 0;
+  }
+
+  .empty-state p {
+    font-size: 0.875rem;
+    color: var(--muted-foreground);
+    margin: 0;
+  }
+
+  @media (max-width: 640px) {
+    .archive-header h1 {
+      font-size: 2rem;
+    }
+
+    .dates-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
