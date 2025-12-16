@@ -12,6 +12,66 @@ target_date = None  # Set via papermill, or auto-detect from manifest
 ```{python}
 import polars as pl
 import plotly.express as px
-
 from loaders import load_parquet
+
+raw_df = load_parquet("unique_network_participants_per_client", target_date)
 ```
+
+## Total unique peers in the network
+
+```{python}
+# Display the number of unique peers in the network
+raw_df = load_parquet("unique_network_participants_per_client", target_date)
+
+# get the number of unique peers
+df = (
+    pl.from_pandas(raw_df)
+    .group_by("hour_bucket")
+    .agg(unique_peers=pl.col("peer_id").n_unique())
+    .sort("hour_bucket")
+)
+
+fig = px.line(
+    df,
+    x="hour_bucket",
+    y="unique_peers",
+)
+
+fig.update_layout(
+    title="Total number of unique peers",
+    xaxis_title="Date",
+    yaxis_title="Unique peers",
+    font_size=12,
+    width=1200,
+    height=800,
+)
+```
+
+## Client distribution of the unique peers
+
+```{python}
+# get the number of unique peers
+df = (
+    pl.from_pandas(raw_df)
+    .group_by(["hour_bucket", "client_name"])
+    .agg(unique_peers=pl.col("peer_id").n_unique())
+    .sort("hour_bucket")
+)
+
+fig = px.area(
+    df,
+    x="hour_bucket",
+    y="unique_peers",
+    color="client_name",
+)
+
+fig.update_layout(
+    title="Total number of unique peers",
+    xaxis_title="Date",
+    yaxis_title="Unique peers",
+    font_size=12,
+    width=1200,
+    height=800,
+)
+```
+

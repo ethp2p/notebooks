@@ -23,6 +23,8 @@ website:
         href: notebooks/02-blob-flow.qmd
       - text: Column propagation
         href: notebooks/03-column-propagation.qmd
+      - text: Network overview
+        href: notebooks/04-network-overview.qmd
 format:
   html:
     theme:

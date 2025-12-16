@@ -11,6 +11,7 @@ A collection of notebooks analyzing P2P dynamics in Ethereum networks. Currently
 - [Blob inclusion](notebooks/01-blob-inclusion.qmd): Blob inclusion patterns per block and epoch.
 - [Blob flow](notebooks/02-blob-flow.qmd): Flow diagrams tracing blob packing per entities, builders, and relays.
 - [Column propagation](notebooks/03-column-propagation.qmd): Column propagation timing across 128 data columns subnets.
+- [Network Overview](notebooks/04-network-overview.qmd): General view of the p2p network.
 
 ## Generation
 

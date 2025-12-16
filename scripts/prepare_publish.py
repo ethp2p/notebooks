@@ -20,6 +20,7 @@ NOTEBOOKS = [
     ("01-blob-inclusion", "Blob inclusion"),
     ("02-blob-flow", "Blob flow"),
     ("03-column-propagation", "Column propagation"),
+    ("04-network-overview", "Network overview"),
 ]
 
 DATA_ROOT = Path("notebooks/data")
