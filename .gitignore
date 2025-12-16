@@ -40,3 +40,5 @@ notebooks/data/
 
 # OS
 .DS_Store
+
+node_modules/

@@ -41,32 +41,32 @@ const { title, description = 'Ethereum P2P network analysis notebooks', showToc 
     </script>
   </head>
   <body class="min-h-screen">
-    <div class="layout-container">
+    <div class="layout-container flex min-h-screen">
       <!-- Left Sidebar -->
-      <aside class="left-sidebar">
-        <div class="sidebar-inner">
-          <a href="/" class="site-title group">
-            <span class="site-logo">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" class="logo-icon">
+      <aside class="left-sidebar fixed top-0 left-0 h-screen w-64 bg-sidebar border-r border-sidebar-border overflow-y-auto z-50 flex flex-col transition-colors duration-300 max-lg:hidden">
+        <div class="p-5 flex-1 relative z-[1]">
+          <a href="/" class="site-title group flex items-center gap-3 no-underline mb-7 p-3 -m-3 rounded-lg transition-all duration-200 hover:bg-muted">
+            <span class="site-logo flex items-center justify-center w-9 h-9 rounded-lg bg-primary text-primary-foreground transition-all duration-300">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" class="logo-icon transition-transform duration-300">
                 <!-- Ethereum-inspired diamond -->
-                <path d="M12 1L3 12l9 5 9-5L12 1z" stroke="currentColor" stroke-width="1.5" fill="none" class="diamond-top"/>
+                <path d="M12 1L3 12l9 5 9-5L12 1z" stroke="currentColor" stroke-width="1.5" fill="none" class="diamond-top transition-opacity duration-300"/>
                 <path d="M12 17l-9-5 9 11 9-11-9 5z" stroke="currentColor" stroke-width="1.5" fill="none" class="diamond-bottom"/>
                 <path d="M12 1v16" stroke="currentColor" stroke-width="1.5" opacity="0.3"/>
               </svg>
             </span>
-            <span class="site-title-text">
-              <span class="site-title-main">ETH P2P</span>
-              <span class="site-title-sub">Notebooks</span>
+            <span class="flex flex-col leading-tight">
+              <span class="font-mono text-[0.8125rem] font-bold tracking-wide text-foreground">ETH P2P</span>
+              <span class="font-serif text-sm text-muted-foreground -tracking-tight">Notebooks</span>
             </span>
           </a>
           <Sidebar />
         </div>
 
         <!-- Theme switcher at bottom of sidebar -->
-        <div class="sidebar-footer">
-          <div class="theme-switcher" role="radiogroup" aria-label="Theme selection">
+        <div class="p-4 px-5 border-t border-sidebar-border relative z-[1]">
+          <div class="theme-switcher flex items-center relative bg-muted rounded-lg p-1" role="radiogroup" aria-label="Theme selection">
             <button
-              class="theme-option"
+              class="theme-option flex items-center justify-center w-10 h-8 bg-transparent border-none rounded-md text-muted-foreground cursor-pointer transition-all duration-200 relative z-[1] hover:text-foreground [&.active]:text-foreground"
               data-theme="light"
               role="radio"
               aria-checked="false"
@@ -85,7 +85,7 @@ const { title, description = 'Ethereum P2P network analysis notebooks', showToc 
               </svg>
             </button>
             <button
-              class="theme-option"
+              class="theme-option flex items-center justify-center w-10 h-8 bg-transparent border-none rounded-md text-muted-foreground cursor-pointer transition-all duration-200 relative z-[1] hover:text-foreground [&.active]:text-foreground"
               data-theme="system"
               role="radio"
               aria-checked="true"
@@ -98,7 +98,7 @@ const { title, description = 'Ethereum P2P network analysis notebooks', showToc 
               </svg>
             </button>
             <button
-              class="theme-option"
+              class="theme-option flex items-center justify-center w-10 h-8 bg-transparent border-none rounded-md text-muted-foreground cursor-pointer transition-all duration-200 relative z-[1] hover:text-foreground [&.active]:text-foreground"
               data-theme="dark"
               role="radio"
               aria-checked="false"
@@ -114,15 +114,15 @@ const { title, description = 'Ethereum P2P network analysis notebooks', showToc 
       </aside>
 
       <!-- Main Content -->
-      <main class="main-content">
-        <div class="content-wrapper">
+      <main class="main-content flex-1 ml-64 min-w-0 transition-[margin] duration-300 max-lg:ml-0">
+        <div class="max-w-4xl mx-auto py-10 px-12 animate-[fadeUp_0.5s_ease-out] max-lg:p-6">
           <slot />
         </div>
       </main>
 
       <!-- Right TOC -->
       {showToc && (
-        <aside class="right-sidebar">
+        <aside class="right-sidebar fixed top-0 right-0 h-screen w-60 py-10 px-5 overflow-y-auto z-40 max-xl:hidden">
           <TableOfContents />
         </aside>
       )}
@@ -233,27 +233,7 @@ const { title, description = 'Ethereum P2P network analysis notebooks', showToc 
 </html>
 
 <style is:global>
-  .layout-container {
-    display: flex;
-    min-height: 100vh;
-  }
-
-  .left-sidebar {
-    position: fixed;
-    top: 0;
-    left: 0;
-    height: 100vh;
-    width: 16rem;
-    background: var(--sidebar);
-    border-right: 1px solid var(--sidebar-border);
-    overflow-y: auto;
-    z-index: 50;
-    display: flex;
-    flex-direction: column;
-    transition: background 0.3s ease, border-color 0.3s ease;
-  }
-
-  /* Sidebar gradient overlay */
+  /* Sidebar gradient overlay - needs pseudo-element */
   .left-sidebar::before {
     content: '';
     position: absolute;
@@ -263,128 +243,21 @@ const { title, description = 'Ethereum P2P network analysis notebooks', showToc 
     pointer-events: none;
   }
 
-  .sidebar-inner {
-    padding: 1.25rem;
-    flex: 1;
-    position: relative;
-    z-index: 1;
-  }
-
-  .sidebar-footer {
-    padding: 1rem 1.25rem;
-    border-top: 1px solid var(--sidebar-border);
-    position: relative;
-    z-index: 1;
-  }
-
-  /* Site Title/Logo */
-  .site-title {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    text-decoration: none;
-    margin-bottom: 1.75rem;
-    padding: 0.75rem;
-    margin: -0.75rem;
-    margin-bottom: 1.75rem;
-    border-radius: var(--radius);
-    transition: all 0.25s ease;
-  }
-
-  .site-title:hover {
-    background: var(--muted);
-  }
-
-  .site-logo {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 36px;
-    height: 36px;
-    border-radius: var(--radius);
-    background: var(--primary);
-    color: var(--primary-foreground);
-    transition: all 0.3s ease;
-  }
-
+  /* Logo hover effects */
   .site-title:hover .site-logo {
     transform: scale(1.05);
     box-shadow: var(--glow);
-  }
-
-  .logo-icon {
-    transition: transform 0.3s ease;
   }
 
   .site-title:hover .logo-icon {
     transform: rotate(10deg);
   }
 
-  .diamond-top {
-    transition: opacity 0.3s ease;
-  }
-
   .site-title:hover .diamond-top {
     opacity: 0.7;
   }
 
-  .site-title-text {
-    display: flex;
-    flex-direction: column;
-    gap: 0;
-    line-height: 1.1;
-  }
-
-  .site-title-main {
-    font-family: var(--font-mono);
-    font-size: 0.8125rem;
-    font-weight: 700;
-    letter-spacing: 0.05em;
-    color: var(--foreground);
-  }
-
-  .site-title-sub {
-    font-family: var(--font-serif);
-    font-size: 0.875rem;
-    color: var(--muted-foreground);
-    letter-spacing: -0.01em;
-  }
-
-  /* Theme Switcher - Segmented Control */
-  .theme-switcher {
-    display: flex;
-    align-items: center;
-    position: relative;
-    background: var(--muted);
-    border-radius: var(--radius);
-    padding: 0.25rem;
-    gap: 0;
-  }
-
-  .theme-option {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 2.5rem;
-    height: 2rem;
-    background: transparent;
-    border: none;
-    border-radius: calc(var(--radius) - 2px);
-    color: var(--muted-foreground);
-    cursor: pointer;
-    transition: all 0.2s ease;
-    position: relative;
-    z-index: 1;
-  }
-
-  .theme-option:hover {
-    color: var(--foreground);
-  }
-
-  .theme-option.active {
-    color: var(--foreground);
-  }
-
+  /* Theme indicator positioning - needs JS */
   .theme-indicator {
     position: absolute;
     top: 0.25rem;
@@ -402,57 +275,10 @@ const { title, description = 'Ethereum P2P network analysis notebooks', showToc 
     box-shadow: 0 1px 3px oklch(0 0 0 / 30%);
   }
 
-  /* Main Content */
-  .main-content {
-    flex: 1;
-    margin-left: 16rem;
-    min-width: 0;
-    transition: margin 0.3s ease;
-  }
-
-  .content-wrapper {
-    max-width: 56rem;
-    margin: 0 auto;
-    padding: 2.5rem 3rem;
-    animation: fadeUp 0.5s ease-out;
-  }
-
-  /* Right Sidebar (TOC) */
-  .right-sidebar {
-    position: fixed;
-    top: 0;
-    right: 0;
-    height: 100vh;
-    width: 15rem;
-    padding: 2.5rem 1.25rem;
-    overflow-y: auto;
-    z-index: 40;
-  }
-
-  /* When TOC is shown, add right padding to prevent overlap */
+  /* When TOC is shown, add right margin to prevent overlap */
   @media (min-width: 1280px) {
     .layout-container:has(.right-sidebar) .main-content {
       margin-right: 15rem;
-    }
-  }
-
-  @media (max-width: 1024px) {
-    .left-sidebar {
-      display: none;
-    }
-
-    .main-content {
-      margin-left: 0;
-    }
-
-    .content-wrapper {
-      padding: 1.5rem;
-    }
-  }
-
-  @media (max-width: 1280px) {
-    .right-sidebar {
-      display: none;
     }
   }
 </style>

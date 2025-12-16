@@ -41,47 +41,47 @@ const formatMonth = (monthStr: string) => {
 ---
 
 <BaseLayout title="Archive">
-  <div class="archive-container">
-    <header class="archive-header">
-      <h1>Historical Archive</h1>
-      <p class="archive-description">
+  <div class="max-w-3xl">
+    <header class="mb-12 animate-[fadeUp_0.5s_ease-out]">
+      <h1 class="font-serif text-4xl font-normal -tracking-wide m-0 mb-4 max-sm:text-3xl">Historical Archive</h1>
+      <p class="text-[1.0625rem] leading-relaxed text-muted-foreground max-w-xl mb-6">
         Browse all historical notebook snapshots. Each date contains a complete set of analysis
         notebooks from that day's data.
       </p>
-      <div class="archive-stats">
-        <div class="stat">
-          <span class="stat-value">{dates.length}</span>
-          <span class="stat-label">Snapshots</span>
+      <div class="flex gap-8">
+        <div class="flex flex-col gap-0.5">
+          <span class="font-mono text-2xl font-semibold text-primary">{dates.length}</span>
+          <span class="font-mono text-[0.6875rem] uppercase tracking-widest text-muted-foreground">Snapshots</span>
         </div>
-        <div class="stat">
-          <span class="stat-value">{Object.keys(groupedDates).length}</span>
-          <span class="stat-label">Months</span>
+        <div class="flex flex-col gap-0.5">
+          <span class="font-mono text-2xl font-semibold text-primary">{Object.keys(groupedDates).length}</span>
+          <span class="font-mono text-[0.6875rem] uppercase tracking-widest text-muted-foreground">Months</span>
         </div>
       </div>
     </header>
 
     {dates.length > 0 ? (
-      <div class="archive-content">
+      <div class="flex flex-col gap-10">
         {Object.entries(groupedDates).map(([month, monthDates]) => (
-          <section class="month-section">
-            <h2 class="month-title">{formatMonth(month)}</h2>
-            <div class="dates-grid">
+          <section class="animate-[fadeUp_0.5s_ease-out_backwards]">
+            <h2 class="font-serif text-xl font-normal -tracking-tight m-0 mb-4 pb-3 border-b border-border text-foreground">{formatMonth(month)}</h2>
+            <div class="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-3 max-sm:grid-cols-1">
               {monthDates.map((date, index) => (
                 <a
                   href={`/archive/${date}`}
-                  class="date-card"
-                  style={`--index: ${index}`}
+                  class="group flex items-center gap-3.5 py-3.5 px-4 bg-card border border-border rounded-lg no-underline transition-all duration-200 animate-[fadeUp_0.3s_ease-out_backwards] hover:border-primary hover:-translate-y-0.5 hover:shadow-[0_4px_12px_oklch(0_0_0/8%)] dark:hover:bg-[oklch(0.16_0.02_260)] dark:hover:shadow-[0_4px_20px_oklch(0.55_0.12_280/15%)]"
+                  style={`animation-delay: calc(${index} * 0.02s)`}
                 >
-                  <div class="date-day">
+                  <div class="font-mono text-xl font-semibold text-foreground w-10 text-center">
                     {new Date(date + 'T00:00:00Z').getDate()}
                   </div>
-                  <div class="date-info">
-                    <span class="date-weekday">
+                  <div class="flex-1 flex flex-col min-w-0">
+                    <span class="text-xs text-muted-foreground uppercase tracking-wide">
                       {new Date(date + 'T00:00:00Z').toLocaleDateString('en-US', { weekday: 'short', timeZone: 'UTC' })}
                     </span>
-                    <span class="date-full">{date}</span>
+                    <span class="font-mono text-[0.6875rem] text-muted-foreground opacity-70">{date}</span>
                   </div>
-                  <svg class="date-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <svg class="text-muted-foreground opacity-0 -translate-x-1 transition-all duration-200 group-hover:opacity-100 group-hover:translate-x-0 group-hover:text-primary" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <polyline points="9 18 15 12 9 6"></polyline>
                   </svg>
                 </a>
@@ -91,8 +91,8 @@ const formatMonth = (monthStr: string) => {
         ))}
       </div>
     ) : (
-      <div class="empty-state">
-        <div class="empty-icon">
+      <div class="text-center py-16 px-8 bg-muted rounded-lg">
+        <div class="text-muted-foreground opacity-50 mb-6">
           <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
             <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
             <line x1="16" y1="2" x2="16" y2="6" />
@@ -100,195 +100,9 @@ const formatMonth = (monthStr: string) => {
             <line x1="3" y1="10" x2="21" y2="10" />
           </svg>
         </div>
-        <h2>No Historical Data</h2>
-        <p>Run the render pipeline to generate notebook archives.</p>
+        <h2 class="font-serif text-xl font-normal m-0 mb-2">No Historical Data</h2>
+        <p class="text-sm text-muted-foreground m-0">Run the render pipeline to generate notebook archives.</p>
       </div>
     )}
   </div>
 </BaseLayout>
-
-<style>
-  .archive-container {
-    max-width: 48rem;
-  }
-
-  .archive-header {
-    margin-bottom: 3rem;
-    animation: fadeUp 0.5s ease-out;
-  }
-
-  .archive-header h1 {
-    font-family: var(--font-serif);
-    font-size: 2.5rem;
-    font-weight: 400;
-    letter-spacing: -0.03em;
-    margin: 0 0 1rem 0;
-  }
-
-  .archive-description {
-    font-size: 1.0625rem;
-    line-height: 1.7;
-    color: var(--muted-foreground);
-    max-width: 36rem;
-    margin-bottom: 1.5rem;
-  }
-
-  .archive-stats {
-    display: flex;
-    gap: 2rem;
-  }
-
-  .stat {
-    display: flex;
-    flex-direction: column;
-    gap: 0.125rem;
-  }
-
-  .stat-value {
-    font-family: var(--font-mono);
-    font-size: 1.5rem;
-    font-weight: 600;
-    color: var(--primary);
-  }
-
-  .stat-label {
-    font-family: var(--font-mono);
-    font-size: 0.6875rem;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--muted-foreground);
-  }
-
-  .archive-content {
-    display: flex;
-    flex-direction: column;
-    gap: 2.5rem;
-  }
-
-  .month-section {
-    animation: fadeUp 0.5s ease-out backwards;
-  }
-
-  .month-title {
-    font-family: var(--font-serif);
-    font-size: 1.25rem;
-    font-weight: 400;
-    letter-spacing: -0.02em;
-    margin: 0 0 1rem 0;
-    padding-bottom: 0.75rem;
-    border-bottom: 1px solid var(--border);
-    color: var(--foreground);
-  }
-
-  .dates-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 0.75rem;
-  }
-
-  .date-card {
-    display: flex;
-    align-items: center;
-    gap: 0.875rem;
-    padding: 0.875rem 1rem;
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    text-decoration: none;
-    transition: all 0.2s ease;
-    animation: fadeUp 0.3s ease-out backwards;
-    animation-delay: calc(var(--index, 0) * 0.02s);
-  }
-
-  .date-card:hover {
-    border-color: var(--primary);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px oklch(0 0 0 / 8%);
-  }
-
-  :global(.dark) .date-card:hover {
-    background: oklch(0.16 0.02 260);
-    box-shadow: 0 4px 20px oklch(0.55 0.12 280 / 15%);
-  }
-
-  .date-day {
-    font-family: var(--font-mono);
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: var(--foreground);
-    width: 2.5rem;
-    text-align: center;
-  }
-
-  .date-info {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 0;
-    min-width: 0;
-  }
-
-  .date-weekday {
-    font-size: 0.75rem;
-    color: var(--muted-foreground);
-    text-transform: uppercase;
-    letter-spacing: 0.02em;
-  }
-
-  .date-full {
-    font-family: var(--font-mono);
-    font-size: 0.6875rem;
-    color: var(--muted-foreground);
-    opacity: 0.7;
-  }
-
-  .date-arrow {
-    color: var(--muted-foreground);
-    opacity: 0;
-    transform: translateX(-4px);
-    transition: all 0.2s ease;
-  }
-
-  .date-card:hover .date-arrow {
-    opacity: 1;
-    transform: translateX(0);
-    color: var(--primary);
-  }
-
-  /* Empty state */
-  .empty-state {
-    text-align: center;
-    padding: 4rem 2rem;
-    background: var(--muted);
-    border-radius: var(--radius);
-  }
-
-  .empty-icon {
-    color: var(--muted-foreground);
-    opacity: 0.5;
-    margin-bottom: 1.5rem;
-  }
-
-  .empty-state h2 {
-    font-family: var(--font-serif);
-    font-size: 1.25rem;
-    font-weight: 400;
-    margin: 0 0 0.5rem 0;
-  }
-
-  .empty-state p {
-    font-size: 0.875rem;
-    color: var(--muted-foreground);
-    margin: 0;
-  }
-
-  @media (max-width: 640px) {
-    .archive-header h1 {
-      font-size: 2rem;
-    }
-
-    .dates-grid {
-      grid-template-columns: 1fr;
-    }
-  }
-</style>
