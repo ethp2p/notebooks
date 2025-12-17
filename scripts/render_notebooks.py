@@ -4,12 +4,17 @@ Render notebooks to HTML.
 
 Renders Quarto notebooks with incremental support - only re-renders when
 notebook source or data changes. Generates a manifest for Astro to consume.
+
+Notebooks within each date are rendered in parallel for faster builds.
 """
 import argparse
 import hashlib
 import json
+import shutil
 import subprocess
 import sys
+import tempfile
+from concurrent.futures import ProcessPoolExecutor, as_completed
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -94,9 +99,6 @@ def render_notebook(
     output_dir: Path,
 ) -> tuple[bool, str]:
     """Render a single notebook for a specific date."""
-    import shutil
-    import tempfile
-
     output_dir.mkdir(parents=True, exist_ok=True)
     output_file = output_dir / f"{notebook_id}.html"
 
@@ -161,6 +163,31 @@ def render_notebook(
             shutil.copytree(files_dir, dest_files)
 
     return True, str(output_file)
+
+
+def render_notebook_task(
+    notebook_id: str,
+    notebook_source_str: str,
+    target_date: str,
+    output_dir_str: str,
+) -> dict:
+    """
+    Worker function for parallel rendering.
+
+    Takes string paths (for pickling across processes) and returns a result dict.
+    """
+    notebook_source = Path(notebook_source_str)
+    output_dir = Path(output_dir_str)
+
+    ok, result = render_notebook(notebook_id, notebook_source, target_date, output_dir)
+
+    return {
+        "notebook_id": notebook_id,
+        "date": target_date,
+        "success": ok,
+        "result": result,
+        "notebook_hash": hash_file(notebook_source) if ok else "",
+    }
 
 
 def main() -> None:
@@ -228,6 +255,9 @@ def main() -> None:
     skip_count = 0
     failed = []
 
+    # Use process pool for parallel rendering (one process per notebook)
+    max_workers = min(len(notebooks), 4)  # Cap at 4 to avoid overwhelming system
+
     for date in dates_to_render:
         # Determine output path
         if date == latest_date:
@@ -238,6 +268,8 @@ def main() -> None:
         if date not in manifest["dates"]:
             manifest["dates"][date] = {}
 
+        # Collect notebooks that need rendering for this date
+        to_render = []
         for nb in notebooks:
             notebook_id = nb["id"]
             notebook_source = Path(nb["source"])
@@ -249,30 +281,48 @@ def main() -> None:
                 skip_count += 1
                 continue
 
-            print(f"  Rendering: {notebook_id} @ {date}...", end=" ", flush=True)
+            to_render.append((notebook_id, str(notebook_source)))
 
-            ok, result = render_notebook(
-                notebook_id, notebook_source, date, date_output_dir
-            )
+        if not to_render:
+            continue
 
-            if ok:
-                print("OK")
-                success_count += 1
+        # Render notebooks in parallel
+        print(f"  Rendering {len(to_render)} notebook(s) @ {date} in parallel...")
 
-                # Update manifest
-                if date == latest_date:
-                    html_path = f"latest/{notebook_id}.html"
+        with ProcessPoolExecutor(max_workers=max_workers) as executor:
+            futures = {
+                executor.submit(
+                    render_notebook_task,
+                    notebook_id,
+                    notebook_source_str,
+                    date,
+                    str(date_output_dir),
+                ): notebook_id
+                for notebook_id, notebook_source_str in to_render
+            }
+
+            for future in as_completed(futures):
+                result = future.result()
+                notebook_id = result["notebook_id"]
+
+                if result["success"]:
+                    print(f"    {notebook_id}: OK")
+                    success_count += 1
+
+                    # Update manifest
+                    if date == latest_date:
+                        html_path = f"latest/{notebook_id}.html"
+                    else:
+                        html_path = f"archive/{date}/{notebook_id}.html"
+
+                    manifest["dates"][date][notebook_id] = {
+                        "rendered_at": datetime.now(timezone.utc).isoformat(),
+                        "notebook_hash": result["notebook_hash"],
+                        "html_path": html_path,
+                    }
                 else:
-                    html_path = f"archive/{date}/{notebook_id}.html"
-
-                manifest["dates"][date][notebook_id] = {
-                    "rendered_at": datetime.now(timezone.utc).isoformat(),
-                    "notebook_hash": hash_file(notebook_source),
-                    "html_path": html_path,
-                }
-            else:
-                print("FAILED")
-                failed.append((date, notebook_id, result))
+                    print(f"    {notebook_id}: FAILED")
+                    failed.append((date, notebook_id, result["result"]))
 
     # Update latest date
     manifest["latest_date"] = latest_date
