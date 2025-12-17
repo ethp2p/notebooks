@@ -28,6 +28,7 @@ site/public/rendered/
 
 # Quarto build output (notebooks still use Quarto for rendering)
 _site/
+site_libs/
 .quarto/
 _freeze/
 **/*.quarto_ipynb

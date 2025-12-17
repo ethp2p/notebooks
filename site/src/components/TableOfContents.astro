@@ -1,22 +1,19 @@
 ---
 // Floating Table of Contents component
 // Extracts headings from notebook content and displays a sticky TOC
+import { Icon } from './Icon';
 ---
 
-<nav class="sticky top-8 max-h-[calc(100vh-4rem)] overflow-y-auto p-5 bg-card border border-border rounded-lg text-[0.8125rem] transition-all duration-300 dark:bg-[oklch(0.14_0.018_260/80%)] dark:backdrop-blur-lg max-xl:hidden" id="toc">
+<nav class="sticky top-8 max-h-[calc(100vh-4rem)] overflow-y-auto p-5 bg-card border border-border  text-[0.8125rem] transition-all duration-300 dark:bg-[oklch(0.14_0.018_260/80%)] dark:backdrop-blur-lg max-xl:hidden" id="toc">
   <div class="flex items-center gap-2 mb-4 pb-3 border-b border-border text-muted-foreground">
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <line x1="3" y1="6" x2="21" y2="6" />
-      <line x1="3" y1="12" x2="15" y2="12" />
-      <line x1="3" y1="18" x2="18" y2="18" />
-    </svg>
+    <Icon name="List" size={14} client:load />
     <span class="font-mono font-semibold text-[0.6875rem] uppercase tracking-widest">On this page</span>
   </div>
   <ul class="list-none p-0 m-0 flex flex-col gap-0.5" id="toc-list">
     <!-- Populated by JavaScript -->
   </ul>
-  <div class="mt-4 pt-3 border-t border-border h-[3px] bg-muted rounded-sm overflow-hidden">
-    <div class="h-full bg-gradient-to-r from-primary to-accent rounded-sm w-0 transition-[width] duration-100" id="toc-progress-bar"></div>
+  <div class="mt-4 pt-3 border-t border-border h-[3px] bg-muted  overflow-hidden">
+    <div class="h-full bg-gradient-to-r from-primary to-accent  w-0 transition-[width] duration-100" id="toc-progress-bar"></div>
   </div>
 </nav>
 
@@ -60,7 +57,7 @@
       const a = document.createElement('a');
       a.href = `#${heading.id}`;
       a.textContent = heading.textContent;
-      a.className = 'toc-link block py-1.5 px-2.5 text-muted-foreground no-underline rounded-lg border-l-2 border-transparent -ml-2.5 transition-all duration-200 leading-snug text-xs hover:text-foreground hover:bg-muted hover:border-l-[var(--mauve-6)]';
+      a.className = 'toc-link block py-1.5 px-2.5 text-muted-foreground no-underline  border-l-2 border-transparent -ml-2.5 transition-all duration-200 leading-snug text-xs hover:text-foreground hover:bg-muted hover:border-l-[var(--mauve-6)]';
 
       li.appendChild(a);
       tocList.appendChild(li);

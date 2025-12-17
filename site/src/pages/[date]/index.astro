@@ -1,10 +1,17 @@
 ---
-import BaseLayout from '../../../layouts/BaseLayout.astro';
-import { NotebookIcon } from '../../../components/NotebookIcon';
-import { Icon } from '../../../components/Icon';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { NotebookIcon } from '../../components/NotebookIcon';
+import { Icon } from '../../components/Icon';
 import yaml from 'js-yaml';
 import fs from 'node:fs';
 import path from 'node:path';
+
+// Helper to convert YYYYMMDD to YYYY-MM-DD
+const toIsoDate = (compact: string) =>
+  `${compact.slice(0,4)}-${compact.slice(4,6)}-${compact.slice(6,8)}`;
+
+// Helper to convert YYYY-MM-DD to YYYYMMDD
+const toCompactDate = (iso: string) => iso.replace(/-/g, '');
 
 // Load notebooks config
 const configPath = path.join(process.cwd(), 'config', 'notebooks.yaml');
@@ -34,26 +41,32 @@ export function getStaticPaths() {
   const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'));
   const dates = Object.keys(manifest.dates || {});
 
-  return dates.map(date => ({
-    params: { date },
+  // Return compact date format (YYYYMMDD)
+  return dates.map(isoDate => ({
+    params: { date: isoDate.replace(/-/g, '') },
+    props: { isoDate }
   }));
 }
 
 const { date } = Astro.params;
-const dateData = manifest.dates[date!] || {};
+const { isoDate } = Astro.props;
+
+// Use provided isoDate or convert from compact format
+const dateIso = isoDate || toIsoDate(date!);
+const dateData = manifest.dates[dateIso] || {};
 const notebooks = config.notebooks.sort((a, b) => a.order - b.order);
 
 // Filter to notebooks that have been rendered for this date
 const availableNotebooks = notebooks.filter(nb => dateData[nb.id]);
 
-// Get all dates for navigation
-const allDates = Object.keys(manifest.dates).sort((a, b) => b.localeCompare(a));
-const currentIndex = allDates.indexOf(date!);
-const prevDate = currentIndex < allDates.length - 1 ? allDates[currentIndex + 1] : null;
-const nextDate = currentIndex > 0 ? allDates[currentIndex - 1] : null;
+// Get all dates for navigation (sorted newest first)
+const allDatesIso = Object.keys(manifest.dates).sort((a, b) => b.localeCompare(a));
+const currentIndex = allDatesIso.indexOf(dateIso);
+const prevDateIso = currentIndex < allDatesIso.length - 1 ? allDatesIso[currentIndex + 1] : null;
+const nextDateIso = currentIndex > 0 ? allDatesIso[currentIndex - 1] : null;
 
 // Format date for display
-const dateObj = new Date(date + 'T00:00:00Z');
+const dateObj = new Date(dateIso + 'T00:00:00Z');
 const formattedDate = dateObj.toLocaleDateString('en-US', {
   weekday: 'long',
   month: 'long',
@@ -68,8 +81,8 @@ const year = dateObj.getFullYear();
 
 ---
 
-<BaseLayout title={`Archive: ${date}`}>
-  <div class="archive-date-page">
+<BaseLayout title={`${formattedDate}`}>
+  <div class="date-page">
     <!-- Breadcrumb -->
     <nav class="breadcrumb">
       <a href="/" class="breadcrumb-link">
@@ -77,68 +90,29 @@ const year = dateObj.getFullYear();
         <span>Home</span>
       </a>
       <span class="breadcrumb-sep">/</span>
-      <a href="/archive" class="breadcrumb-link">Archive</a>
-      <span class="breadcrumb-sep">/</span>
-      <span class="breadcrumb-current">{date}</span>
+      <span class="breadcrumb-current">{dateIso}</span>
     </nav>
 
     <!-- Header -->
     <header class="date-header">
       <div class="date-display">
-        <div class="date-calendar">
+        <div class="date-calendar-badge">
           <span class="date-month">{monthShort}</span>
           <span class="date-day">{dayNum}</span>
           <span class="date-year">{year}</span>
         </div>
         <div class="date-info">
           <span class="date-weekday">{dayOfWeek}</span>
-          <h1 class="date-title">Snapshot Archive</h1>
+          <h1 class="date-title">Daily Snapshot</h1>
           <p class="date-subtitle">{formattedDate}</p>
         </div>
       </div>
-
     </header>
-
-    <!-- Stats bar -->
-    <div class="stats-bar">
-      <div class="stat">
-        <span class="stat-value">{availableNotebooks.length}</span>
-        <span class="stat-label">Notebooks</span>
-      </div>
-      <div class="stat-divider"></div>
-      <div class="stat">
-        <span class="stat-value">{date}</span>
-        <span class="stat-label">Snapshot Date</span>
-      </div>
-    </div>
-
-    <!-- Navigation arrows -->
-    <div class="date-nav">
-      {prevDate ? (
-        <a href={`/archive/${prevDate}`} class="nav-arrow nav-prev">
-          <Icon name="ChevronLeft" size={16} />
-          <span class="nav-label">
-            <span class="nav-hint">Previous</span>
-            <span class="nav-date">{prevDate}</span>
-          </span>
-        </a>
-      ) : <div class="nav-placeholder"></div>}
-
-      {nextDate ? (
-        <a href={`/archive/${nextDate}`} class="nav-arrow nav-next">
-          <span class="nav-label">
-            <span class="nav-hint">Next</span>
-            <span class="nav-date">{nextDate}</span>
-          </span>
-          <Icon name="ChevronRight" size={16} />
-        </a>
-      ) : <div class="nav-placeholder"></div>}
-    </div>
 
     <!-- Notebooks section -->
     <section class="notebooks-section">
       <h2 class="section-title">
-        <span class="section-title-text">Available Notebooks</span>
+        <span class="section-title-text">Analysis Notebooks</span>
         <span class="section-title-line"></span>
       </h2>
 
@@ -146,7 +120,7 @@ const year = dateObj.getFullYear();
         <div class="notebooks-grid">
           {availableNotebooks.map((nb, index) => (
             <a
-              href={`/archive/${date}/${nb.id}`}
+              href={`/${date}/${nb.id}`}
               class="notebook-card"
               style={`--delay: ${index * 0.08}s`}
             >
@@ -171,25 +145,24 @@ const year = dateObj.getFullYear();
           </div>
           <h3 class="empty-title">No Notebooks Available</h3>
           <p class="empty-text">No analysis notebooks have been rendered for this date.</p>
-          <a href="/archive" class="empty-link">Browse other dates</a>
         </div>
       )}
     </section>
 
     <!-- Back link -->
     <div class="back-section">
-      <a href="/archive" class="back-link">
+      <a href="/" class="back-link">
         <Icon name="ArrowLeft" size={16} />
-        <span>Back to Archive</span>
+        <span>Back to Home</span>
       </a>
     </div>
   </div>
 </BaseLayout>
 
 <style>
-  @reference "../../../styles/global.css";
+  @reference "../../styles/global.css";
 
-  .archive-date-page {
+  .date-page {
     @apply max-w-3xl;
     animation: fadeUp 0.5s ease-out;
   }
@@ -217,32 +190,32 @@ const year = dateObj.getFullYear();
 
   /* Header */
   .date-header {
-    @apply mb-8 pb-8;
+    @apply mb-3 pb-8;
   }
 
   .date-display {
-    @apply flex items-center gap-6;
+    @apply flex items-center gap-5;
   }
 
-  .date-calendar {
-    @apply flex flex-col items-center justify-center w-20 h-24  border-2 border-primary bg-primary/5;
+  .date-calendar-badge {
+    @apply flex flex-col items-center justify-center w-16 h-20  border-2 border-primary bg-primary/5;
     animation: fadeUp 0.4s ease-out 0.1s backwards;
   }
 
-  :global(.dark) .date-calendar {
+  :global(.dark) .date-calendar-badge {
     @apply bg-primary/10;
   }
 
   .date-month {
-    @apply font-mono text-xs font-bold uppercase tracking-wider text-primary;
+    @apply font-mono text-[0.625rem] font-bold uppercase tracking-wider text-primary;
   }
 
   .date-day {
-    @apply font-serif text-3xl font-normal text-foreground leading-none -tracking-tight;
+    @apply font-serif text-2xl font-normal text-foreground leading-none -tracking-tight;
   }
 
   .date-year {
-    @apply font-mono text-xs text-muted-foreground;
+    @apply font-mono text-[0.625rem] text-muted-foreground;
   }
 
   .date-info {
@@ -251,75 +224,15 @@ const year = dateObj.getFullYear();
   }
 
   .date-weekday {
-    @apply font-mono text-xs font-semibold uppercase tracking-widest text-primary mb-1;
+    @apply font-mono text-[0.625rem] font-semibold uppercase tracking-widest text-primary mb-0.5;
   }
 
   .date-title {
-    @apply font-serif text-3xl font-normal text-foreground m-0 mb-1 leading-tight -tracking-wide;
+    @apply font-serif text-2xl font-normal text-foreground m-0 mb-0.5 leading-tight -tracking-wide;
   }
 
   .date-subtitle {
     @apply font-sans text-sm text-muted-foreground m-0;
-  }
-
-  /* Stats bar */
-  .stats-bar {
-    @apply flex items-center gap-6 mb-6 py-4 px-6  bg-muted/50 border border-border;
-    animation: fadeUp 0.4s ease-out 0.25s backwards;
-  }
-
-  .stat {
-    @apply flex items-baseline gap-2;
-  }
-
-  .stat-value {
-    @apply font-mono text-lg font-semibold text-foreground;
-  }
-
-  .stat-label {
-    @apply font-mono text-xs uppercase tracking-wider text-muted-foreground;
-  }
-
-  .stat-divider {
-    @apply w-px h-6 bg-border;
-  }
-
-  /* Date navigation */
-  .date-nav {
-    @apply flex justify-between items-center gap-4 mb-10;
-    animation: fadeUp 0.4s ease-out 0.3s backwards;
-  }
-
-  .nav-arrow {
-    @apply flex items-center gap-2 py-2 px-3  text-muted-foreground no-underline transition-all duration-200;
-  }
-
-  .nav-arrow:hover {
-    @apply text-foreground bg-muted;
-  }
-
-  .nav-prev {
-    @apply pr-4;
-  }
-
-  .nav-next {
-    @apply pl-4 text-right;
-  }
-
-  .nav-label {
-    @apply flex flex-col;
-  }
-
-  .nav-hint {
-    @apply text-xs uppercase tracking-wider opacity-60;
-  }
-
-  .nav-date {
-    @apply font-mono text-sm;
-  }
-
-  .nav-placeholder {
-    @apply w-32;
   }
 
   /* Section */
@@ -411,15 +324,7 @@ const year = dateObj.getFullYear();
   }
 
   .empty-text {
-    @apply text-sm text-muted-foreground m-0 mb-6;
-  }
-
-  .empty-link {
-    @apply inline-flex items-center gap-2 font-mono text-sm text-primary no-underline transition-colors duration-200;
-  }
-
-  .empty-link:hover {
-    @apply text-accent underline;
+    @apply text-sm text-muted-foreground m-0;
   }
 
   /* Back section */
@@ -442,40 +347,16 @@ const year = dateObj.getFullYear();
       @apply gap-4;
     }
 
-    .date-calendar {
-      @apply w-16 h-20;
+    .date-calendar-badge {
+      @apply w-14 h-16;
     }
 
     .date-day {
-      @apply text-2xl;
+      @apply text-xl;
     }
 
     .date-title {
-      @apply text-2xl;
-    }
-
-    .stats-bar {
-      @apply flex-col items-start gap-3 px-4 py-3;
-    }
-
-    .stat-divider {
-      @apply w-full h-px;
-    }
-
-    .date-nav {
-      @apply flex-col gap-2;
-    }
-
-    .nav-arrow {
-      @apply w-full justify-between;
-    }
-
-    .nav-prev, .nav-next {
-      @apply px-4;
-    }
-
-    .nav-placeholder {
-      @apply hidden;
+      @apply text-xl;
     }
 
     .notebook-card {

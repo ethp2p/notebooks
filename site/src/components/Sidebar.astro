@@ -1,7 +1,12 @@
 ---
+import { NotebookIcon } from './NotebookIcon';
+import { Icon } from './Icon';
 import yaml from 'js-yaml';
 import fs from 'node:fs';
 import path from 'node:path';
+
+// Helper to convert YYYY-MM-DD to YYYYMMDD
+const toCompactDate = (iso: string) => iso.replace(/-/g, '');
 
 // Load notebooks config
 const configPath = path.join(process.cwd(), 'config', 'notebooks.yaml');
@@ -11,6 +16,7 @@ const config = yaml.load(configContent) as {
     id: string;
     title: string;
     description: string;
+    icon?: string;
     order: number;
   }>;
 };
@@ -47,8 +53,8 @@ const formatDate = (dateStr: string) => {
   <div class="flex flex-col gap-2">
     <div class="flex items-center justify-between px-2 mb-1">
       <span class="font-mono text-[0.625rem] font-semibold uppercase tracking-widest text-muted-foreground">Latest</span>
-      <span class="flex items-center gap-1.5 font-mono text-[0.5625rem] font-medium py-0.5 px-2 bg-muted rounded-full text-muted-foreground">
-        <span class="w-1.5 h-1.5 bg-accent rounded-full animate-pulse"></span>
+      <span class="flex items-center gap-1.5 font-mono text-[0.5625rem] font-medium py-0.5 px-2 bg-muted  text-muted-foreground">
+        <span class="w-1.5 h-1.5 bg-accent  animate-pulse"></span>
         {formatDate(latestDate)}
       </span>
     </div>
@@ -61,20 +67,15 @@ const formatDate = (dateStr: string) => {
             <a
               href={href}
               class:list={[
-                'group relative flex items-center gap-2.5 py-2 px-2.5 text-muted-foreground no-underline rounded-lg text-[0.8125rem] transition-all duration-200',
-                'before:content-[\'\'] before:absolute before:left-0 before:top-1/2 before:w-[3px] before:h-0 before:bg-primary before:rounded-r before:-translate-y-1/2 before:transition-all before:duration-200',
+                'group relative flex items-center gap-2.5 py-2 px-2.5 text-muted-foreground no-underline  text-[0.8125rem] transition-all duration-200',
+                'before:content-[\'\'] before:absolute before:left-0 before:top-1/2 before:w-[3px] before:h-0 before:bg-primary before: before:-translate-y-1/2 before:transition-all before:duration-200',
                 'hover:text-foreground hover:bg-muted hover:before:h-1/2',
                 isActive ? 'text-foreground bg-[var(--mauve-4)] font-medium before:!h-[60%]' : ''
               ]}
               title={nb.description}
             >
               <span class="flex items-center justify-center shrink-0 opacity-50 transition-all duration-200 group-hover:opacity-100 group-hover:text-primary group-[.active]:opacity-100 group-[.active]:text-primary">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                  <polyline points="14 2 14 8 20 8" />
-                  <line x1="16" y1="13" x2="8" y2="13" />
-                  <line x1="16" y1="17" x2="8" y2="17" />
-                </svg>
+                <NotebookIcon icon={nb.icon} size={14} />
               </span>
               <span class="flex-1 min-w-0 overflow-hidden text-ellipsis whitespace-nowrap">{nb.title}</span>
             </a>
@@ -84,61 +85,38 @@ const formatDate = (dateStr: string) => {
     </ul>
   </div>
 
-  <!-- Historical Section -->
+  <!-- Previous Snapshots Section -->
   {historicalDates.length > 0 && (
     <div class="flex flex-col gap-2">
       <div class="flex items-center justify-between px-2 mb-1">
-        <span class="font-mono text-[0.625rem] font-semibold uppercase tracking-widest text-muted-foreground">Historical</span>
+        <span class="font-mono text-[0.625rem] font-semibold uppercase tracking-widest text-muted-foreground">Previous</span>
         <span class="font-mono text-[0.5625rem] font-medium text-muted-foreground opacity-70">{historicalDates.length} dates</span>
       </div>
       <ul class="list-none p-0 m-0 flex flex-col gap-0.5">
         {historicalDates.slice(0, 7).map((date, index) => {
-          const href = `${base}archive/${date}`;
-          const isActive = currentPath.includes(`/archive/${date}`);
+          const compactDate = toCompactDate(date);
+          const href = `${base}${compactDate}`;
+          const isActive = currentPath.startsWith(`/${compactDate}`);
           return (
             <li class="animate-[slideInLeft_0.3s_ease-out_backwards]" style={`animation-delay: calc(${index} * 0.03s)`}>
               <a
                 href={href}
                 class:list={[
-                  'group relative flex items-center gap-2.5 py-2 px-2.5 text-muted-foreground no-underline rounded-lg text-[0.8125rem] transition-all duration-200',
-                  'before:content-[\'\'] before:absolute before:left-0 before:top-1/2 before:w-[3px] before:h-0 before:bg-primary before:rounded-r before:-translate-y-1/2 before:transition-all before:duration-200',
+                  'group relative flex items-center gap-2.5 py-2 px-2.5 text-muted-foreground no-underline  text-[0.8125rem] transition-all duration-200',
+                  'before:content-[\'\'] before:absolute before:left-0 before:top-1/2 before:w-[3px] before:h-0 before:bg-primary before: before:-translate-y-1/2 before:transition-all before:duration-200',
                   'hover:text-foreground hover:bg-muted hover:before:h-1/2',
                   isActive ? 'text-foreground bg-[var(--mauve-4)] font-medium before:!h-[60%]' : ''
                 ]}
               >
                 <span class="flex items-center justify-center shrink-0 opacity-50 transition-all duration-200 group-hover:opacity-100 group-hover:text-primary">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-                    <line x1="16" y1="2" x2="16" y2="6" />
-                    <line x1="8" y1="2" x2="8" y2="6" />
-                    <line x1="3" y1="10" x2="21" y2="10" />
-                  </svg>
+                  <Icon name="Calendar" size={14} client:load />
                 </span>
                 <span class="flex-1 min-w-0 overflow-hidden text-ellipsis whitespace-nowrap font-mono text-xs tracking-tight">{formatDate(date)}</span>
-                <span class="font-mono text-[0.5625rem] text-muted-foreground opacity-60 py-0.5 px-1 bg-muted rounded">{date.slice(0, 4)}</span>
+                <span class="font-mono text-[0.5625rem] text-muted-foreground opacity-60 py-0.5 px-1 bg-muted">{date.slice(0, 4)}</span>
               </a>
             </li>
           );
         })}
-        {historicalDates.length > 7 && (
-          <li>
-            <a href={`${base}archive`} class="group relative flex items-center gap-2.5 py-2 px-2.5 text-muted-foreground no-underline rounded-lg text-[0.8125rem] transition-all duration-200 mt-1 hover:text-foreground hover:bg-muted">
-              <span class="flex items-center justify-center shrink-0 opacity-50 transition-all duration-200 group-hover:opacity-100 group-hover:text-primary">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <circle cx="12" cy="12" r="1" />
-                  <circle cx="19" cy="12" r="1" />
-                  <circle cx="5" cy="12" r="1" />
-                </svg>
-              </span>
-              <span class="flex-1 min-w-0 overflow-hidden text-ellipsis whitespace-nowrap">View all dates</span>
-              <span class="opacity-0 -translate-x-1 transition-all duration-200 group-hover:opacity-100 group-hover:translate-x-0">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <polyline points="9 18 15 12 9 6"></polyline>
-                </svg>
-              </span>
-            </a>
-          </li>
-        )}
       </ul>
     </div>
   )}

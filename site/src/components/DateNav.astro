@@ -1,15 +1,19 @@
 ---
 // Sticky date navigation with prev/next arrows
+import { Icon } from './Icon';
 import fs from 'node:fs';
 import path from 'node:path';
 
 interface Props {
-  currentDate: string;
+  currentDate: string; // ISO format YYYY-MM-DD
   notebookId: string;
   isLatest?: boolean;
 }
 
 const { currentDate, notebookId, isLatest = false } = Astro.props;
+
+// Helper to convert YYYY-MM-DD to YYYYMMDD
+const toCompactDate = (iso: string) => iso.replace(/-/g, '');
 
 // Load manifest to get available dates
 const manifestPath = path.join(process.cwd(), 'public', 'rendered', 'manifest.json');
@@ -27,14 +31,14 @@ const currentIndex = dates.indexOf(currentDate);
 const prevDate = currentIndex < dates.length - 1 ? dates[currentIndex + 1] : null;
 const nextDate = currentIndex > 0 ? dates[currentIndex - 1] : null;
 
-// Build URLs
+// Build URLs - use /notebooks/ for latest, /YYYYMMDD/ for historical
 const base = import.meta.env.BASE_URL;
 const buildUrl = (date: string | null) => {
   if (!date) return null;
   if (date === latestDate) {
     return `${base}notebooks/${notebookId}`;
   }
-  return `${base}archive/${date}/${notebookId}`;
+  return `${base}${toCompactDate(date)}/${notebookId}`;
 };
 
 const prevUrl = buildUrl(prevDate);
@@ -62,37 +66,30 @@ const formatShortDate = (dateStr: string) => {
 };
 ---
 
-<div class="flex items-center justify-between gap-4 py-3.5 px-5 bg-card border border-border rounded-lg mb-8 sticky top-4 z-40 backdrop-blur-xl transition-all dark:bg-[oklch(0.14_0.018_260/90%)] dark:shadow-[0_1px_2px_oklch(0_0_0/20%),0_0_30px_oklch(0.55_0.12_280/8%)]">
+<div class="flex items-center justify-between gap-4 py-3.5 px-5 bg-card border border-border  mb-8 sticky top-4 z-40 backdrop-blur-xl transition-all dark:bg-[oklch(0.14_0.018_260/90%)] dark:shadow-[0_1px_2px_oklch(0_0_0/20%),0_0_30px_oklch(0.55_0.12_280/8%)]">
   <a
     href={prevUrl || '#'}
     class:list={[
-      'group flex items-center gap-2 py-2.5 px-3.5 rounded-lg text-muted-foreground no-underline text-xs transition-all min-w-[90px] border border-transparent justify-start',
+      'group flex items-center gap-2 py-2.5 px-3.5  text-muted-foreground no-underline text-xs transition-all min-w-[90px] border border-transparent justify-start',
       'hover:bg-primary hover:text-primary-foreground hover:border-primary hover:-translate-x-0.5',
       { 'opacity-25 cursor-not-allowed pointer-events-none': !prevUrl }
     ]}
     aria-label="Previous date"
     aria-disabled={!prevUrl}
   >
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <polyline points="15 18 9 12 15 6"></polyline>
-    </svg>
+    <Icon name="ChevronLeft" size={18} client:load />
     {prevDate && <span class="font-mono text-[0.6875rem] tracking-wide hidden sm:inline">{formatShortDate(prevDate)}</span>}
   </a>
 
   <div class="flex flex-col items-center gap-1 flex-1 text-center">
     <span class="flex items-center gap-1.5 font-mono text-[0.625rem] text-muted-foreground uppercase tracking-widest">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-        <line x1="16" y1="2" x2="16" y2="6" />
-        <line x1="8" y1="2" x2="8" y2="6" />
-        <line x1="3" y1="10" x2="21" y2="10" />
-      </svg>
+      <Icon name="Calendar" size={14} client:load />
       Data snapshot
     </span>
     <span class="font-serif font-normal text-base text-foreground flex items-center gap-2.5 -tracking-tight sm:text-base text-sm">
       {formatDate(currentDate)}
       {isLatest && (
-        <span class="font-mono text-[0.5625rem] font-semibold uppercase tracking-widest py-0.5 px-2 bg-gradient-to-br from-primary to-accent text-primary-foreground rounded-full animate-pulse-glow">
+        <span class="font-mono text-[0.5625rem] font-semibold uppercase tracking-widest py-0.5 px-2 bg-gradient-to-br from-primary to-accent text-primary-foreground  animate-pulse-glow">
           Latest
         </span>
       )}
@@ -102,7 +99,7 @@ const formatShortDate = (dateStr: string) => {
   <a
     href={nextUrl || '#'}
     class:list={[
-      'group flex items-center gap-2 py-2.5 px-3.5 rounded-lg text-muted-foreground no-underline text-xs transition-all min-w-[90px] border border-transparent justify-end',
+      'group flex items-center gap-2 py-2.5 px-3.5  text-muted-foreground no-underline text-xs transition-all min-w-[90px] border border-transparent justify-end',
       'hover:bg-primary hover:text-primary-foreground hover:border-primary hover:translate-x-0.5',
       { 'opacity-25 cursor-not-allowed pointer-events-none': !nextUrl }
     ]}
@@ -110,8 +107,6 @@ const formatShortDate = (dateStr: string) => {
     aria-disabled={!nextUrl}
   >
     {nextDate && <span class="font-mono text-[0.6875rem] tracking-wide hidden sm:inline">{formatShortDate(nextDate)}</span>}
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <polyline points="9 18 15 12 9 6"></polyline>
-    </svg>
+    <Icon name="ChevronRight" size={18} client:load />
   </a>
 </div>

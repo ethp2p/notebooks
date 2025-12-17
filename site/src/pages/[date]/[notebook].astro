@@ -1,10 +1,17 @@
 ---
-import BaseLayout from '../../../layouts/BaseLayout.astro';
-import NotebookEmbed from '../../../components/NotebookEmbed.astro';
-import DateNav from '../../../components/DateNav.astro';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import NotebookEmbed from '../../components/NotebookEmbed.astro';
+import DateNav from '../../components/DateNav.astro';
 import yaml from 'js-yaml';
 import fs from 'node:fs';
 import path from 'node:path';
+
+// Helper to convert YYYYMMDD to YYYY-MM-DD
+const toIsoDate = (compact: string) =>
+  `${compact.slice(0,4)}-${compact.slice(4,6)}-${compact.slice(6,8)}`;
+
+// Helper to convert YYYY-MM-DD to YYYYMMDD
+const toCompactDate = (iso: string) => iso.replace(/-/g, '');
 
 // Load notebooks config
 const configPath = path.join(process.cwd(), 'config', 'notebooks.yaml');
@@ -37,14 +44,16 @@ export function getStaticPaths() {
   }
   const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'));
 
-  const paths: Array<{ params: { date: string; notebook: string } }> = [];
+  const paths: Array<{ params: { date: string; notebook: string }; props: { isoDate: string } }> = [];
 
-  for (const date of Object.keys(manifest.dates || {})) {
-    const dateData = manifest.dates[date];
+  for (const isoDate of Object.keys(manifest.dates || {})) {
+    const dateData = manifest.dates[isoDate];
+    const compactDate = isoDate.replace(/-/g, '');
     for (const nb of config.notebooks) {
       if (dateData[nb.id]) {
         paths.push({
-          params: { date, notebook: nb.id },
+          params: { date: compactDate, notebook: nb.id },
+          props: { isoDate }
         });
       }
     }
@@ -54,24 +63,28 @@ export function getStaticPaths() {
 }
 
 const { date, notebook: notebookId } = Astro.params;
+const { isoDate } = Astro.props;
+
+// Use provided isoDate or convert from compact format
+const dateIso = isoDate || toIsoDate(date!);
 const notebook = config.notebooks.find(nb => nb.id === notebookId);
 
 if (!notebook) {
   return Astro.redirect('/404');
 }
 
-const dateData = manifest.dates[date!] || {};
+const dateData = manifest.dates[dateIso] || {};
 const notebookData = dateData[notebook.id];
 
 if (!notebookData) {
-  return Astro.redirect(`/archive/${date}`);
+  return Astro.redirect(`/${date}`);
 }
 
-const htmlPath = notebookData.html_path || `archive/${date}/${notebook.id}.html`;
-const isLatest = date === manifest.latest_date;
+const htmlPath = notebookData.html_path || `archive/${dateIso}/${notebook.id}.html`;
+const isLatest = dateIso === manifest.latest_date;
 ---
 
-<BaseLayout title={`${notebook.title} - ${date}`} description={notebook.description} showToc={true}>
-  <DateNav currentDate={date!} notebookId={notebook.id} isLatest={isLatest} />
+<BaseLayout title={`${notebook.title} - ${dateIso}`} description={notebook.description} showToc={true}>
+  <DateNav currentDate={dateIso} notebookId={notebook.id} isLatest={isLatest} />
   <NotebookEmbed htmlPath={htmlPath} title={notebook.title} />
 </BaseLayout>
