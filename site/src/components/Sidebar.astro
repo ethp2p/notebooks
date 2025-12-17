@@ -42,28 +42,33 @@ const formatDate = (dateStr: string) => {
 };
 ---
 
-<nav class="sidebar-nav">
+<nav class="flex flex-col gap-8">
   <!-- Latest Section -->
-  <div class="sidebar-section">
-    <div class="sidebar-section-header">
-      <span class="sidebar-section-title">Latest</span>
-      <span class="sidebar-section-badge">
-        <span class="badge-dot"></span>
+  <div class="flex flex-col gap-2">
+    <div class="flex items-center justify-between px-2 mb-1">
+      <span class="font-mono text-[0.625rem] font-semibold uppercase tracking-widest text-muted-foreground">Latest</span>
+      <span class="flex items-center gap-1.5 font-mono text-[0.5625rem] font-medium py-0.5 px-2 bg-muted rounded-full text-muted-foreground">
+        <span class="w-1.5 h-1.5 bg-accent rounded-full animate-pulse"></span>
         {formatDate(latestDate)}
       </span>
     </div>
-    <ul class="sidebar-list">
+    <ul class="list-none p-0 m-0 flex flex-col gap-0.5">
       {notebooks.map((nb, index) => {
         const href = `${base}notebooks/${nb.id}`;
         const isActive = currentPath.includes(`/notebooks/${nb.id}`);
         return (
-          <li style={`--index: ${index}`}>
+          <li class="animate-[slideInLeft_0.3s_ease-out_backwards]" style={`animation-delay: calc(${index} * 0.03s)`}>
             <a
               href={href}
-              class:list={['sidebar-link', { active: isActive }]}
+              class:list={[
+                'group relative flex items-center gap-2.5 py-2 px-2.5 text-muted-foreground no-underline rounded-lg text-[0.8125rem] transition-all duration-200',
+                'before:content-[\'\'] before:absolute before:left-0 before:top-1/2 before:w-[3px] before:h-0 before:bg-primary before:rounded-r before:-translate-y-1/2 before:transition-all before:duration-200',
+                'hover:text-foreground hover:bg-muted hover:before:h-1/2',
+                isActive ? 'text-foreground bg-[var(--mauve-4)] font-medium before:!h-[60%]' : ''
+              ]}
               title={nb.description}
             >
-              <span class="sidebar-link-icon">
+              <span class="flex items-center justify-center shrink-0 opacity-50 transition-all duration-200 group-hover:opacity-100 group-hover:text-primary group-[.active]:opacity-100 group-[.active]:text-primary">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
                   <polyline points="14 2 14 8 20 8" />
@@ -71,7 +76,7 @@ const formatDate = (dateStr: string) => {
                   <line x1="16" y1="17" x2="8" y2="17" />
                 </svg>
               </span>
-              <span class="sidebar-link-text">{nb.title}</span>
+              <span class="flex-1 min-w-0 overflow-hidden text-ellipsis whitespace-nowrap">{nb.title}</span>
             </a>
           </li>
         );
@@ -81,22 +86,27 @@ const formatDate = (dateStr: string) => {
 
   <!-- Historical Section -->
   {historicalDates.length > 0 && (
-    <div class="sidebar-section">
-      <div class="sidebar-section-header">
-        <span class="sidebar-section-title">Historical</span>
-        <span class="sidebar-section-count">{historicalDates.length} dates</span>
+    <div class="flex flex-col gap-2">
+      <div class="flex items-center justify-between px-2 mb-1">
+        <span class="font-mono text-[0.625rem] font-semibold uppercase tracking-widest text-muted-foreground">Historical</span>
+        <span class="font-mono text-[0.5625rem] font-medium text-muted-foreground opacity-70">{historicalDates.length} dates</span>
       </div>
-      <ul class="sidebar-list">
+      <ul class="list-none p-0 m-0 flex flex-col gap-0.5">
         {historicalDates.slice(0, 7).map((date, index) => {
           const href = `${base}archive/${date}`;
           const isActive = currentPath.includes(`/archive/${date}`);
           return (
-            <li style={`--index: ${index}`}>
+            <li class="animate-[slideInLeft_0.3s_ease-out_backwards]" style={`animation-delay: calc(${index} * 0.03s)`}>
               <a
                 href={href}
-                class:list={['sidebar-link sidebar-link-date', { active: isActive }]}
+                class:list={[
+                  'group relative flex items-center gap-2.5 py-2 px-2.5 text-muted-foreground no-underline rounded-lg text-[0.8125rem] transition-all duration-200',
+                  'before:content-[\'\'] before:absolute before:left-0 before:top-1/2 before:w-[3px] before:h-0 before:bg-primary before:rounded-r before:-translate-y-1/2 before:transition-all before:duration-200',
+                  'hover:text-foreground hover:bg-muted hover:before:h-1/2',
+                  isActive ? 'text-foreground bg-[var(--mauve-4)] font-medium before:!h-[60%]' : ''
+                ]}
               >
-                <span class="sidebar-link-icon">
+                <span class="flex items-center justify-center shrink-0 opacity-50 transition-all duration-200 group-hover:opacity-100 group-hover:text-primary">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
                     <line x1="16" y1="2" x2="16" y2="6" />
@@ -104,24 +114,24 @@ const formatDate = (dateStr: string) => {
                     <line x1="3" y1="10" x2="21" y2="10" />
                   </svg>
                 </span>
-                <span class="sidebar-link-text">{formatDate(date)}</span>
-                <span class="sidebar-link-year">{date.slice(0, 4)}</span>
+                <span class="flex-1 min-w-0 overflow-hidden text-ellipsis whitespace-nowrap font-mono text-xs tracking-tight">{formatDate(date)}</span>
+                <span class="font-mono text-[0.5625rem] text-muted-foreground opacity-60 py-0.5 px-1 bg-muted rounded">{date.slice(0, 4)}</span>
               </a>
             </li>
           );
         })}
         {historicalDates.length > 7 && (
           <li>
-            <a href={`${base}archive`} class="sidebar-link sidebar-link-more">
-              <span class="sidebar-link-icon">
+            <a href={`${base}archive`} class="group relative flex items-center gap-2.5 py-2 px-2.5 text-muted-foreground no-underline rounded-lg text-[0.8125rem] transition-all duration-200 mt-1 hover:text-foreground hover:bg-muted">
+              <span class="flex items-center justify-center shrink-0 opacity-50 transition-all duration-200 group-hover:opacity-100 group-hover:text-primary">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <circle cx="12" cy="12" r="1" />
                   <circle cx="19" cy="12" r="1" />
                   <circle cx="5" cy="12" r="1" />
                 </svg>
               </span>
-              <span class="sidebar-link-text">View all dates</span>
-              <span class="sidebar-link-arrow">
+              <span class="flex-1 min-w-0 overflow-hidden text-ellipsis whitespace-nowrap">View all dates</span>
+              <span class="opacity-0 -translate-x-1 transition-all duration-200 group-hover:opacity-100 group-hover:translate-x-0">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <polyline points="9 18 15 12 9 6"></polyline>
                 </svg>
@@ -133,198 +143,3 @@ const formatDate = (dateStr: string) => {
     </div>
   )}
 </nav>
-
-<style>
-  .sidebar-nav {
-    display: flex;
-    flex-direction: column;
-    gap: 2rem;
-  }
-
-  .sidebar-section {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-
-  .sidebar-section-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 0.5rem;
-    margin-bottom: 0.25rem;
-  }
-
-  .sidebar-section-title {
-    font-family: var(--font-mono);
-    font-size: 0.625rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: var(--muted-foreground);
-  }
-
-  .sidebar-section-badge {
-    display: flex;
-    align-items: center;
-    gap: 0.375rem;
-    font-family: var(--font-mono);
-    font-size: 0.5625rem;
-    font-weight: 500;
-    padding: 0.1875rem 0.5rem;
-    background: var(--muted);
-    border-radius: 2rem;
-    color: var(--muted-foreground);
-  }
-
-  .badge-dot {
-    width: 6px;
-    height: 6px;
-    background: var(--accent);
-    border-radius: 50%;
-    animation: pulse 2s ease-in-out infinite;
-  }
-
-  @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.5; }
-  }
-
-  .sidebar-section-count {
-    font-family: var(--font-mono);
-    font-size: 0.5625rem;
-    font-weight: 500;
-    color: var(--muted-foreground);
-    opacity: 0.7;
-  }
-
-  .sidebar-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 0.125rem;
-  }
-
-  .sidebar-list li {
-    animation: slideIn 0.3s ease-out backwards;
-    animation-delay: calc(var(--index, 0) * 0.03s);
-  }
-
-  @keyframes slideIn {
-    from {
-      opacity: 0;
-      transform: translateX(-8px);
-    }
-    to {
-      opacity: 1;
-      transform: translateX(0);
-    }
-  }
-
-  .sidebar-link {
-    display: flex;
-    align-items: center;
-    gap: 0.625rem;
-    padding: 0.5rem 0.625rem;
-    color: var(--muted-foreground);
-    text-decoration: none;
-    border-radius: var(--radius);
-    font-size: 0.8125rem;
-    transition: all 0.2s ease;
-    position: relative;
-  }
-
-  .sidebar-link::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 50%;
-    width: 3px;
-    height: 0;
-    background: var(--primary);
-    border-radius: 0 2px 2px 0;
-    transform: translateY(-50%);
-    transition: height 0.2s ease;
-  }
-
-  .sidebar-link:hover {
-    color: var(--foreground);
-    background: var(--muted);
-  }
-
-  .sidebar-link:hover::before {
-    height: 50%;
-  }
-
-  .sidebar-link.active {
-    color: var(--foreground);
-    background: var(--mauve-4);
-    font-weight: 500;
-  }
-
-  .sidebar-link.active::before {
-    height: 60%;
-  }
-
-  .sidebar-link-icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    opacity: 0.5;
-    transition: all 0.2s ease;
-  }
-
-  .sidebar-link:hover .sidebar-link-icon,
-  .sidebar-link.active .sidebar-link-icon {
-    opacity: 1;
-    color: var(--primary);
-  }
-
-  .sidebar-link-text {
-    flex: 1;
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .sidebar-link-date .sidebar-link-text {
-    font-family: var(--font-mono);
-    font-size: 0.75rem;
-    letter-spacing: 0.01em;
-  }
-
-  .sidebar-link-year {
-    font-family: var(--font-mono);
-    font-size: 0.5625rem;
-    color: var(--muted-foreground);
-    opacity: 0.6;
-    padding: 0.125rem 0.25rem;
-    background: var(--muted);
-    border-radius: 0.25rem;
-  }
-
-  .sidebar-link-more {
-    color: var(--muted-foreground);
-    font-style: normal;
-    margin-top: 0.25rem;
-  }
-
-  .sidebar-link-more:hover {
-    color: var(--foreground);
-  }
-
-  .sidebar-link-arrow {
-    opacity: 0;
-    transform: translateX(-4px);
-    transition: all 0.2s ease;
-  }
-
-  .sidebar-link-more:hover .sidebar-link-arrow {
-    opacity: 1;
-    transform: translateX(0);
-  }
-</style>

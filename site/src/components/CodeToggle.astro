@@ -3,11 +3,11 @@
 // Persists state to localStorage
 ---
 
-<div class="code-toggle-container">
-  <label class="code-toggle">
-    <input type="checkbox" id="show-all-code" />
-    <span class="checkmark"></span>
-    <span class="label-text">Show all code</span>
+<div class="inline-block">
+  <label class="group inline-flex items-center gap-2 cursor-pointer text-[0.8125rem] text-muted-foreground select-none py-1.5 px-3 bg-muted rounded-md transition-all duration-150 hover:text-foreground hover:bg-[var(--mauve-3)]">
+    <input type="checkbox" id="show-all-code" class="peer absolute opacity-0 cursor-pointer h-0 w-0" />
+    <span class="relative h-3.5 w-3.5 bg-background border border-border rounded shrink-0 transition-all duration-150 group-hover:border-[var(--mauve-8)] peer-checked:bg-foreground peer-checked:border-foreground after:content-[''] after:absolute after:hidden after:left-1 after:top-px after:w-1 after:h-[0.45rem] after:border-background after:border-r-[1.5px] after:border-b-[1.5px] after:rotate-45 peer-checked:after:block"></span>
+    <span class="font-sans">Show all code</span>
   </label>
 </div>
 
@@ -69,77 +69,3 @@
   // Re-run on Astro page transitions
   document.addEventListener('astro:page-load', initCodeToggle);
 </script>
-
-<style>
-  .code-toggle-container {
-    display: inline-block;
-  }
-
-  .code-toggle {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    cursor: pointer;
-    font-size: 0.8125rem;
-    color: var(--muted-foreground);
-    user-select: none;
-    padding: 0.375rem 0.75rem;
-    background: var(--muted);
-    border-radius: 0.375rem;
-    transition: all 0.15s ease;
-  }
-
-  .code-toggle:hover {
-    color: var(--foreground);
-    background: var(--mauve-3);
-  }
-
-  .code-toggle input {
-    position: absolute;
-    opacity: 0;
-    cursor: pointer;
-    height: 0;
-    width: 0;
-  }
-
-  .checkmark {
-    position: relative;
-    height: 0.875rem;
-    width: 0.875rem;
-    background-color: var(--background);
-    border: 1px solid var(--border);
-    border-radius: 0.25rem;
-    transition: all 0.15s ease;
-    flex-shrink: 0;
-  }
-
-  .code-toggle:hover .checkmark {
-    border-color: var(--mauve-8);
-  }
-
-  .code-toggle input:checked ~ .checkmark {
-    background-color: var(--foreground);
-    border-color: var(--foreground);
-  }
-
-  .checkmark:after {
-    content: "";
-    position: absolute;
-    display: none;
-    left: 0.25rem;
-    top: 0.0625rem;
-    width: 0.25rem;
-    height: 0.45rem;
-    border: solid var(--background);
-    border-width: 0 1.5px 1.5px 0;
-    transform: rotate(45deg);
-  }
-
-  .code-toggle input:checked ~ .checkmark:after {
-    display: block;
-  }
-
-  .label-text {
-    font-family: 'Inter', system-ui, sans-serif;
-  }
-</style>
