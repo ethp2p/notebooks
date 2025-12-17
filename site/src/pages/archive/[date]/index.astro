@@ -47,10 +47,10 @@ const availableNotebooks = notebooks.filter(nb => dateData[nb.id]);
 
 <BaseLayout title={`Archive: ${date}`}>
   <div class="max-w-3xl">
-    <div class="mb-4 text-sm text-[var(--muted-foreground)]">
-      <a href="/" class="hover:text-[var(--foreground)]">Home</a>
+    <div class="mb-4 text-sm text-muted-foreground">
+      <a href="/" class="hover:text-foreground">Home</a>
       <span class="mx-2">/</span>
-      <a href="/archive" class="hover:text-[var(--foreground)]">Archive</a>
+      <a href="/archive" class="hover:text-foreground">Archive</a>
       <span class="mx-2">/</span>
       <span>{date}</span>
     </div>
@@ -68,19 +68,19 @@ const availableNotebooks = notebooks.filter(nb => dateData[nb.id]);
           {availableNotebooks.map(nb => (
             <a
               href={`/archive/${date}/${nb.id}`}
-              class="block p-4 border border-[var(--border)] rounded-lg hover:border-[var(--mauve-8)] hover:bg-[var(--mauve-2)] transition-colors no-underline"
+              class="block p-4 border border-border rounded-lg hover:border-primary hover:bg-muted transition-colors no-underline"
             >
-              <h3 class="text-lg font-medium text-[var(--foreground)] mb-1 mt-0">
+              <h3 class="text-lg font-medium text-foreground mb-1 mt-0">
                 {nb.title}
               </h3>
-              <p class="text-sm text-[var(--muted-foreground)] m-0">
+              <p class="text-sm text-muted-foreground m-0">
                 {nb.description}
               </p>
             </a>
           ))}
         </div>
       ) : (
-        <p class="text-[var(--muted-foreground)]">
+        <p class="text-muted-foreground">
           No notebooks available for this date.
         </p>
       )}

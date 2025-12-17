@@ -103,13 +103,13 @@ if (fs.existsSync(fullPath)) {
 }
 
 <style is:global>
+    @reference "../styles/global.css";
+
     .error-container {
-        padding: 2.5rem;
+        @apply p-10 rounded-lg text-center;
         background: oklch(0.95 0.03 25 / 50%);
         border: 1px solid oklch(0.85 0.08 25);
-        border-radius: var(--radius);
         color: oklch(0.45 0.15 25);
-        text-align: center;
     }
 
     :global(.dark) .error-container {
@@ -119,150 +119,107 @@ if (fs.existsSync(fullPath)) {
     }
 
     .error-icon {
-        display: inline-flex;
-        margin-bottom: 1rem;
-        opacity: 0.7;
+        @apply inline-flex mb-4 opacity-70;
     }
 
     .error-container h2 {
-        font-family: var(--font-serif);
-        font-size: 1.25rem;
-        font-weight: 400;
-        margin-bottom: 0.5rem;
+        @apply font-serif text-xl font-normal mb-2;
     }
 
     .error-container p {
-        font-family: var(--font-mono);
-        font-size: 0.8125rem;
-        opacity: 0.8;
+        @apply font-mono text-sm opacity-80;
     }
 
     /* Notebook header */
     .notebook-header {
-        margin-bottom: 2.5rem;
-        padding-bottom: 2rem;
-        border-bottom: 1px solid var(--border);
+        @apply mb-10 pb-8 border-b border-border;
         animation: fadeUp 0.5s ease-out;
     }
 
     .notebook-title {
-        font-family: var(--font-serif);
-        font-size: 2.5rem;
-        font-weight: 400;
-        color: var(--foreground);
-        margin: 0 0 1.25rem 0;
+        @apply font-serif text-4xl font-normal text-foreground m-0 mb-5 leading-tight;
         letter-spacing: -0.03em;
-        line-height: 1.15;
     }
 
     :global(.dark) .notebook-title {
-        background: linear-gradient(
-            135deg,
-            var(--foreground) 0%,
-            var(--mauve-11) 100%
-        );
+        background: linear-gradient(135deg, var(--foreground) 0%, var(--mauve-11) 100%);
+        @apply bg-clip-text;
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
-        background-clip: text;
     }
 
     .notebook-controls {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
+        @apply flex items-center gap-4;
     }
 
     /* Section headings */
     .notebook-content h2 {
-        font-family: var(--font-serif);
+        @apply font-serif font-normal text-foreground relative pb-2.5 border-b border-border;
         font-size: 1.625rem;
-        font-weight: 400;
-        color: var(--foreground);
         margin: 3.5rem 0 1.5rem 0;
-        padding-bottom: 0.625rem;
-        border-bottom: 1px solid var(--border);
         letter-spacing: -0.02em;
         line-height: 1.25;
-        position: relative;
     }
 
     .notebook-content h2::before {
+        @apply absolute bottom-[-1px] left-0 w-12 h-0.5 bg-primary;
         content: "";
-        position: absolute;
-        bottom: -1px;
-        left: 0;
-        width: 3rem;
-        height: 2px;
-        background: var(--primary);
     }
 
     .notebook-content h2:first-of-type {
-        margin-top: 0;
+        @apply mt-0;
     }
 
     .notebook-content h3 {
-        font-family: var(--font-serif);
-        font-size: 1.25rem;
-        font-weight: 400;
-        color: var(--foreground);
+        @apply font-serif text-xl font-normal text-foreground;
         margin: 2.5rem 0 1rem 0;
         letter-spacing: -0.01em;
         line-height: 1.35;
     }
 
     .notebook-content h4 {
-        font-family: var(--font-sans);
-        font-size: 1rem;
-        font-weight: 600;
-        color: var(--foreground);
+        @apply font-sans text-base font-semibold text-foreground;
         margin: 2rem 0 0.75rem 0;
     }
 
     /* Paragraphs and text */
     .notebook-content p {
-        margin: 0 0 1.25rem 0;
-        line-height: 1.75;
-        color: var(--foreground);
+        @apply mb-5 leading-relaxed text-foreground;
+        margin-top: 0;
     }
 
     .notebook-content a {
-        color: var(--primary);
-        text-decoration: underline;
+        @apply text-primary underline transition-all duration-200;
         text-decoration-color: oklch(0.6 0.15 280 / 40%);
         text-underline-offset: 3px;
-        transition: all 0.2s ease;
     }
 
     .notebook-content a:hover {
-        color: var(--accent);
+        @apply text-accent;
         text-decoration-color: var(--accent);
     }
 
     /* Lists */
     .notebook-content ul,
     .notebook-content ol {
-        margin: 0 0 1.25rem 0;
-        padding-left: 1.75rem;
+        @apply mb-5 pl-7;
+        margin-top: 0;
     }
 
     .notebook-content li {
-        margin-bottom: 0.5rem;
+        @apply mb-2;
         line-height: 1.7;
     }
 
     .notebook-content li::marker {
-        color: var(--primary);
+        @apply text-primary;
     }
 
     /* Syntax highlighting - Technical Observatory theme */
     .sourceCode {
-        background: var(--muted) !important;
-        border: 1px solid var(--border);
-        border-radius: var(--radius);
-        overflow-x: auto;
+        @apply bg-muted border border-border rounded-lg overflow-x-auto relative;
         font-size: 0.8125rem;
         line-height: 1.65;
-        position: relative;
     }
 
     :global(.dark) .sourceCode {
@@ -271,16 +228,11 @@ if (fs.existsSync(fullPath)) {
     }
 
     .sourceCode pre {
-        margin: 0;
-        padding: 1.25rem 1.5rem;
-        background: transparent !important;
+        @apply m-0 py-5 px-6 bg-transparent;
     }
 
     .sourceCode code {
-        font-family: var(--font-mono);
-        font-size: 0.8125rem;
-        background: transparent !important;
-        padding: 0;
+        @apply font-mono text-sm bg-transparent p-0;
     }
 
     /* Token colors - Light mode */
@@ -428,34 +380,22 @@ if (fs.existsSync(fullPath)) {
 
     /* Code folding - subtle, minimal style */
     .notebook-content details.code-fold {
-        margin-bottom: 1.5rem;
+        @apply mb-6;
     }
 
     .notebook-content details.code-fold > summary {
-        cursor: pointer;
-        font-family: var(--font-mono);
+        @apply cursor-pointer font-mono text-muted-foreground p-0 bg-transparent border-none inline-flex items-center gap-0 select-none list-none opacity-60;
         font-size: 0.6875rem;
-        color: var(--muted-foreground);
-        padding: 0;
-        background: none;
-        border: none;
-        display: inline-flex;
-        align-items: center;
-        gap: 0rem;
         transition: color 0.15s ease;
-        user-select: none;
-        list-style: none;
-        opacity: 0.6;
     }
 
     .notebook-content details.code-fold > summary:hover {
-        color: var(--foreground);
-        opacity: 1;
+        @apply text-foreground opacity-100;
     }
 
     .notebook-content details.code-fold > summary::marker,
     .notebook-content details.code-fold > summary::-webkit-details-marker {
-        display: none;
+        @apply hidden;
     }
 
     .notebook-content details.code-fold > summary::before {
@@ -465,76 +405,58 @@ if (fs.existsSync(fullPath)) {
     }
 
     .notebook-content details.code-fold[open] > summary::before {
-        transform: rotate(90deg);
+        @apply rotate-90;
     }
 
     .notebook-content details.code-fold[open] > summary {
-        margin-bottom: 0.5rem;
+        @apply mb-2;
     }
 
     /* Charts */
     .notebook-content .js-plotly-plot,
     .notebook-content .plotly-graph-div {
-        width: 100% !important;
-        margin: 1.5rem 0;
-        border-radius: var(--radius);
-        overflow: hidden;
+        @apply w-full my-6 rounded-lg overflow-hidden;
     }
 
     .notebook-content .vega-embed {
-        width: 100%;
-        margin: 1.5rem 0;
+        @apply w-full my-6;
     }
 
     /* Code cells */
     .notebook-content .cell {
-        margin-bottom: 2.5rem;
+        @apply mb-10;
     }
 
     .notebook-content .cell-code {
-        margin-bottom: 1rem;
+        @apply mb-4;
     }
 
     /* Cell output */
     .notebook-content .cell-output-display {
-        margin-top: 1.25rem;
+        @apply mt-5;
     }
 
     /* Tables */
     .notebook-content table {
-        width: 100%;
-        border-collapse: collapse;
-        margin: 1.5rem 0;
-        font-size: 0.875rem;
-        border: 1px solid var(--border);
-        border-radius: var(--radius);
-        overflow: hidden;
+        @apply w-full border-collapse my-6 text-sm border border-border rounded-lg overflow-hidden;
     }
 
     .notebook-content th,
     .notebook-content td {
-        padding: 0.75rem 1rem;
-        text-align: left;
-        border-bottom: 1px solid var(--border);
+        @apply py-3 px-4 text-left border-b border-border;
     }
 
     .notebook-content th {
-        font-family: var(--font-mono);
+        @apply font-mono font-semibold uppercase tracking-wider bg-muted text-muted-foreground;
         font-size: 0.6875rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-        background: var(--muted);
-        color: var(--muted-foreground);
     }
 
     .notebook-content td {
-        font-family: var(--font-mono);
-        font-size: 0.8125rem;
+        @apply font-mono text-sm;
     }
 
     .notebook-content tr:last-child td {
-        border-bottom: none;
+        @apply border-b-0;
     }
 
     .notebook-content tr:hover td {
@@ -547,24 +469,18 @@ if (fs.existsSync(fullPath)) {
 
     /* Hide Quarto elements */
     .notebook-content .code-copy-button {
-        display: none;
+        @apply hidden;
     }
 
     /* Line numbers */
     .sourceCode pre code span.line-number {
-        color: var(--muted-foreground);
-        margin-right: 1.25rem;
-        user-select: none;
-        opacity: 0.5;
+        @apply text-muted-foreground mr-5 select-none opacity-50;
     }
 
     /* Blockquotes */
     .notebook-content blockquote {
-        margin: 2rem 0;
-        padding: 1.25rem 1.5rem;
-        border-left: 3px solid var(--primary);
+        @apply my-8 py-5 px-6 border-l-[3px] border-l-primary rounded-r-lg;
         background: var(--mauve-2);
-        border-radius: 0 var(--radius) var(--radius) 0;
     }
 
     :global(.dark) .notebook-content blockquote {
@@ -572,17 +488,13 @@ if (fs.existsSync(fullPath)) {
     }
 
     .notebook-content blockquote p:last-child {
-        margin-bottom: 0;
+        @apply mb-0;
     }
 
     /* Inline code */
     .notebook-content :not(pre) > code {
-        background: var(--muted);
-        padding: 0.1875rem 0.5rem;
-        border-radius: var(--radius);
+        @apply bg-muted py-0.5 px-2 rounded-lg font-mono text-primary;
         font-size: 0.875em;
-        font-family: var(--font-mono);
-        color: var(--primary);
     }
 
     :global(.dark) .notebook-content :not(pre) > code {
@@ -591,16 +503,12 @@ if (fs.existsSync(fullPath)) {
 
     /* Images */
     .notebook-content img {
-        max-width: 100%;
-        height: auto;
-        border-radius: var(--radius);
+        @apply max-w-full h-auto rounded-lg;
     }
 
     /* Horizontal rules */
     .notebook-content hr {
-        border: none;
-        border-top: 1px solid var(--border);
-        margin: 3rem 0;
+        @apply border-none border-t border-border my-12;
     }
 
     /* Animation for cells appearing */
@@ -619,19 +527,9 @@ if (fs.existsSync(fullPath)) {
         animation: cellReveal 0.5s ease-out backwards;
     }
 
-    .notebook-content .cell:nth-child(1) {
-        animation-delay: 0.1s;
-    }
-    .notebook-content .cell:nth-child(2) {
-        animation-delay: 0.15s;
-    }
-    .notebook-content .cell:nth-child(3) {
-        animation-delay: 0.2s;
-    }
-    .notebook-content .cell:nth-child(4) {
-        animation-delay: 0.25s;
-    }
-    .notebook-content .cell:nth-child(5) {
-        animation-delay: 0.3s;
-    }
+    .notebook-content .cell:nth-child(1) { animation-delay: 0.1s; }
+    .notebook-content .cell:nth-child(2) { animation-delay: 0.15s; }
+    .notebook-content .cell:nth-child(3) { animation-delay: 0.2s; }
+    .notebook-content .cell:nth-child(4) { animation-delay: 0.25s; }
+    .notebook-content .cell:nth-child(5) { animation-delay: 0.3s; }
 </style>

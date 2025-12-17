@@ -18,12 +18,12 @@ if (fs.existsSync(manifestPath)) {
 ---
 
 <div class="date-picker">
-  <label for="date-select" class="block text-sm text-[var(--muted-foreground)] mb-1">
+  <label for="date-select" class="block text-sm text-muted-foreground mb-1">
     Select date:
   </label>
   <select
     id="date-select"
-    class="w-full px-3 py-2 bg-[var(--background)] border border-[var(--border)] rounded-lg text-[var(--foreground)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--mauve-8)]"
+    class="w-full px-3 py-2 bg-background border border-border rounded-lg text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
     data-dates={JSON.stringify(dates)}
   >
     {dates.map(date => (

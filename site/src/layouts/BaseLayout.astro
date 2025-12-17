@@ -84,34 +84,33 @@ const { title, description = 'Ethereum P2P network analysis notebooks', showToc 
 </html>
 
 <style is:global>
+  @reference "../styles/global.css";
+
   /* Sidebar gradient overlay - needs pseudo-element */
   .left-sidebar::before {
+    @apply absolute inset-0 opacity-50 pointer-events-none;
     content: '';
-    position: absolute;
-    inset: 0;
     background: linear-gradient(180deg, transparent 0%, var(--sidebar) 100%);
-    opacity: 0.5;
-    pointer-events: none;
   }
 
   /* Logo hover effects */
   .site-title:hover .site-logo {
-    transform: scale(1.05);
+    @apply scale-105;
     box-shadow: var(--glow);
   }
 
   .site-title:hover .logo-icon {
-    transform: rotate(10deg);
+    @apply rotate-[10deg];
   }
 
   .site-title:hover .diamond-top {
-    opacity: 0.7;
+    @apply opacity-70;
   }
 
   /* When TOC is shown, add right margin to prevent overlap */
   @media (min-width: 1280px) {
     .layout-container:has(.right-sidebar) .main-content {
-      margin-right: 15rem;
+      @apply mr-60;
     }
   }
 </style>
