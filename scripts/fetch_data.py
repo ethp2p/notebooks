@@ -29,6 +29,7 @@ from queries import (
     fetch_slot_in_epoch,
     fetch_proposer_blobs,
     fetch_col_first_seen,
+    fetch_xatu_client_connectivity,
 )
 
 # List of (name, fetcher) tuples
@@ -39,6 +40,7 @@ FETCHERS = [
     ("slot_in_epoch", fetch_slot_in_epoch),
     ("proposer_blobs", fetch_proposer_blobs),
     ("col_first_seen", fetch_col_first_seen),
+    ("xatu_client_connectivity", fetch_xatu_client_connectivity),
 ]
 
 

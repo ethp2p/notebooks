@@ -15,7 +15,7 @@ website:
       contents:
       - text: Introduction
         href: index.qmd
-    - section: '2025-12-09'
+    - section: '2025-12-14'
       contents:
       - text: Blob inclusion
         href: notebooks/01-blob-inclusion.qmd
@@ -23,10 +23,8 @@ website:
         href: notebooks/02-blob-flow.qmd
       - text: Column propagation
         href: notebooks/03-column-propagation.qmd
-    - section: Historical
-      contents:
-      - text: '2025-12-08'
-        href: 20251208/index.qmd
+      - text: Network overview
+        href: notebooks/04-network-overview.qmd
 format:
   html:
     theme:

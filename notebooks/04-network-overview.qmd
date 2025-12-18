@@ -1,0 +1,176 @@
+---
+tittle: "Network Overview"
+---
+
+Analysis script to compute the overall network overview from the Xatu sentry nodes on Ethereum mainnet.
+
+```{python}
+#| tags: [parameters]
+target_date = None  # Set via papermill, or auto-detect from manifest
+network = None # Set via papermill, or auto-detect from manifest
+```
+
+```{python}
+import polars as pl
+import plotly.express as px
+from loaders import load_parquet
+
+raw_df = load_parquet("xatu_client_connectivity", target_date)
+```
+
+## Total unique peers in the network
+
+```{python}
+# Display the number of unique peers in the network
+df = (
+    pl.from_pandas(raw_df)
+    .group_by("hour_bucket")
+    .agg(unique_peers=pl.col("peer_id").n_unique())
+    .sort("hour_bucket")
+)
+
+fig = px.line(
+    df,
+    x="hour_bucket",
+    y="unique_peers",
+)
+
+fig.update_layout(
+    title="Total number of unique peers",
+    xaxis_title="Date",
+    yaxis_title="Unique peers",
+)
+```
+
+## Client distribution of the unique peers
+
+```{python}
+# get the number of unique peers
+df = (
+    pl.from_pandas(raw_df)
+    .sort(["hour_bucket", "peer_id", "client_name"], descending=[False, False, True])
+    .unique(subset=["hour_bucket", "peer_id"], keep="first")
+    .filter(
+        pl.col("client_name").is_not_null() & (pl.col("client_name") != "")
+    )
+    .group_by(["hour_bucket","client_name"])
+    .agg(peers=pl.len())
+    .sort("hour_bucket", "peers")
+)
+
+fig = px.area(
+    df,
+    x="hour_bucket",
+    y="peers",
+    color="client_name",
+)
+
+fig.update_layout(
+    title="Total number of unique peers",
+    xaxis_title="Date",
+    yaxis_title="Peers",
+    width=1200,
+    height=800,
+)
+```
+
+## Number of connections from each Xatu node
+
+```{python}
+# Plot the number of connections per each Xatu node
+df = (
+    pl.from_pandas(raw_df)
+    .group_by(["hour_bucket", "local_name"])
+    .agg(peers=pl.col("peer_id").n_unique())
+    .sort("hour_bucket")
+    .with_columns(
+        pl.col("local_name").str.replace(f"ethpandaops/{network}/", "")
+    )
+)
+
+fig = px.line(
+    df,
+    x="hour_bucket",
+    y="peers",
+    color="local_name",
+)
+
+fig.update_layout(
+    title="Connections per Xatu nodes",
+    xaxis_title=None,
+    yaxis_title="Connected peers",
+    legend=dict(
+        title="Client Names",
+        orientation = "h",
+        yanchor="top",
+        y=-.25,
+        xanchor="center",
+        x=0.5,
+        # entrywidth=300,
+    ),
+    width=1200,
+    height=800,
+)
+```
+
+## Distribution of connections to peers on each IP protocol + Transport protocol combination
+
+```{python}
+df = (
+    pl.from_pandas(raw_df)
+    .group_by(["hour_bucket", "peer_id", "protocol"])
+    .agg(
+        all_transports=pl.col("transport_protocol").unique().sort().str.join(" & ")
+    )
+    .with_columns(
+        protocol_combos=pl.col("protocol") + " + (" + pl.col("all_transports") + ")"
+    )
+    .group_by(["hour_bucket", "protocol_combos"])
+    .agg(peers=pl.count("peer_id"))
+    .sort("hour_bucket")
+)
+
+fig = px.line(
+    df,
+    x="hour_bucket",
+    y="peers",
+    color="protocol_combos",
+)
+
+fig.update_layout(
+    title="Transport protocol distribution for Xatu nodes",
+    yaxis_title="Connected peers",
+    width=1200,
+    height=800,
+)
+
+```
+
+## Popularity of ports
+
+```{python}
+df = (
+    pl.from_pandas(raw_df)
+    # this might double count peers that use different ports in the same day
+    .group_by(["peer_id", "port"])
+    .agg()
+    .group_by("port")
+    .agg(peers=pl.count("peer_id"))
+    .with_columns(port=pl.col("port").cast(pl.String))
+    .sort("peers", descending=True)
+)
+
+fig = px.bar(
+    df.head(20),
+    x="port",
+    y="peers",
+)
+fig.update_xaxes(type='category')
+fig.update_layout(
+    title="Popularity of ports",
+    xaxis_title=None,
+    yaxis_title="Connected peers",
+    width=1200,
+    height=800,
+)
+```

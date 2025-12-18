@@ -181,6 +181,5 @@ python -m http.server -d _site
    df = load_parquet("my_data")
    # Visualize...
    ```
-   ```
 
 4. **Add to site** in `_quarto.yml` navbar
