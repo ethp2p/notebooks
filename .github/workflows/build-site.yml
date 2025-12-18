@@ -9,14 +9,14 @@ on:
   workflow_dispatch:
     inputs:
       force_render:
-        description: 'Force re-render all notebooks'
+        description: "Force re-render all notebooks"
         type: boolean
         default: false
       render_date:
-        description: 'Specific date to re-render (YYYY-MM-DD)'
+        description: "Specific date to re-render (YYYY-MM-DD)"
         required: false
       render_notebook:
-        description: 'Specific notebook ID to re-render'
+        description: "Specific notebook ID to re-render"
         required: false
 
 permissions:
@@ -81,9 +81,6 @@ jobs:
       - name: Install Python dependencies
         run: uv sync
 
-      - name: Set up Quarto
-        uses: quarto-dev/quarto-actions/setup@v2
-
       - name: Render notebooks
         run: |
           ARGS=""
@@ -135,8 +132,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
-          cache: 'pnpm'
+          node-version: "22"
+          cache: "pnpm"
           cache-dependency-path: site/pnpm-lock.yaml
 
       - name: Install dependencies
