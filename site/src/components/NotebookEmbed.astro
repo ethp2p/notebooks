@@ -21,7 +21,7 @@ let headContent = "";
 if (fs.existsSync(fullPath)) {
     const html = fs.readFileSync(fullPath, "utf-8");
 
-    // Extract head content for styles
+    // Extract head content for styles (Plotly/Altair may inject styles)
     const headMatch = html.match(/<head[^>]*>([\s\S]*?)<\/head>/i);
     if (headMatch) {
         // Extract only style tags from head
@@ -37,28 +37,6 @@ if (fs.existsSync(fullPath)) {
     const bodyMatch = html.match(/<body[^>]*>([\s\S]*)<\/body>/i);
     if (bodyMatch) {
         content = bodyMatch[1];
-
-        // Remove Quarto navigation elements and duplicate title
-        content = content
-            .replace(
-                /<nav[^>]*class="[^"]*quarto-secondary-nav[^"]*"[^>]*>[\s\S]*?<\/nav>/gi,
-                "",
-            )
-            .replace(
-                /<header[^>]*id="quarto-header"[^>]*>[\s\S]*?<\/header>/gi,
-                "",
-            )
-            .replace(/<nav[^>]*id="quarto-sidebar"[^>]*>[\s\S]*?<\/nav>/gi, "")
-            .replace(/<footer[^>]*>[\s\S]*?<\/footer>/gi, "")
-            // Remove the Quarto-generated title (we show our own)
-            .replace(
-                /<header[^>]*id="title-block-header"[^>]*>[\s\S]*?<\/header>/gi,
-                "",
-            )
-            .replace(
-                /<h1[^>]*class="[^"]*title[^"]*"[^>]*>[\s\S]*?<\/h1>/gi,
-                "",
-            );
     } else {
         content = html;
     }
@@ -96,7 +74,7 @@ if (fs.existsSync(fullPath)) {
     @reference "../styles/global.css";
 
     .error-container {
-        @apply p-10  text-center;
+        @apply p-10 text-center;
         background: oklch(0.95 0.03 25 / 50%);
         border: 1px solid oklch(0.85 0.08 25);
         color: oklch(0.45 0.15 25);
@@ -179,14 +157,26 @@ if (fs.existsSync(fullPath)) {
     }
 
     .notebook-content a {
-        @apply text-primary underline transition-all duration-200;
-        text-decoration-color: oklch(0.6 0.15 280 / 40%);
-        text-underline-offset: 3px;
+        @apply text-primary no-underline transition-colors duration-200;
     }
 
     .notebook-content a:hover {
         @apply text-accent;
-        text-decoration-color: var(--accent);
+    }
+
+    /* Anchor links on headings - hide by default, show on hover */
+    .notebook-content .anchor-link {
+        @apply opacity-0 ml-2 text-muted-foreground no-underline transition-opacity duration-200;
+    }
+
+    .notebook-content h2:hover .anchor-link,
+    .notebook-content h3:hover .anchor-link,
+    .notebook-content h4:hover .anchor-link {
+        @apply opacity-50;
+    }
+
+    .notebook-content .anchor-link:hover {
+        @apply opacity-100 text-primary;
     }
 
     /* Lists */
@@ -205,170 +195,87 @@ if (fs.existsSync(fullPath)) {
         @apply text-primary;
     }
 
-    /* Syntax highlighting - Technical Observatory theme */
-    .sourceCode {
-        @apply bg-muted  overflow-x-auto relative;
+    /* Code blocks - nbconvert uses .highlight for syntax highlighting */
+    .notebook-content .highlight,
+    .notebook-content .input_area {
+        @apply bg-muted overflow-x-auto relative;
         font-size: 0.8125rem;
         line-height: 1.65;
     }
 
-    :global(.dark) .sourceCode {
+    :global(.dark) .notebook-content .highlight,
+    :global(.dark) .notebook-content .input_area {
         background: oklch(0.14 0.02 260) !important;
-        border-color: oklch(0.25 0.02 260);
     }
 
-    .sourceCode pre {
+    .notebook-content .highlight pre {
         @apply m-0 py-5 px-6 bg-transparent;
     }
 
-    .sourceCode code {
+    .notebook-content .highlight code,
+    .notebook-content .input_area code {
         @apply font-mono text-sm bg-transparent p-0;
     }
 
-    /* Token colors - Light mode */
-    .sourceCode .kw {
+    /* Pygments token colors - Light mode */
+    .notebook-content .highlight .k,
+    .notebook-content .highlight .kn,
+    .notebook-content .highlight .kd {
         color: oklch(0.5 0.2 330);
         font-weight: 500;
-    } /* Keywords - magenta */
-    .sourceCode .dt {
-        color: oklch(0.45 0.18 260);
-    } /* Data types - purple */
-    .sourceCode .dv {
-        color: oklch(0.5 0.15 180);
-    } /* Decimal values - teal */
-    .sourceCode .bn {
-        color: oklch(0.5 0.15 180);
-    } /* Base N */
-    .sourceCode .fl {
-        color: oklch(0.5 0.15 180);
-    } /* Float */
-    .sourceCode .ch {
+    } /* Keywords */
+    .notebook-content .highlight .n,
+    .notebook-content .highlight .nn {
+        color: var(--foreground);
+    } /* Names */
+    .notebook-content .highlight .o,
+    .notebook-content .highlight .p {
+        color: var(--foreground);
+    } /* Operators, punctuation */
+    .notebook-content .highlight .s,
+    .notebook-content .highlight .s1,
+    .notebook-content .highlight .s2 {
         color: oklch(0.45 0.12 145);
-    } /* Char - green */
-    .sourceCode .st {
-        color: oklch(0.45 0.12 145);
-    } /* String */
-    .sourceCode .co {
+    } /* Strings */
+    .notebook-content .highlight .mi,
+    .notebook-content .highlight .mf {
+        color: oklch(0.5 0.15 180);
+    } /* Numbers */
+    .notebook-content .highlight .c,
+    .notebook-content .highlight .c1 {
         color: var(--muted-foreground);
         font-style: italic;
-    } /* Comment */
-    .sourceCode .ot {
-        color: oklch(0.5 0.2 330);
-    } /* Other */
-    .sourceCode .al {
-        color: oklch(0.55 0.2 25);
-        font-weight: bold;
-    } /* Alert - red */
-    .sourceCode .fu {
-        color: oklch(0.5 0.18 280);
-    } /* Function - purple */
-    .sourceCode .er {
-        color: oklch(0.55 0.2 25);
-        font-weight: bold;
-    } /* Error */
-    .sourceCode .wa {
-        color: oklch(0.55 0.15 80);
-        font-style: italic;
-    } /* Warning - gold */
-    .sourceCode .cn {
-        color: oklch(0.5 0.15 180);
-    } /* Constant */
-    .sourceCode .sc {
-        color: oklch(0.45 0.12 145);
-    } /* Special char */
-    .sourceCode .vs {
-        color: oklch(0.45 0.12 145);
-    } /* Verbatim string */
-    .sourceCode .ss {
-        color: oklch(0.45 0.12 145);
-    } /* Special string */
-    .sourceCode .im {
-        color: oklch(0.5 0.2 330);
-    } /* Import */
-    .sourceCode .va {
-        color: var(--foreground);
-    } /* Variable */
-    .sourceCode .cf {
-        color: oklch(0.5 0.2 330);
-        font-weight: 500;
-    } /* Control flow */
-    .sourceCode .op {
-        color: var(--foreground);
-    } /* Operator */
-    .sourceCode .bu {
+    } /* Comments */
+    .notebook-content .highlight .nb {
         color: oklch(0.45 0.18 260);
     } /* Built-in */
-    .sourceCode .ex {
+    .notebook-content .highlight .nf {
         color: oklch(0.5 0.18 280);
-    } /* Extension */
-    .sourceCode .pp {
-        color: oklch(0.5 0.2 330);
-    } /* Preprocessor */
-    .sourceCode .at {
-        color: oklch(0.45 0.18 260);
-    } /* Attribute */
-    .sourceCode .do {
-        color: var(--muted-foreground);
-        font-style: italic;
-    } /* Documentation */
-    .sourceCode .an {
-        color: var(--muted-foreground);
-        font-weight: bold;
-        font-style: italic;
-    } /* Annotation */
-    .sourceCode .cv {
-        color: var(--muted-foreground);
-        font-weight: bold;
-        font-style: italic;
-    } /* Comment var */
-    .sourceCode .in {
-        color: var(--muted-foreground);
-        font-weight: bold;
-        font-style: italic;
-    } /* Information */
+    } /* Function */
 
     /* Dark mode token colors */
-    :global(.dark) .sourceCode .kw {
+    :global(.dark) .notebook-content .highlight .k,
+    :global(.dark) .notebook-content .highlight .kn,
+    :global(.dark) .notebook-content .highlight .kd {
         color: oklch(0.75 0.18 330);
     }
-    :global(.dark) .sourceCode .dt {
-        color: oklch(0.72 0.15 260);
-    }
-    :global(.dark) .sourceCode .dv {
-        color: oklch(0.75 0.14 180);
-    }
-    :global(.dark) .sourceCode .bn {
-        color: oklch(0.75 0.14 180);
-    }
-    :global(.dark) .sourceCode .fl {
-        color: oklch(0.75 0.14 180);
-    }
-    :global(.dark) .sourceCode .ch {
+    :global(.dark) .notebook-content .highlight .s,
+    :global(.dark) .notebook-content .highlight .s1,
+    :global(.dark) .notebook-content .highlight .s2 {
         color: oklch(0.72 0.12 145);
     }
-    :global(.dark) .sourceCode .st {
-        color: oklch(0.72 0.12 145);
+    :global(.dark) .notebook-content .highlight .mi,
+    :global(.dark) .notebook-content .highlight .mf {
+        color: oklch(0.75 0.14 180);
     }
-    :global(.dark) .sourceCode .fu {
-        color: oklch(0.75 0.15 280);
-    }
-    :global(.dark) .sourceCode .al {
-        color: oklch(0.72 0.18 25);
-    }
-    :global(.dark) .sourceCode .er {
-        color: oklch(0.72 0.18 25);
-    }
-    :global(.dark) .sourceCode .wa {
-        color: oklch(0.78 0.14 80);
-    }
-    :global(.dark) .sourceCode .bu {
+    :global(.dark) .notebook-content .highlight .nb {
         color: oklch(0.72 0.15 260);
     }
-    :global(.dark) .sourceCode .ex {
+    :global(.dark) .notebook-content .highlight .nf {
         color: oklch(0.75 0.15 280);
     }
 
-    /* Code folding - subtle, minimal style */
+    /* Code folding - our custom template uses details.code-fold */
     .notebook-content details.code-fold {
         @apply mb-3;
     }
@@ -402,33 +309,40 @@ if (fs.existsSync(fullPath)) {
         @apply mb-2;
     }
 
-    /* Charts */
+    /* Charts - Plotly and Altair */
     .notebook-content .js-plotly-plot,
     .notebook-content .plotly-graph-div {
-        @apply w-full my-6  overflow-hidden;
+        @apply w-full my-6 overflow-hidden;
     }
 
     .notebook-content .vega-embed {
         @apply w-full my-6;
     }
 
-    /* Code cells */
+    /* nbconvert cell structure */
     .notebook-content .cell {
-        @apply mb-3;
+        @apply mb-6;
     }
 
-    .notebook-content .cell-code {
+    .notebook-content .code_cell {
+        @apply mb-6;
+    }
+
+    .notebook-content .text_cell {
         @apply mb-4;
     }
 
-    /* Cell output */
-    .notebook-content .cell-output-display {
-        @apply mt-5;
+    .notebook-content .output_wrapper {
+        @apply mt-4;
+    }
+
+    .notebook-content .output_area {
+        @apply my-2;
     }
 
     /* Tables */
     .notebook-content table {
-        @apply w-full border-collapse my-6 text-sm border border-border  overflow-hidden;
+        @apply w-full border-collapse my-6 text-sm border border-border overflow-hidden;
     }
 
     .notebook-content th,
@@ -457,19 +371,9 @@ if (fs.existsSync(fullPath)) {
         background: oklch(0.18 0.02 260);
     }
 
-    /* Hide Quarto elements */
-    .notebook-content .code-copy-button {
-        @apply hidden;
-    }
-
-    /* Line numbers */
-    .sourceCode pre code span.line-number {
-        @apply text-muted-foreground mr-5 select-none opacity-50;
-    }
-
     /* Blockquotes */
     .notebook-content blockquote {
-        @apply my-8 py-5 px-6 border-l-[3px] border-l-primary ;
+        @apply my-8 py-5 px-6 border-l-[3px] border-l-primary;
         background: var(--mauve-2);
     }
 
@@ -483,7 +387,7 @@ if (fs.existsSync(fullPath)) {
 
     /* Inline code */
     .notebook-content :not(pre) > code {
-        @apply bg-muted py-0.5 px-2  font-mono text-primary;
+        @apply bg-muted py-0.5 px-2 font-mono text-primary;
         font-size: 0.875em;
     }
 
@@ -493,7 +397,7 @@ if (fs.existsSync(fullPath)) {
 
     /* Images */
     .notebook-content img {
-        @apply max-w-full h-auto ;
+        @apply max-w-full h-auto;
     }
 
     /* Horizontal rules */
@@ -522,4 +426,9 @@ if (fs.existsSync(fullPath)) {
     .notebook-content .cell:nth-child(3) { animation-delay: 0.2s; }
     .notebook-content .cell:nth-child(4) { animation-delay: 0.25s; }
     .notebook-content .cell:nth-child(5) { animation-delay: 0.3s; }
+
+    /* Hide parameter cells (they have celltag_parameters class) */
+    .notebook-content .celltag_parameters {
+        @apply hidden;
+    }
 </style>

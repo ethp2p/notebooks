@@ -8,7 +8,7 @@ This is an **Ethereum P2P Network Analysis** project that:
 
 1. Fetches network telemetry data from ClickHouse (EthPandaOps Xatu infrastructure)
 2. Stores data as Parquet files
-3. Renders Jupyter/Quarto notebooks into HTML visualizations
+3. Renders Jupyter notebooks into HTML visualizations (using papermill + nbconvert)
 4. Serves the results via a static Astro website
 
 The site displays daily analysis of Ethereum mainnet P2P networking, including blob propagation, validator behavior, and column timing.
@@ -23,11 +23,12 @@ The site displays daily analysis of Ethereum mainnet P2P networking, including b
 │   └── column_propagation.py   # Column propagation timing queries
 ├── scripts/
 │   ├── fetch_data.py           # CLI: fetch data from ClickHouse → Parquet
-│   └── render_notebooks.py     # CLI: render .qmd notebooks → HTML
+│   └── render_notebooks.py     # CLI: render .ipynb notebooks → HTML
 ├── notebooks/
 │   ├── loaders.py              # Parquet loading utilities
 │   ├── data/                   # Local Parquet data cache (gitignored)
-│   └── *.qmd                   # Quarto markdown notebooks
+│   ├── templates/              # nbconvert HTML templates
+│   └── *.ipynb                 # Jupyter notebooks
 ├── site/                       # Astro static site
 │   ├── config/notebooks.yaml   # Notebook registry (metadata, order, icons)
 │   ├── public/rendered/        # Pre-rendered notebook HTML + manifest.json
@@ -49,7 +50,8 @@ The site displays daily analysis of Ethereum mainnet P2P networking, including b
 | ---------------- | --------------------------- | ----------------------------------- |
 | Data fetch       | Python + ClickHouse         | Query network telemetry             |
 | Data storage     | Parquet                     | Columnar data files                 |
-| Notebooks        | Quarto (.qmd)               | Analysis with Plotly visualizations |
+| Notebooks        | Jupyter (.ipynb)            | Analysis with Plotly visualizations |
+| Rendering        | papermill + nbconvert       | Execute and convert to HTML         |
 | Site framework   | Astro                       | Static site generation              |
 | Styling          | Tailwind CSS v4             | Utility-first CSS                   |
 | UI components    | shadcn/ui + Lucide icons    | React component library             |
@@ -95,7 +97,11 @@ The site is in `site/`. Key files:
 
 1. Create query function in `queries/new_query.py`
 2. Register fetcher in `scripts/fetch_data.py` FETCHERS list
-3. Create notebook `notebooks/XX-new-notebook.qmd`
+3. Create notebook `notebooks/XX-new-notebook.ipynb` with a parameters cell:
+   ```python
+   # Cell with tag "parameters"
+   target_date = None  # Set via papermill
+   ```
 4. Add entry to `site/config/notebooks.yaml` (include `icon` field with Lucide icon name)
 5. Run `just fetch && just render && just build`
 
@@ -192,7 +198,9 @@ ClickHouse (Xatu)
     ▼ [scripts/fetch_data.py]
 Parquet files (notebooks/data/)
     │
-    ▼ [scripts/render_notebooks.py + Quarto]
+    ▼ [scripts/render_notebooks.py]
+    │   └── papermill: execute with parameters
+    │   └── nbconvert: convert to HTML with custom template
 Pre-rendered HTML (site/public/rendered/)
     │
     ▼ [Astro build]

@@ -11,15 +11,15 @@ dependencies = [
     "numpy>=1.26",
     "python-dotenv>=1.0",
     "pyarrow>=22.0.0",
-    "jupytext>=1.18.1",
-    "jupyterlab>=4.5.0",
     "pyyaml>=6.0.3",
+    "nbconvert>=7.16.6",
+    "papermill>=2.6.0",
+    "nbformat>=5.10.0",
 ]
 
 [dependency-groups]
 dev = [
     "ipykernel>=7.1.0",
-    "nbconvert>=7.16.6",
-    "papermill>=2.6.0",
-    "jupyter-book>=1.0.0",
+    "jupytext>=1.18.1",
+    "jupyterlab>=4.5.0",
 ]

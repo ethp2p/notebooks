@@ -599,22 +599,6 @@ wheels = [
 ]
 
 [[package]]
-name = "jupyter-book"
-version = "2.1.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "ipykernel" },
-    { name = "jupyter-core" },
-    { name = "jupyter-server" },
-    { name = "nodeenv" },
-    { name = "platformdirs" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/9d/ef/618a3080c9c2f76f6d17212b7954db448d7f92da6459450a6acce1e0d596/jupyter_book-2.1.0.tar.gz", hash = "sha256:f42b6f264e6e270b07362f4430ef671edccbb1be36cd0872afd231c642a4ba7e", size = 14440795, upload-time = "2025-12-05T13:16:57.496Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/69/0a/066cacdbe5fa68a39df245cd91db2a77e7485cb4c94d8c48cc3e8ed02e45/jupyter_book-2.1.0-py3-none-any.whl", hash = "sha256:cdf54323e0b5c0e1d9a6972742ac2dbfea9f7617e20f58113dc25cc85b7ac4d9", size = 2599900, upload-time = "2025-12-05T13:16:54.292Z" },
-]
-
-[[package]]
 name = "jupyter-client"
 version = "8.6.3"
 source = { registry = "https://pypi.org/simple" }
@@ -1004,15 +988,6 @@ wheels = [
 ]
 
 [[package]]
-name = "nodeenv"
-version = "1.9.1"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/43/16/fc88b08840de0e0a72a2f9d8c6bae36be573e475a6326ae854bcc549fc45/nodeenv-1.9.1.tar.gz", hash = "sha256:6ec12890a2dab7946721edbfbcd91f3319c6ccc9aec47be7c7e6b7011ee6645f", size = 47437, upload-time = "2024-06-04T18:44:11.171Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/d2/1d/1b658dbd2b9fa9c4c9f32accbfc0205d532c8c6194dc0f2a4c0428e7128a/nodeenv-1.9.1-py2.py3-none-any.whl", hash = "sha256:ba11c9782d29c27c70ffbdda2d7415098754709be8a7056d79a737cd901155c9", size = 22314, upload-time = "2024-06-04T18:44:08.352Z" },
-]
-
-[[package]]
 name = "notebook-shim"
 version = "0.2.4"
 source = { registry = "https://pypi.org/simple" }
@@ -1170,10 +1145,11 @@ source = { virtual = "." }
 dependencies = [
     { name = "altair" },
     { name = "clickhouse-connect" },
-    { name = "jupyterlab" },
-    { name = "jupytext" },
+    { name = "nbconvert" },
+    { name = "nbformat" },
     { name = "numpy" },
     { name = "pandas" },
+    { name = "papermill" },
     { name = "plotly" },
     { name = "pyarrow" },
     { name = "python-dotenv" },
@@ -1183,19 +1159,19 @@ dependencies = [
 [package.dev-dependencies]
 dev = [
     { name = "ipykernel" },
-    { name = "jupyter-book" },
-    { name = "nbconvert" },
-    { name = "papermill" },
+    { name = "jupyterlab" },
+    { name = "jupytext" },
 ]
 
 [package.metadata]
 requires-dist = [
     { name = "altair", specifier = ">=5.0" },
     { name = "clickhouse-connect", specifier = ">=0.8.0" },
-    { name = "jupyterlab", specifier = ">=4.5.0" },
-    { name = "jupytext", specifier = ">=1.18.1" },
+    { name = "nbconvert", specifier = ">=7.16.6" },
+    { name = "nbformat", specifier = ">=5.10.0" },
     { name = "numpy", specifier = ">=1.26" },
     { name = "pandas", specifier = ">=2.0" },
+    { name = "papermill", specifier = ">=2.6.0" },
     { name = "plotly", specifier = ">=5.0" },
     { name = "pyarrow", specifier = ">=22.0.0" },
     { name = "python-dotenv", specifier = ">=1.0" },
@@ -1205,9 +1181,8 @@ requires-dist = [
 [package.metadata.requires-dev]
 dev = [
     { name = "ipykernel", specifier = ">=7.1.0" },
-    { name = "jupyter-book", specifier = ">=1.0.0" },
-    { name = "nbconvert", specifier = ">=7.16.6" },
-    { name = "papermill", specifier = ">=2.6.0" },
+    { name = "jupyterlab", specifier = ">=4.5.0" },
+    { name = "jupytext", specifier = ">=1.18.1" },
 ]
 
 [[package]]

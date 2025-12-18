@@ -6,7 +6,7 @@ notebooks:
     title: "Blob Inclusion"
     description: "Analysis of blob inclusion patterns in Ethereum mainnet blocks"
     icon: Layers
-    source: notebooks/01-blob-inclusion.qmd
+    source: notebooks/01-blob-inclusion.ipynb
     schedule: daily
     queries:
       - blobs_per_slot
@@ -23,7 +23,7 @@ notebooks:
     title: "Blob Flow"
     description: "Flow diagrams tracing blob packing per entities, builders, and relays"
     icon: Activity
-    source: notebooks/02-blob-flow.qmd
+    source: notebooks/02-blob-flow.ipynb
     schedule: daily
     queries:
       - proposer_blobs
@@ -37,7 +37,7 @@ notebooks:
     title: "Column Propagation"
     description: "Column propagation timing across 128 data columns subnets"
     icon: Grid3x3
-    source: notebooks/03-column-propagation.qmd
+    source: notebooks/03-column-propagation.ipynb
     schedule: daily
     queries:
       - col_first_seen

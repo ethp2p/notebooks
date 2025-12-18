@@ -3,11 +3,12 @@
 @import "shadcn/tailwind.css";
 
 /* Typography - Distinctive font choices */
+@import "@fontsource-variable/plus-jakarta-sans";
 @import "@fontsource/space-mono/400.css";
 @import "@fontsource/space-mono/700.css";
-@import "@fontsource/jetbrains-mono/400.css";
-@import "@fontsource/jetbrains-mono/500.css";
-@import "@fontsource/jetbrains-mono/600.css";
+@import "@fontsource/google-sans-code/400.css";
+@import "@fontsource/google-sans-code/500.css";
+@import "@fontsource/google-sans-code/600.css";
 @import "@fontsource/instrument-serif";
 
 @custom-variant dark (&:is(.dark *));
@@ -159,9 +160,9 @@
 }
 
 @theme inline {
-    --font-sans: "Public Sans Variable", system-ui, sans-serif;
+    --font-sans: "Plus Jakarta Sans Variable", system-ui, sans-serif;
     --font-serif: "Instrument Serif", Georgia, serif;
-    --font-mono: "JetBrains Mono", "Space Mono", ui-monospace, monospace;
+    --font-mono: "Google Sans Code", "Space Mono", ui-monospace, monospace;
     --font-display: "Space Mono", monospace;
 
     --color-sidebar-ring: var(--sidebar-ring);

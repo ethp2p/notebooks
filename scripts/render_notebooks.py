@@ -2,28 +2,35 @@
 """
 Render notebooks to HTML.
 
-Renders Quarto notebooks with incremental support - only re-renders when
-notebook source or data changes. Generates a manifest for Astro to consume.
+Executes notebooks with papermill and converts to HTML with nbconvert.
+Supports incremental rendering - only re-renders when source or data changes.
+Generates a manifest for Astro to consume.
 
 Notebooks within each date are rendered in parallel for faster builds.
 """
+
 import argparse
 import hashlib
 import json
+import os
 import shutil
-import subprocess
 import sys
 import tempfile
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from datetime import datetime, timezone
 from pathlib import Path
 
+import nbformat
+import papermill as pm
 import yaml
+from nbconvert import HTMLExporter
+from traitlets.config import Config
 
 CONFIG_PATH = Path("site/config/notebooks.yaml")
 DATA_ROOT = Path("notebooks/data")
 OUTPUT_DIR = Path("site/public/rendered")
 MANIFEST_PATH = OUTPUT_DIR / "manifest.json"
+TEMPLATE_DIR = Path("notebooks/templates")
 
 
 def load_config() -> dict:
@@ -92,77 +99,102 @@ def should_render(
     return False
 
 
+def inject_plotly_renderer(nb: nbformat.NotebookNode) -> nbformat.NotebookNode:
+    """Inject a cell to configure Plotly renderer for HTML export."""
+    # Create a setup cell that configures Plotly to output HTML
+    setup_code = """# Auto-injected: Configure Plotly for HTML export
+import plotly.io as pio
+pio.renderers.default = "notebook"
+"""
+    setup_cell = nbformat.v4.new_code_cell(source=setup_code)
+    # Use 'setup' tag - NOT 'injected-parameters' as papermill replaces that!
+    setup_cell.metadata["tags"] = ["setup"]
+
+    # Insert after parameters cell (or at start if no parameters cell)
+    # Papermill will inject its parameters cell after the 'parameters' cell,
+    # so we need to insert after where papermill's injection will go
+    insert_idx = 0
+    for i, cell in enumerate(nb.cells):
+        if cell.cell_type == "code":
+            tags = cell.metadata.get("tags", [])
+            if "parameters" in tags:
+                insert_idx = i + 1
+                break
+
+    nb.cells.insert(insert_idx, setup_cell)
+    return nb
+
+
 def render_notebook(
     notebook_id: str,
     notebook_source: Path,
     target_date: str,
     output_dir: Path,
 ) -> tuple[bool, str]:
-    """Render a single notebook for a specific date."""
+    """Render a single notebook for a specific date using papermill + nbconvert."""
     output_dir.mkdir(parents=True, exist_ok=True)
     output_file = output_dir / f"{notebook_id}.html"
 
     # Use absolute paths
     abs_source = notebook_source.resolve()
+    abs_template_dir = TEMPLATE_DIR.resolve()
 
-    # Quarto has issues with --output-dir and --output together
-    # Render to a temp directory and move the result
-    with tempfile.TemporaryDirectory() as tmpdir:
-        tmp_path = Path(tmpdir)
+    try:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp_path = Path(tmpdir)
+            executed_nb = tmp_path / f"{notebook_id}_executed.ipynb"
+            prepared_nb = tmp_path / f"{notebook_id}_prepared.ipynb"
 
-        cmd = [
-            "quarto",
-            "render",
-            str(abs_source),
-            "--no-clean",
-            "-P",
-            f"target_date:{target_date}",
-            "--output-dir",
-            str(tmp_path),
-            "--output",
-            f"{notebook_id}.html",
-            "--execute",
-            # Minimal output - we embed in Astro
-            "-M",
-            "sidebar:false",
-            "-M",
-            "bread-crumbs:false",
-            "-M",
-            "toc:false",
-            # Code folding - collapse by default
-            "-M",
-            "code-fold:true",
-            "-M",
-            "code-summary:Show code",
-        ]
+            # Read notebook and inject Plotly renderer config
+            with open(abs_source) as f:
+                nb = nbformat.read(f, as_version=4)
+            nb = inject_plotly_renderer(nb)
 
-        result = subprocess.run(cmd, capture_output=True, text=True)
-        if result.returncode != 0:
-            return False, result.stderr[:500]
+            # Write prepared notebook
+            with open(prepared_nb, "w") as f:
+                nbformat.write(nb, f)
 
-        # Find the rendered HTML file (might be in tmpdir or parent due to Quarto quirks)
-        rendered_html = tmp_path / f"{notebook_id}.html"
-        if not rendered_html.exists():
-            # Check parent directory (Quarto sometimes outputs there)
-            parent_html = tmp_path.parent / f"{notebook_id}.html"
-            if parent_html.exists():
-                rendered_html = parent_html
+            # Execute notebook with papermill
+            pm.execute_notebook(
+                str(prepared_nb),
+                str(executed_nb),
+                parameters={"target_date": target_date},
+                cwd=str(abs_source.parent),  # Run from notebooks/ directory
+                kernel_name="python3",
+            )
 
-        if not rendered_html.exists():
-            return False, f"Output file not found after render"
+            # Convert to HTML with custom template
+            c = Config()
+            c.HTMLExporter.extra_template_basedirs = [str(abs_template_dir)]
+            c.HTMLExporter.template_name = "minimal"
+            c.HTMLExporter.exclude_input_prompt = True
+            c.HTMLExporter.exclude_output_prompt = True
 
-        # Move to final destination
-        shutil.copy2(rendered_html, output_file)
+            exporter = HTMLExporter(config=c)
 
-        # Also copy any _files directory (for supporting assets)
-        files_dir = tmp_path / f"{notebook_id}_files"
-        if files_dir.exists():
-            dest_files = output_dir / f"{notebook_id}_files"
-            if dest_files.exists():
-                shutil.rmtree(dest_files)
-            shutil.copytree(files_dir, dest_files)
+            # Read executed notebook
+            with open(executed_nb) as f:
+                nb = nbformat.read(f, as_version=4)
 
-    return True, str(output_file)
+            # Export to HTML
+            html_content, resources = exporter.from_notebook_node(nb)
+
+            # Write HTML
+            with open(output_file, "w") as f:
+                f.write(html_content)
+
+            # Handle any extracted resources (images, etc.)
+            if resources.get("outputs"):
+                files_dir = output_dir / f"{notebook_id}_files"
+                files_dir.mkdir(exist_ok=True)
+                for filename, data in resources["outputs"].items():
+                    with open(files_dir / filename, "wb") as f:
+                        f.write(data)
+
+        return True, str(output_file)
+
+    except Exception as e:
+        return False, str(e)[:500]
 
 
 def render_notebook_task(

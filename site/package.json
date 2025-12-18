@@ -10,7 +10,10 @@
   "dependencies": {
     "@astrojs/react": "^4.2.0",
     "@base-ui/react": "^1.0.0",
+    "@fontsource-variable/open-sans": "^5.2.7",
+    "@fontsource-variable/plus-jakarta-sans": "^5.2.8",
     "@fontsource-variable/public-sans": "^5.2.7",
+    "@fontsource/google-sans-code": "^5.2.3",
     "@fontsource/instrument-serif": "^5.2.8",
     "@fontsource/jetbrains-mono": "^5.2.8",
     "@fontsource/space-mono": "^5.2.9",
