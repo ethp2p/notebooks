@@ -141,8 +141,8 @@ jobs:
 
       - name: Build Astro site
         env:
-          ASTRO_SITE: https://ethpandaops.github.io
-          ASTRO_BASE: /peerdas-devnet-7
+          ASTRO_SITE: https://ethp2p.github.io
+          ASTRO_BASE: /notebooks
         run: cd site && pnpm run build
 
       - name: Upload artifact
