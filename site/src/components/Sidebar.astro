@@ -1,6 +1,5 @@
 ---
-import { NotebookIcon } from './NotebookIcon';
-import { Icon } from './Icon';
+import Icon from './Icon.astro';
 import yaml from 'js-yaml';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -48,34 +47,34 @@ const formatDate = (dateStr: string) => {
 };
 ---
 
-<nav class="flex flex-col gap-8">
+<nav class="flex flex-col gap-5">
   <!-- Latest Section -->
-  <div class="flex flex-col gap-2">
-    <div class="flex items-center justify-between px-2 mb-1">
-      <span class="font-mono text-[0.625rem] font-semibold uppercase tracking-widest text-muted-foreground">Latest</span>
-      <span class="flex items-center gap-1.5 font-mono text-[0.5625rem] font-medium py-0.5 px-2 bg-muted  text-muted-foreground">
-        <span class="w-1.5 h-1.5 bg-accent  animate-pulse"></span>
+  <div class="flex flex-col gap-1">
+    <div class="flex items-center justify-between px-2 mb-0.5">
+      <span class="text-[0.625rem] font-semibold uppercase tracking-wide text-muted-foreground">Latest</span>
+      <span class="flex items-center gap-1 text-[0.5625rem] font-medium py-0.5 px-1.5 bg-muted text-muted-foreground">
+        <span class="w-1 h-1 bg-accent animate-pulse"></span>
         {formatDate(latestDate)}
       </span>
     </div>
-    <ul class="list-none p-0 m-0 flex flex-col gap-0.5">
+    <ul class="list-none p-0 m-0 flex flex-col">
       {notebooks.map((nb, index) => {
         const href = `${base}notebooks/${nb.id}`;
         const isActive = currentPath.includes(`/notebooks/${nb.id}`);
         return (
-          <li class="animate-[slideInLeft_0.3s_ease-out_backwards]" style={`animation-delay: calc(${index} * 0.03s)`}>
+          <li>
             <a
               href={href}
               class:list={[
-                'group relative flex items-center gap-2.5 py-2 px-2.5 text-muted-foreground no-underline  text-[0.8125rem] transition-all duration-200',
-                'before:content-[\'\'] before:absolute before:left-0 before:top-1/2 before:w-[3px] before:h-0 before:bg-primary before: before:-translate-y-1/2 before:transition-all before:duration-200',
+                'group relative flex items-center gap-2 py-1.5 px-2 text-muted-foreground no-underline text-[0.8125rem] transition-all duration-200',
+                'before:content-[\'\'] before:absolute before:left-0 before:top-1/2 before:w-[2px] before:h-0 before:bg-primary before:-translate-y-1/2 before:transition-all before:duration-200',
                 'hover:text-foreground hover:bg-muted hover:before:h-1/2',
                 isActive ? 'text-foreground bg-[var(--mauve-4)] font-medium before:!h-[60%]' : ''
               ]}
               title={nb.description}
             >
               <span class="flex items-center justify-center shrink-0 opacity-50 transition-all duration-200 group-hover:opacity-100 group-hover:text-primary group-[.active]:opacity-100 group-[.active]:text-primary">
-                <NotebookIcon icon={nb.icon} size={14} />
+                <Icon name={nb.icon || 'FileText'} size={12} />
               </span>
               <span class="flex-1 min-w-0 overflow-hidden text-ellipsis whitespace-nowrap">{nb.title}</span>
             </a>
@@ -87,32 +86,32 @@ const formatDate = (dateStr: string) => {
 
   <!-- Previous Snapshots Section -->
   {historicalDates.length > 0 && (
-    <div class="flex flex-col gap-2">
-      <div class="flex items-center justify-between px-2 mb-1">
-        <span class="font-mono text-[0.625rem] font-semibold uppercase tracking-widest text-muted-foreground">Previous</span>
-        <span class="font-mono text-[0.5625rem] font-medium text-muted-foreground opacity-70">{historicalDates.length} dates</span>
+    <div class="flex flex-col gap-1">
+      <div class="flex items-center justify-between px-2 mb-0.5">
+        <span class="text-[0.625rem] font-semibold uppercase tracking-wide text-muted-foreground">Previous</span>
+        <span class="text-[0.5625rem] font-normal text-muted-foreground opacity-70">{historicalDates.length} dates</span>
       </div>
-      <ul class="list-none p-0 m-0 flex flex-col gap-0.5">
+      <ul class="list-none p-0 m-0 flex flex-col">
         {historicalDates.slice(0, 7).map((date, index) => {
           const compactDate = toCompactDate(date);
           const href = `${base}${compactDate}`;
           const isActive = currentPath.startsWith(`/${compactDate}`);
           return (
-            <li class="animate-[slideInLeft_0.3s_ease-out_backwards]" style={`animation-delay: calc(${index} * 0.03s)`}>
+            <li>
               <a
                 href={href}
                 class:list={[
-                  'group relative flex items-center gap-2.5 py-2 px-2.5 text-muted-foreground no-underline  text-[0.8125rem] transition-all duration-200',
-                  'before:content-[\'\'] before:absolute before:left-0 before:top-1/2 before:w-[3px] before:h-0 before:bg-primary before: before:-translate-y-1/2 before:transition-all before:duration-200',
+                  'group relative flex items-center gap-2 py-1.5 px-2 text-muted-foreground no-underline text-[0.8125rem] transition-all duration-200',
+                  'before:content-[\'\'] before:absolute before:left-0 before:top-1/2 before:w-[2px] before:h-0 before:bg-primary before:-translate-y-1/2 before:transition-all before:duration-200',
                   'hover:text-foreground hover:bg-muted hover:before:h-1/2',
                   isActive ? 'text-foreground bg-[var(--mauve-4)] font-medium before:!h-[60%]' : ''
                 ]}
               >
                 <span class="flex items-center justify-center shrink-0 opacity-50 transition-all duration-200 group-hover:opacity-100 group-hover:text-primary">
-                  <Icon name="Calendar" size={14} client:load />
+                  <Icon name="Calendar" size={12} />
                 </span>
-                <span class="flex-1 min-w-0 overflow-hidden text-ellipsis whitespace-nowrap font-mono text-xs tracking-tight">{formatDate(date)}</span>
-                <span class="font-mono text-[0.5625rem] text-muted-foreground opacity-60 py-0.5 px-1 bg-muted">{date.slice(0, 4)}</span>
+                <span class="flex-1 min-w-0 overflow-hidden text-ellipsis whitespace-nowrap">{formatDate(date)}</span>
+                <span class="text-[0.5625rem] font-normal text-muted-foreground opacity-60 py-0.5 px-1 bg-muted">{date.slice(0, 4)}</span>
               </a>
             </li>
           );

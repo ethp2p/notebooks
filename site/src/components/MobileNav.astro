@@ -1,0 +1,323 @@
+---
+// Floating mobile navigation buttons - bottom left (menu) and bottom right (TOC)
+import Icon from './Icon.astro';
+import Sidebar from './Sidebar.astro';
+
+interface Heading {
+  id: string;
+  text: string;
+  level: number;
+}
+
+interface Props {
+  headings?: Heading[];
+}
+
+const { headings = [] } = Astro.props;
+---
+
+<!-- Floating menu button (bottom left) - mobile only -->
+<div id="mobile-nav-buttons" class="mobile-nav-buttons fixed bottom-6 left-4 z-[60] pointer-events-none opacity-0 translate-y-4 transition-all duration-300 lg:hidden">
+  <button
+    type="button"
+    id="mobile-menu-button"
+    class="pointer-events-auto flex items-center justify-center w-10 h-10 bg-background/80 backdrop-blur-sm border border-border/50 text-muted-foreground shadow-sm transition-all duration-200 hover:bg-background hover:text-foreground hover:shadow-md active:scale-95"
+    aria-label="Open menu"
+    aria-expanded="false"
+    aria-controls="mobile-sidebar-drawer"
+  >
+    <Icon name="PanelLeft" size={18} />
+  </button>
+</div>
+
+<!-- TOC button (bottom right on mobile, top right on tablet) -->
+{headings.length > 0 && (
+  <div id="mobile-toc-buttons" class="mobile-toc-buttons fixed z-[60] pointer-events-none opacity-0 transition-all duration-300 xl:hidden bottom-6 right-4 lg:bottom-auto lg:top-6 lg:opacity-100">
+    <button
+      type="button"
+      id="mobile-toc-button"
+      class="pointer-events-auto flex items-center justify-center w-10 h-10 bg-background/80 backdrop-blur-sm border border-border/50 text-muted-foreground shadow-sm transition-all duration-200 hover:bg-background hover:text-foreground hover:shadow-md active:scale-95"
+      aria-label="Table of contents"
+      aria-expanded="false"
+      aria-controls="mobile-toc-drawer"
+    >
+      <Icon name="List" size={18} />
+    </button>
+  </div>
+)}
+
+<!-- Backdrop overlay (shared) -->
+<div
+  id="mobile-nav-backdrop"
+  class="fixed inset-0 bg-black/50 backdrop-blur-sm z-[70] opacity-0 pointer-events-none transition-opacity duration-300 lg:hidden"
+  aria-hidden="true"
+></div>
+
+<!-- Sidebar drawer (slides from left) -->
+<aside
+  id="mobile-sidebar-drawer"
+  class="fixed top-0 left-0 h-screen w-72 max-w-[85vw] bg-sidebar border-r border-sidebar-border z-[80] -translate-x-full transition-transform duration-300 ease-out overflow-hidden lg:hidden"
+  aria-label="Navigation"
+>
+  <div class="flex flex-col h-full">
+    <div class="flex items-center justify-between p-4 border-b border-sidebar-border">
+      <a href="/" class="flex items-center gap-2.5 no-underline">
+        <span class="flex items-center justify-center w-8 h-8 bg-primary text-primary-foreground">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <path d="M12 1L3 12l9 5 9-5L12 1z" stroke="currentColor" stroke-width="1.5" fill="none"/>
+            <path d="M12 17l-9-5 9 11 9-11-9 5z" stroke="currentColor" stroke-width="1.5" fill="none"/>
+            <path d="M12 1v16" stroke="currentColor" stroke-width="1.5" opacity="0.3"/>
+          </svg>
+        </span>
+        <span class="flex flex-col leading-none">
+          <span class="font-mono text-[0.75rem] font-bold tracking-wide text-foreground">ETH P2P</span>
+          <span class="font-serif text-[0.75rem] text-muted-foreground">Notebooks</span>
+        </span>
+      </a>
+      <button
+        type="button"
+        class="mobile-drawer-close flex items-center justify-center w-8 h-8 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+        aria-label="Close menu"
+      >
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <line x1="18" y1="6" x2="6" y2="18" />
+          <line x1="6" y1="6" x2="18" y2="18" />
+        </svg>
+      </button>
+    </div>
+    <div class="flex-1 overflow-y-auto p-4">
+      <Sidebar />
+    </div>
+  </div>
+</aside>
+
+<!-- TOC floating bubble (bottom-aligned) -->
+{headings.length > 0 && (
+  <div
+    id="mobile-toc-drawer"
+    class="fixed w-80 max-w-[calc(100vw-2rem)] max-h-[60vh] bg-card border border-border shadow-xl z-[80] opacity-0 scale-95 pointer-events-none transition-all duration-200 ease-out overflow-hidden xl:hidden bottom-20 right-4 origin-bottom-right lg:bottom-auto lg:top-16 lg:origin-top-right"
+    aria-label="Table of contents"
+  >
+    <div class="flex flex-col h-full max-h-[60vh]">
+      <div class="flex items-center justify-between p-3 border-b border-border shrink-0">
+        <div class="flex items-center gap-1.5 text-muted-foreground">
+          <Icon name="List" size={12} />
+          <span class="font-semibold text-[0.625rem] uppercase tracking-wide">On this page</span>
+        </div>
+        <button
+          type="button"
+          class="mobile-drawer-close flex items-center justify-center w-7 h-7 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+          aria-label="Close"
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
+      </div>
+      <div class="flex-1 overflow-y-auto p-2 min-h-0">
+        <ul class="list-none p-0 m-0 flex flex-col">
+          {headings.map((heading) => (
+            <li class:list={['m-0', heading.level === 3 ? 'pl-3' : '']}>
+              <a
+                href={`#${heading.id}`}
+                class="toc-link block py-1.5 px-2 text-muted-foreground no-underline text-[0.8125rem] leading-snug transition-all duration-200 hover:text-foreground hover:bg-muted"
+              >
+                {heading.text}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  </div>
+)}
+
+<script>
+  function initMobileNav() {
+    const menuButtonContainer = document.getElementById('mobile-nav-buttons');
+    const tocButtonContainer = document.getElementById('mobile-toc-buttons');
+    const menuButton = document.getElementById('mobile-menu-button');
+    const tocButton = document.getElementById('mobile-toc-button');
+    const backdrop = document.getElementById('mobile-nav-backdrop');
+    const sidebarDrawer = document.getElementById('mobile-sidebar-drawer');
+    const tocDrawer = document.getElementById('mobile-toc-drawer');
+    const closeButtons = document.querySelectorAll('.mobile-drawer-close');
+
+    if (!backdrop) return;
+
+    let activeDrawer: HTMLElement | null = null;
+    let isTocOpen = false;
+    let hideTimeout: ReturnType<typeof setTimeout> | null = null;
+
+    // Check if we're in mobile mode (below lg breakpoint)
+    const isMobile = () => window.innerWidth < 1024;
+
+    function showButtons() {
+      if (activeDrawer || isTocOpen) return;
+      // Menu button container (mobile only)
+      menuButtonContainer?.classList.remove('opacity-0', 'translate-y-4');
+      menuButtonContainer?.classList.add('opacity-100', 'translate-y-0');
+      // TOC button container (mobile only - at lg+ it's always visible via CSS)
+      if (isMobile() && tocButtonContainer) {
+        tocButtonContainer.classList.remove('opacity-0');
+        tocButtonContainer.classList.add('opacity-100');
+      }
+
+      if (hideTimeout) clearTimeout(hideTimeout);
+      hideTimeout = setTimeout(hideButtons, 2500);
+    }
+
+    function hideButtons() {
+      if (activeDrawer || isTocOpen) return;
+      menuButtonContainer?.classList.add('opacity-0', 'translate-y-4');
+      menuButtonContainer?.classList.remove('opacity-100', 'translate-y-0');
+      // Only hide TOC button on mobile
+      if (isMobile() && tocButtonContainer) {
+        tocButtonContainer.classList.add('opacity-0');
+        tocButtonContainer.classList.remove('opacity-100');
+      }
+    }
+
+    function openSidebar() {
+      if (isTocOpen) closeToc();
+      activeDrawer = sidebarDrawer;
+      sidebarDrawer?.classList.remove('-translate-x-full');
+      sidebarDrawer?.classList.add('translate-x-0');
+      backdrop.classList.remove('opacity-0', 'pointer-events-none');
+      backdrop.classList.add('opacity-100');
+      menuButton?.setAttribute('aria-expanded', 'true');
+      document.body.style.overflow = 'hidden';
+      if (hideTimeout) clearTimeout(hideTimeout);
+    }
+
+    function closeSidebar() {
+      sidebarDrawer?.classList.add('-translate-x-full');
+      sidebarDrawer?.classList.remove('translate-x-0');
+      backdrop.classList.add('opacity-0', 'pointer-events-none');
+      backdrop.classList.remove('opacity-100');
+      menuButton?.setAttribute('aria-expanded', 'false');
+      document.body.style.overflow = '';
+      activeDrawer = null;
+      hideTimeout = setTimeout(hideButtons, 2500);
+    }
+
+    function openToc() {
+      if (activeDrawer) closeSidebar();
+      isTocOpen = true;
+      tocDrawer?.classList.remove('opacity-0', 'scale-95', 'pointer-events-none');
+      tocDrawer?.classList.add('opacity-100', 'scale-100', 'pointer-events-auto');
+      tocButton?.setAttribute('aria-expanded', 'true');
+      if (hideTimeout) clearTimeout(hideTimeout);
+    }
+
+    function closeToc() {
+      isTocOpen = false;
+      tocDrawer?.classList.add('opacity-0', 'scale-95', 'pointer-events-none');
+      tocDrawer?.classList.remove('opacity-100', 'scale-100', 'pointer-events-auto');
+      tocButton?.setAttribute('aria-expanded', 'false');
+      hideTimeout = setTimeout(hideButtons, 2500);
+    }
+
+    function closeAll() {
+      if (activeDrawer) closeSidebar();
+      if (isTocOpen) closeToc();
+    }
+
+    // Scroll listener - show buttons on scroll (mobile only for menu button)
+    let ticking = false;
+
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          showButtons();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    }, { passive: true });
+
+    // Touch move also shows buttons (for momentum scrolling)
+    window.addEventListener('touchmove', showButtons, { passive: true });
+
+    // Menu button toggles sidebar
+    menuButton.addEventListener('click', () => {
+      showButtons(); // Ensure visible
+      if (activeDrawer) {
+        closeSidebar();
+      } else {
+        openSidebar();
+      }
+    });
+
+    // TOC button toggles TOC bubble
+    tocButton?.addEventListener('click', () => {
+      showButtons(); // Ensure visible
+      if (isTocOpen) {
+        closeToc();
+      } else {
+        openToc();
+      }
+    });
+
+    // Close buttons
+    closeButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (activeDrawer) closeSidebar();
+        if (isTocOpen) closeToc();
+      });
+    });
+
+    // Backdrop click closes sidebar
+    backdrop.addEventListener('click', closeSidebar);
+
+    // Click outside TOC bubble closes it
+    document.addEventListener('click', (e) => {
+      if (!isTocOpen) return;
+      const target = e.target as HTMLElement;
+      if (!tocDrawer?.contains(target) && !tocButton?.contains(target)) {
+        closeToc();
+      }
+    });
+
+    // Escape key closes all
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeAll();
+      }
+    });
+
+    // Links close their drawer
+    sidebarDrawer?.querySelectorAll('a').forEach(link => {
+      link.addEventListener('click', () => setTimeout(closeSidebar, 100));
+    });
+    tocDrawer?.querySelectorAll('a').forEach(link => {
+      link.addEventListener('click', () => setTimeout(closeToc, 100));
+    });
+
+    // Resize to desktop closes all
+    window.matchMedia('(min-width: 1024px)').addEventListener('change', (e) => {
+      if (e.matches) closeAll();
+    });
+  }
+
+  initMobileNav();
+  document.addEventListener('astro:page-load', initMobileNav);
+</script>
+
+<style>
+  #mobile-sidebar-drawer,
+  #mobile-toc-drawer {
+    box-shadow: 0 0 24px rgba(0, 0, 0, 0.15);
+  }
+
+  #mobile-sidebar-drawer::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, transparent 0%, var(--sidebar) 100%);
+    opacity: 0.5;
+    pointer-events: none;
+    z-index: -1;
+  }
+</style>

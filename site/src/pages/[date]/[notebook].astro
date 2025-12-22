@@ -2,6 +2,7 @@
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import NotebookEmbed from '../../components/NotebookEmbed.astro';
 import DateNav from '../../components/DateNav.astro';
+import { extractHeadings } from '../../lib/extract-headings';
 import yaml from 'js-yaml';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -82,9 +83,10 @@ if (!notebookData) {
 
 const htmlPath = notebookData.html_path || `archive/${dateIso}/${notebook.id}.html`;
 const isLatest = dateIso === manifest.latest_date;
+const headings = extractHeadings(htmlPath);
 ---
 
-<BaseLayout title={`${notebook.title} - ${dateIso}`} description={notebook.description} showToc={true}>
+<BaseLayout title={`${notebook.title} - ${dateIso}`} description={notebook.description} headings={headings}>
   <DateNav currentDate={dateIso} notebookId={notebook.id} isLatest={isLatest} />
   <NotebookEmbed htmlPath={htmlPath} title={notebook.title} />
 </BaseLayout>

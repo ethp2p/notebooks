@@ -1,6 +1,6 @@
 ---
 // Sticky date navigation with prev/next arrows
-import { Icon } from './Icon';
+import Icon from './Icon.astro';
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -70,20 +70,20 @@ const formatShortDate = (dateStr: string) => {
   <a
     href={prevUrl || '#'}
     class:list={[
-      'group flex items-center gap-2 py-2.5 px-3.5  text-muted-foreground no-underline text-xs transition-all min-w-[90px] border border-transparent justify-start',
-      'hover:bg-primary hover:text-primary-foreground hover:border-primary hover:-translate-x-0.5',
+      'group flex items-center gap-2 py-2.5 px-3.5  text-muted-foreground no-underline text-xs transition-colors min-w-[90px] justify-start',
+      'hover:bg-muted hover:text-foreground',
       { 'opacity-25 cursor-not-allowed pointer-events-none': !prevUrl }
     ]}
     aria-label="Previous date"
     aria-disabled={!prevUrl}
   >
-    <Icon name="ChevronLeft" size={18} client:load />
+    <Icon name="ChevronLeft" size={18} />
     {prevDate && <span class="font-mono text-[0.6875rem] tracking-wide hidden sm:inline">{formatShortDate(prevDate)}</span>}
   </a>
 
   <div class="flex flex-col items-center gap-1 flex-1 text-center">
     <span class="flex items-center gap-1.5 font-mono text-[0.625rem] text-muted-foreground uppercase tracking-widest">
-      <Icon name="Calendar" size={14} client:load />
+      <Icon name="Calendar" size={14} />
       Data snapshot
     </span>
     <span class="font-serif font-normal text-base text-foreground flex items-center gap-2.5 -tracking-tight sm:text-base text-sm">
@@ -99,14 +99,14 @@ const formatShortDate = (dateStr: string) => {
   <a
     href={nextUrl || '#'}
     class:list={[
-      'group flex items-center gap-2 py-2.5 px-3.5  text-muted-foreground no-underline text-xs transition-all min-w-[90px] border border-transparent justify-end',
-      'hover:bg-primary hover:text-primary-foreground hover:border-primary hover:translate-x-0.5',
+      'group flex items-center gap-2 py-2.5 px-3.5  text-muted-foreground no-underline text-xs transition-colors min-w-[90px] justify-end',
+      'hover:bg-muted hover:text-foreground',
       { 'opacity-25 cursor-not-allowed pointer-events-none': !nextUrl }
     ]}
     aria-label="Next date"
     aria-disabled={!nextUrl}
   >
     {nextDate && <span class="font-mono text-[0.6875rem] tracking-wide hidden sm:inline">{formatShortDate(nextDate)}</span>}
-    <Icon name="ChevronRight" size={18} client:load />
+    <Icon name="ChevronRight" size={18} />
   </a>
 </div>

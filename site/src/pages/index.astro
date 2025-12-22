@@ -1,7 +1,6 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import { NotebookIcon } from '../components/NotebookIcon';
-import { Icon } from '../components/Icon';
+import Icon from '../components/Icon.astro';
 import yaml from 'js-yaml';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -74,7 +73,7 @@ const formatDate = (dateStr: string) => {
             style={`--index: ${index}`}
           >
             <div class="flex items-center justify-center w-10 h-10 bg-muted  text-muted-foreground shrink-0 transition-all duration-200 group-hover:bg-primary group-hover:text-primary-foreground">
-              <NotebookIcon icon={nb.icon} size={20} />
+              <Icon name={nb.icon || 'FileText'} size={20} />
             </div>
             <div class="flex-1 min-w-0">
               <h3 class="font-sans text-[0.9375rem] font-semibold text-foreground m-0 mb-1 leading-tight">{nb.title}</h3>
@@ -85,75 +84,6 @@ const formatDate = (dateStr: string) => {
             </div>
           </a>
         ))}
-      </div>
-    </section>
-
-    <!-- Info Grid -->
-    <section class="mb-16">
-      <div class="grid grid-cols-3 gap-5 max-md:grid-cols-1">
-        <div class="p-6 bg-card border border-border  transition-all duration-200 hover:border-[var(--mauve-6)] dark:hover:bg-[oklch(0.16_0.02_260)]">
-          <div class="flex items-center justify-center w-9 h-9 bg-muted  text-primary mb-4">
-            <Icon name="Clock" size={20} strokeWidth={1.5} />
-          </div>
-          <h3 class="font-sans text-sm font-semibold text-foreground m-0 mb-2">Daily Updates</h3>
-          <p class="text-[0.8125rem] text-muted-foreground m-0 leading-relaxed">Notebooks regenerate automatically at 1am UTC with fresh data from the previous day.</p>
-        </div>
-
-        <div class="p-6 bg-card border border-border  transition-all duration-200 hover:border-[var(--mauve-6)] dark:hover:bg-[oklch(0.16_0.02_260)]">
-          <div class="flex items-center justify-center w-9 h-9 bg-muted  text-primary mb-4">
-            <Icon name="Database" size={20} strokeWidth={1.5} />
-          </div>
-          <h3 class="font-sans text-sm font-semibold text-foreground m-0 mb-2">Data Source</h3>
-          <p class="text-[0.8125rem] text-muted-foreground m-0 leading-relaxed">Powered by EthPandaOps Xatu infrastructure, querying ClickHouse for network-wide metrics.</p>
-        </div>
-
-        <div class="p-6 bg-card border border-border  transition-all duration-200 hover:border-[var(--mauve-6)] dark:hover:bg-[oklch(0.16_0.02_260)]">
-          <div class="flex items-center justify-center w-9 h-9 bg-muted  text-primary mb-4">
-            <Icon name="BarChart3" size={20} strokeWidth={1.5} />
-          </div>
-          <h3 class="font-sans text-sm font-semibold text-foreground m-0 mb-2">Daily Snapshots</h3>
-          <p class="text-[0.8125rem] text-muted-foreground m-0 leading-relaxed">All daily snapshots are preserved and accessible. Track trends over time via the sidebar.</p>
-        </div>
-      </div>
-    </section>
-
-    <!-- Pipeline Section -->
-    <section class="p-8 bg-muted  dark:bg-[oklch(0.14_0.02_260)]">
-      <h2 class="font-serif text-xl font-normal -tracking-tight m-0 mb-6 text-center">Data Pipeline</h2>
-      <div class="flex items-center justify-center gap-2 flex-wrap max-md:flex-col">
-        <div class="flex flex-col items-center gap-2">
-          <div class="flex items-center justify-center w-11 h-11 bg-background border border-border  text-muted-foreground transition-all duration-200">
-            <Icon name="Database" size={18} strokeWidth={1.5} />
-          </div>
-          <span class="font-mono text-[0.625rem] uppercase tracking-wide text-muted-foreground">ClickHouse</span>
-        </div>
-        <div class="text-border max-md:rotate-90">
-          <Icon name="ArrowRight" size={24} strokeWidth={1.5} />
-        </div>
-        <div class="flex flex-col items-center gap-2">
-          <div class="flex items-center justify-center w-11 h-11 bg-background border border-border  text-muted-foreground transition-all duration-200">
-            <Icon name="FileText" size={18} strokeWidth={1.5} />
-          </div>
-          <span class="font-mono text-[0.625rem] uppercase tracking-wide text-muted-foreground">Parquet</span>
-        </div>
-        <div class="text-border max-md:rotate-90">
-          <Icon name="ArrowRight" size={24} strokeWidth={1.5} />
-        </div>
-        <div class="flex flex-col items-center gap-2">
-          <div class="flex items-center justify-center w-11 h-11 bg-background border border-border  text-muted-foreground transition-all duration-200">
-            <Icon name="Monitor" size={18} strokeWidth={1.5} />
-          </div>
-          <span class="font-mono text-[0.625rem] uppercase tracking-wide text-muted-foreground">Jupyter</span>
-        </div>
-        <div class="text-border max-md:rotate-90">
-          <Icon name="ArrowRight" size={24} strokeWidth={1.5} />
-        </div>
-        <div class="flex flex-col items-center gap-2">
-          <div class="flex items-center justify-center w-11 h-11 bg-primary border-primary  text-primary-foreground transition-all duration-200 dark:shadow-[var(--glow)]">
-            <Icon name="Layers" size={18} strokeWidth={1.5} />
-          </div>
-          <span class="font-mono text-[0.625rem] uppercase tracking-wide text-primary font-semibold">Visualizations</span>
-        </div>
       </div>
     </section>
   </div>

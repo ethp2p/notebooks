@@ -2,7 +2,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import CodeToggle from "./CodeToggle.astro";
-import { Icon } from "./Icon";
+import Icon from "./Icon.astro";
 
 interface Props {
     htmlPath: string;
@@ -49,7 +49,7 @@ if (fs.existsSync(fullPath)) {
     error ? (
         <div class="error-container">
             <div class="error-icon">
-                <Icon name="AlertCircle" size={24} client:load />
+                <Icon name="AlertCircle" size={24} />
             </div>
             <h2>Error Loading Notebook</h2>
             <p>{error}</p>

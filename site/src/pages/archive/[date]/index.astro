@@ -1,7 +1,6 @@
 ---
 import BaseLayout from '../../../layouts/BaseLayout.astro';
-import { NotebookIcon } from '../../../components/NotebookIcon';
-import { Icon } from '../../../components/Icon';
+import Icon from '../../../components/Icon.astro';
 import yaml from 'js-yaml';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -151,7 +150,7 @@ const year = dateObj.getFullYear();
               style={`--delay: ${index * 0.08}s`}
             >
               <div class="notebook-icon">
-                <NotebookIcon icon={nb.icon} size={24} />
+                <Icon name={nb.icon || 'FileText'} size={24} />
               </div>
               <div class="notebook-content">
                 <h3 class="notebook-title">{nb.title}</h3>

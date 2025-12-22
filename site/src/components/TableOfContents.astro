@@ -1,97 +1,81 @@
 ---
-// Floating Table of Contents component
-// Extracts headings from notebook content and displays a sticky TOC
-import { Icon } from './Icon';
+// Static Table of Contents component
+// Receives headings extracted at build time
+import Icon from './Icon.astro';
+
+interface Heading {
+  id: string;
+  text: string;
+  level: number;
+}
+
+interface Props {
+  headings?: Heading[];
+}
+
+const { headings = [] } = Astro.props;
 ---
 
-<nav class="sticky top-8 max-h-[calc(100vh-4rem)] overflow-y-auto p-5 bg-card border border-border  text-[0.8125rem] transition-all duration-300 dark:bg-[oklch(0.14_0.018_260/80%)] dark:backdrop-blur-lg max-xl:hidden" id="toc">
-  <div class="flex items-center gap-2 mb-4 pb-3 border-b border-border text-muted-foreground">
-    <Icon name="List" size={14} client:load />
-    <span class="font-mono font-semibold text-[0.6875rem] uppercase tracking-widest">On this page</span>
-  </div>
-  <ul class="list-none p-0 m-0 flex flex-col gap-0.5" id="toc-list">
-    <!-- Populated by JavaScript -->
-  </ul>
-</nav>
+{headings.length > 0 && (
+  <nav class="sticky top-8 max-h-[calc(100vh-4rem)] overflow-y-auto p-4 bg-card border border-border text-[0.75rem] dark:bg-[oklch(0.14_0.018_260/80%)] dark:backdrop-blur-lg max-xl:hidden" id="toc">
+    <div class="flex items-center gap-1.5 mb-3 pb-2 border-b border-border text-muted-foreground">
+      <Icon name="List" size={12} />
+      <span class="font-semibold text-[0.625rem] uppercase tracking-wide">On this page</span>
+    </div>
+    <ul class="list-none p-0 m-0 flex flex-col" id="toc-list">
+      {headings.map((heading, index) => (
+        <li
+          class:list={['m-0', heading.level === 3 ? 'pl-3' : '']}
+        >
+          <a
+            href={`#${heading.id}`}
+            class="toc-link block py-1 px-2 text-muted-foreground no-underline border-l border-transparent -ml-2 leading-snug text-[0.8125rem] hover:text-foreground hover:bg-muted hover:border-l-[var(--mauve-6)]"
+          >
+            {heading.text}
+          </a>
+        </li>
+      ))}
+    </ul>
+  </nav>
+)}
 
 <script>
   function initTOC() {
     const tocList = document.getElementById('toc-list');
-    const tocContainer = document.getElementById('toc');
-    if (!tocList || !tocContainer) return;
+    if (!tocList) return;
 
-    // Find all headings in notebook content
-    const content = document.querySelector('.notebook-content');
-    if (!content) return;
+    const tocLinks = tocList.querySelectorAll('.toc-link');
+    const headingIds = Array.from(tocLinks).map(link => link.getAttribute('href')?.slice(1)).filter(Boolean);
 
-    const headings = content.querySelectorAll('h1, h2, h3');
-    if (headings.length === 0) {
-      tocContainer.style.display = 'none';
-      return;
-    }
-
-    // Clear existing items
-    tocList.innerHTML = '';
-
-    // Track TOC items for bottom-of-page handling
-    const tocLinks: HTMLAnchorElement[] = [];
-
-    // Build TOC
-    headings.forEach((heading, index) => {
-      // Skip the main title (first h1)
-      if (heading.tagName === 'H1' && index === 0) return;
-
-      // Ensure heading has an ID
-      if (!heading.id) {
-        heading.id = `heading-${index}`;
-      }
-
-      const li = document.createElement('li');
-      li.className = `m-0 animate-[fadeIn_0.3s_ease-out_backwards]`;
-      li.style.animationDelay = `calc(${index} * 0.02s)`;
-      if (heading.tagName === 'H3') {
-        li.classList.add('pl-3.5');
-      }
-
-      const a = document.createElement('a');
-      a.href = `#${heading.id}`;
-      a.textContent = heading.textContent?.replace(/¶/g, '').trim() || '';
-      a.className = 'toc-link block py-1.5 px-2.5 text-muted-foreground no-underline  border-l-2 border-transparent -ml-2.5 transition-all duration-200 leading-snug text-xs hover:text-foreground hover:bg-muted hover:border-l-[var(--mauve-6)]';
-
-      li.appendChild(a);
-      tocList.appendChild(li);
-      tocLinks.push(a);
-    });
+    if (headingIds.length === 0) return;
 
     const activeClasses = ['active', 'text-foreground', 'border-l-primary', 'bg-[var(--mauve-3)]', 'font-medium', 'dark:bg-[oklch(0.25_0.03_280/50%)]', 'dark:shadow-[0_0_20px_oklch(0.55_0.12_280/10%)]'];
 
     const setActive = (link: Element) => {
-      tocList.querySelectorAll('.toc-link').forEach(l => {
+      tocLinks.forEach(l => {
         l.classList.remove(...activeClasses);
       });
       link.classList.add(...activeClasses);
     };
 
     // Highlight active section on scroll
-    const observerOptions = {
-      rootMargin: '-80px 0px -70% 0px',
-      threshold: 0
-    };
-
     const observer = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
-          const id = entry.target.id;
-          const tocLink = tocList.querySelector(`a[href="#${id}"]`);
+          const tocLink = tocList.querySelector(`a[href="#${entry.target.id}"]`);
           if (tocLink) {
             setActive(tocLink);
           }
         }
       });
-    }, observerOptions);
+    }, {
+      rootMargin: '-80px 0px -70% 0px',
+      threshold: 0
+    });
 
-    headings.forEach(heading => {
-      if (heading.id) {
+    headingIds.forEach(id => {
+      const heading = document.getElementById(id!);
+      if (heading) {
         observer.observe(heading);
       }
     });

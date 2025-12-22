@@ -2,6 +2,7 @@
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import NotebookEmbed from '../../components/NotebookEmbed.astro';
 import DateNav from '../../components/DateNav.astro';
+import { extractHeadings } from '../../lib/extract-headings';
 import yaml from 'js-yaml';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -45,9 +46,10 @@ if (fs.existsSync(manifestPath)) {
 }
 
 const htmlPath = `latest/${notebook.id}.html`;
+const headings = extractHeadings(htmlPath);
 ---
 
-<BaseLayout title={notebook.title} description={notebook.description} showToc={true}>
+<BaseLayout title={notebook.title} description={notebook.description} headings={headings}>
   <DateNav currentDate={latestDate} notebookId={notebook.id} isLatest={true} />
   <NotebookEmbed htmlPath={htmlPath} title={notebook.title} />
 </BaseLayout>

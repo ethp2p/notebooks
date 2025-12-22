@@ -1,6 +1,5 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
-import react from '@astrojs/react';
 import tailwindcss from '@tailwindcss/vite';
 import path from 'path';
 
@@ -11,7 +10,7 @@ const base = process.env.ASTRO_BASE || '/';
 export default defineConfig({
   site: process.env.ASTRO_SITE || 'http://localhost:4321',
   base,
-  integrations: [react()],
+  integrations: [],
   output: 'static',
   build: {
     assets: 'assets'
