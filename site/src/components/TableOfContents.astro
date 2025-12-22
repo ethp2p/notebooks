@@ -12,16 +12,12 @@ import { Icon } from './Icon';
   <ul class="list-none p-0 m-0 flex flex-col gap-0.5" id="toc-list">
     <!-- Populated by JavaScript -->
   </ul>
-  <div class="mt-4 pt-3 border-t border-border h-[3px] bg-muted  overflow-hidden">
-    <div class="h-full bg-gradient-to-r from-primary to-accent  w-0 transition-[width] duration-100" id="toc-progress-bar"></div>
-  </div>
 </nav>
 
 <script>
   function initTOC() {
     const tocList = document.getElementById('toc-list');
     const tocContainer = document.getElementById('toc');
-    const progressBar = document.getElementById('toc-progress-bar');
     if (!tocList || !tocContainer) return;
 
     // Find all headings in notebook content
@@ -36,6 +32,9 @@ import { Icon } from './Icon';
 
     // Clear existing items
     tocList.innerHTML = '';
+
+    // Track TOC items for bottom-of-page handling
+    const tocLinks: HTMLAnchorElement[] = [];
 
     // Build TOC
     headings.forEach((heading, index) => {
@@ -56,12 +55,22 @@ import { Icon } from './Icon';
 
       const a = document.createElement('a');
       a.href = `#${heading.id}`;
-      a.textContent = heading.textContent;
+      a.textContent = heading.textContent?.replace(/¶/g, '').trim() || '';
       a.className = 'toc-link block py-1.5 px-2.5 text-muted-foreground no-underline  border-l-2 border-transparent -ml-2.5 transition-all duration-200 leading-snug text-xs hover:text-foreground hover:bg-muted hover:border-l-[var(--mauve-6)]';
 
       li.appendChild(a);
       tocList.appendChild(li);
+      tocLinks.push(a);
     });
+
+    const activeClasses = ['active', 'text-foreground', 'border-l-primary', 'bg-[var(--mauve-3)]', 'font-medium', 'dark:bg-[oklch(0.25_0.03_280/50%)]', 'dark:shadow-[0_0_20px_oklch(0.55_0.12_280/10%)]'];
+
+    const setActive = (link: Element) => {
+      tocList.querySelectorAll('.toc-link').forEach(l => {
+        l.classList.remove(...activeClasses);
+      });
+      link.classList.add(...activeClasses);
+    };
 
     // Highlight active section on scroll
     const observerOptions = {
@@ -71,15 +80,11 @@ import { Icon } from './Icon';
 
     const observer = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
-        const id = entry.target.id;
-        const tocLink = tocList.querySelector(`a[href="#${id}"]`);
-        if (tocLink) {
-          if (entry.isIntersecting) {
-            // Remove active from all
-            tocList.querySelectorAll('.toc-link').forEach(link => {
-              link.classList.remove('active', 'text-foreground', 'border-l-primary', 'bg-[var(--mauve-3)]', 'font-medium', 'dark:bg-[oklch(0.25_0.03_280/50%)]', 'dark:shadow-[0_0_20px_oklch(0.55_0.12_280/10%)]');
-            });
-            tocLink.classList.add('active', 'text-foreground', 'border-l-primary', 'bg-[var(--mauve-3)]', 'font-medium', 'dark:bg-[oklch(0.25_0.03_280/50%)]', 'dark:shadow-[0_0_20px_oklch(0.55_0.12_280/10%)]');
+        if (entry.isIntersecting) {
+          const id = entry.target.id;
+          const tocLink = tocList.querySelector(`a[href="#${id}"]`);
+          if (tocLink) {
+            setActive(tocLink);
           }
         }
       });
@@ -91,18 +96,16 @@ import { Icon } from './Icon';
       }
     });
 
-    // Progress bar
-    if (progressBar) {
-      const updateProgress = () => {
-        const scrollTop = window.scrollY;
-        const docHeight = document.documentElement.scrollHeight - window.innerHeight;
-        const progress = Math.min((scrollTop / docHeight) * 100, 100);
-        progressBar.style.width = `${progress}%`;
-      };
+    // Select last item when scrolled to bottom
+    const checkBottomScroll = () => {
+      const scrollTop = window.scrollY;
+      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      if (docHeight > 0 && scrollTop >= docHeight - 5 && tocLinks.length > 0) {
+        setActive(tocLinks[tocLinks.length - 1]);
+      }
+    };
 
-      window.addEventListener('scroll', updateProgress, { passive: true });
-      updateProgress();
-    }
+    window.addEventListener('scroll', checkBottomScroll, { passive: true });
 
     // Smooth scroll on click
     tocList.addEventListener('click', (e) => {

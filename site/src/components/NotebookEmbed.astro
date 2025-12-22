@@ -164,18 +164,25 @@ if (fs.existsSync(fullPath)) {
         @apply text-accent;
     }
 
-    /* Anchor links on headings - hide by default, show on hover */
+    /* Anchor links on headings - hide text, show pilcrow via ::after on hover */
     .notebook-content .anchor-link {
-        @apply opacity-0 ml-2 text-muted-foreground no-underline transition-opacity duration-200;
+        @apply ml-2 text-muted-foreground no-underline;
+        font-size: 0;
     }
 
-    .notebook-content h2:hover .anchor-link,
-    .notebook-content h3:hover .anchor-link,
-    .notebook-content h4:hover .anchor-link {
+    .notebook-content .anchor-link::after {
+        content: '¶';
+        font-size: 1rem;
+        @apply opacity-0 transition-opacity duration-200;
+    }
+
+    .notebook-content h2:hover .anchor-link::after,
+    .notebook-content h3:hover .anchor-link::after,
+    .notebook-content h4:hover .anchor-link::after {
         @apply opacity-50;
     }
 
-    .notebook-content .anchor-link:hover {
+    .notebook-content .anchor-link:hover::after {
         @apply opacity-100 text-primary;
     }
 
