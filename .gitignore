@@ -23,7 +23,6 @@ wheels/
 site/dist/
 site/.astro/
 site/node_modules/
-site/pnpm-lock.yaml
 site/public/rendered/
 
 # Notebook rendering artifacts
