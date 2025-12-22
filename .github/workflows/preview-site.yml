@@ -11,7 +11,8 @@ permissions:
   pull-requests: write
 
 concurrency:
-  group: "preview-${{ github.ref }}"
+  # Use head_ref for PRs, ref_name for pushes - ensures same branch cancels previous runs
+  group: "preview-${{ github.head_ref || github.ref_name }}"
   cancel-in-progress: true
 
 jobs:
