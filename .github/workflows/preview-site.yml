@@ -98,7 +98,8 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy site/dist --project-name=eth-notebooks-preview --branch=${{ github.head_ref }}
+          projectName: ${{ secrets.CLOUDFLARE_PROJECT_NAME }}
+          command: pages deploy site/dist --project-name=${{ secrets.CLOUDFLARE_PROJECT_NAME }} --branch=${{ github.head_ref }}
         continue-on-error: true
         id: cloudflare
 
