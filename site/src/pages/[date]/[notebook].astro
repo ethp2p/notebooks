@@ -8,8 +8,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 // Helper to convert YYYYMMDD to YYYY-MM-DD
-const toIsoDate = (compact: string) =>
-  `${compact.slice(0,4)}-${compact.slice(4,6)}-${compact.slice(6,8)}`;
+const toIsoDate = (compact: string) => `${compact.slice(0, 4)}-${compact.slice(4, 6)}-${compact.slice(6, 8)}`;
 
 // Helper to convert YYYY-MM-DD to YYYYMMDD
 const toCompactDate = (iso: string) => iso.replace(/-/g, '');
@@ -54,7 +53,7 @@ export function getStaticPaths() {
       if (dateData[nb.id]) {
         paths.push({
           params: { date: compactDate, notebook: nb.id },
-          props: { isoDate }
+          props: { isoDate },
         });
       }
     }
@@ -68,7 +67,7 @@ const { isoDate } = Astro.props;
 
 // Use provided isoDate or convert from compact format
 const dateIso = isoDate || toIsoDate(date!);
-const notebook = config.notebooks.find(nb => nb.id === notebookId);
+const notebook = config.notebooks.find((nb) => nb.id === notebookId);
 
 if (!notebook) {
   return Astro.redirect('/404');

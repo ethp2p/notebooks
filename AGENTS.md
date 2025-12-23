@@ -5,6 +5,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Project Overview
 
 Ethereum P2P Network Analysis site that:
+
 1. Fetches telemetry from ClickHouse (EthPandaOps Xatu)
 2. Stores as Parquet files with query hash tracking
 3. Renders Jupyter notebooks to HTML (papermill + nbconvert)
@@ -79,9 +80,9 @@ site/                  # Astro static site
 ```yaml
 # Date range modes
 dates:
-  mode: rolling    # rolling | range | list
+  mode: rolling # rolling | range | list
   rolling:
-    window: 14     # Last N days
+    window: 14 # Last N days
 
 # Query registry
 queries:
@@ -141,12 +142,14 @@ Two React components wrap Lucide icons:
 ## Adding a New Notebook
 
 1. Create query function in `queries/new_query.py`:
+
    ```python
    def fetch_my_query(client, target_date: str, output_path: Path, network: str) -> int:
        # Execute SQL, write to Parquet, return row count
    ```
 
 2. Register in `pipeline.yaml`:
+
    ```yaml
    queries:
      my_query:
@@ -163,6 +166,7 @@ Two React components wrap Lucide icons:
    ```
 
 3. Create `notebooks/04-my-notebook.ipynb` with parameters cell tagged "parameters":
+
    ```python
    target_date = None  # Set via papermill
    ```
@@ -172,12 +176,14 @@ Two React components wrap Lucide icons:
 ## Code Conventions
 
 ### Python
+
 - Use type hints
 - Query functions return row count
 - Use `Path` objects for file paths
 - Date format: `YYYY-MM-DD`
 
 ### TypeScript/Astro
+
 - Astro components (`.astro`) for static content
 - React components (`.tsx`) for interactive elements or Lucide icons
 - Prefer CSS variables over hardcoded colors
@@ -244,21 +250,25 @@ cd site && npx shadcn@latest add <component-name>
 ## Debugging
 
 ### Notebook rendering issues
+
 - Check `notebooks/data/` has Parquet files for target date
 - Verify `notebooks/data/manifest.json` lists the date
 - Run `just render-force` to bypass cache
 
 ### Stale data issues
+
 - Run `just check-stale` to see what's outdated
 - Run `just fetch-regen` to auto-fix
 - Check `just show-hashes` vs stored hashes in manifest
 
 ### Site build issues
+
 - Check `site/public/rendered/manifest.json` exists
 - Verify HTML files in `site/public/rendered/{date}/`
 - Run `pnpm run build` from `site/` for detailed errors
 
 ### Data fetch issues
+
 - Verify `.env` has valid ClickHouse credentials
 - Check network connectivity to ClickHouse host
 
@@ -272,9 +282,9 @@ GitHub workflows call `just` commands for local/CI parity:
 
 ## Branches
 
-| Branch | Purpose |
-|--------|---------|
-| `main` | Source code |
-| `data` | Parquet data files |
+| Branch     | Purpose                     |
+| ---------- | --------------------------- |
+| `main`     | Source code                 |
+| `data`     | Parquet data files          |
 | `rendered` | Pre-rendered HTML artifacts |
-| `gh-pages` | Deployed site |
+| `gh-pages` | Deployed site               |

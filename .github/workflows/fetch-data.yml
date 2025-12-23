@@ -2,14 +2,14 @@ name: Fetch Daily Data
 
 on:
   schedule:
-    - cron: '0 1 * * *'  # 1am UTC daily
+    - cron: "0 1 * * *" # 1am UTC daily
   workflow_dispatch:
     inputs:
       date:
-        description: 'Date to fetch (YYYY-MM-DD), default: yesterday'
+        description: "Date to fetch (YYYY-MM-DD), default: yesterday"
         required: false
       auto_regenerate:
-        description: 'Re-fetch all stale data'
+        description: "Re-fetch all stale data"
         type: boolean
         default: false
 

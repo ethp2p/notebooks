@@ -28,10 +28,10 @@ just dev
 
 ## Notebooks
 
-| Notebook | Description |
-|----------|-------------|
-| [Blob Inclusion](notebooks/01-blob-inclusion.ipynb) | Blob inclusion patterns per block and epoch |
-| [Blob Flow](notebooks/02-blob-flow.ipynb) | Blob flow across validators, builders, and relays |
+| Notebook                                                    | Description                                       |
+| ----------------------------------------------------------- | ------------------------------------------------- |
+| [Blob Inclusion](notebooks/01-blob-inclusion.ipynb)         | Blob inclusion patterns per block and epoch       |
+| [Blob Flow](notebooks/02-blob-flow.ipynb)                   | Blob flow across validators, builders, and relays |
 | [Column Propagation](notebooks/03-column-propagation.ipynb) | Column propagation timing across 128 data columns |
 
 ## Architecture
@@ -139,20 +139,20 @@ just daily            # fetch + render + build
 
 GitHub workflows call `just` commands for local/CI parity:
 
-| Workflow | Schedule | Action |
-|----------|----------|--------|
-| `fetch-data.yml` | Daily 1am UTC | `just fetch` -> `data` branch |
-| `build-site.yml` | On push/data update | `just render` + `just build` -> GitHub Pages |
-| `preview-site.yml` | On PR | `just ci-preview` -> Cloudflare Pages |
+| Workflow           | Schedule            | Action                                       |
+| ------------------ | ------------------- | -------------------------------------------- |
+| `fetch-data.yml`   | Daily 1am UTC       | `just fetch` -> `data` branch                |
+| `build-site.yml`   | On push/data update | `just render` + `just build` -> GitHub Pages |
+| `preview-site.yml` | On PR               | `just ci-preview` -> Cloudflare Pages        |
 
 ### Branches
 
-| Branch | Purpose |
-|--------|---------|
-| `main` | Source code |
-| `data` | Parquet data files |
+| Branch     | Purpose                     |
+| ---------- | --------------------------- |
+| `main`     | Source code                 |
+| `data`     | Parquet data files          |
 | `rendered` | Pre-rendered HTML artifacts |
-| `gh-pages` | Deployed static site |
+| `gh-pages` | Deployed static site        |
 
 ## Development
 
@@ -196,16 +196,17 @@ just preview
 
 ## Environment Variables
 
-| Variable | Description |
-|----------|-------------|
-| `CLICKHOUSE_HOST` | ClickHouse server hostname |
-| `CLICKHOUSE_PORT` | ClickHouse server port (default: 8443) |
-| `CLICKHOUSE_USER` | ClickHouse username |
-| `CLICKHOUSE_PASSWORD` | ClickHouse password |
+| Variable              | Description                            |
+| --------------------- | -------------------------------------- |
+| `CLICKHOUSE_HOST`     | ClickHouse server hostname             |
+| `CLICKHOUSE_PORT`     | ClickHouse server port (default: 8443) |
+| `CLICKHOUSE_USER`     | ClickHouse username                    |
+| `CLICKHOUSE_PASSWORD` | ClickHouse password                    |
 
 ## Adding New Analyses
 
 1. **Create query function** in `queries/`:
+
    ```python
    def fetch_my_data(client, target_date: str, output_path: Path, network: str) -> int:
        query = f"SELECT ... WHERE slot_start_date_time >= '{target_date}' ..."
@@ -216,6 +217,7 @@ just preview
    ```
 
 2. **Register in `pipeline.yaml`**:
+
    ```yaml
    queries:
      my_data:

@@ -1,7 +1,36 @@
 ---
 // Floating mobile navigation buttons - bottom left (menu) and bottom right (TOC)
-import Icon from './Icon.astro';
-import Sidebar from './Sidebar.astro';
+import { MobileNav as MobileNavReact } from './MobileNav';
+import fs from 'node:fs';
+import path from 'node:path';
+import yaml from 'js-yaml';
+
+// Reuse the data fetching logic from Sidebar.astro (since we can't import the component's data)
+// Ideally this should be passed from layout, but for now we fetch it here
+const configPath = path.join(process.cwd(), '..', 'pipeline.yaml');
+const configContent = fs.readFileSync(configPath, 'utf-8');
+const config = yaml.load(configContent) as {
+  notebooks: Array<{
+    id: string;
+    title: string;
+    description: string;
+    icon?: string;
+    order: number;
+  }>;
+};
+
+// Load manifest for available dates
+let manifest: { latest_date: string; dates: Record<string, unknown> } = { latest_date: '', dates: {} };
+const manifestPath = path.join(process.cwd(), 'public', 'rendered', 'manifest.json');
+if (fs.existsSync(manifestPath)) {
+  manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'));
+}
+
+const notebooks = config.notebooks.sort((a, b) => a.order - b.order);
+const latestDate = manifest.latest_date || 'No data';
+const historicalDates = Object.keys(manifest.dates || {})
+  .filter((d) => d !== manifest.latest_date)
+  .sort((a, b) => b.localeCompare(a)); // Newest first
 
 interface Heading {
   id: string;
@@ -14,145 +43,8 @@ interface Props {
 }
 
 const { headings = [] } = Astro.props;
+const currentPath = Astro.url.pathname;
+const base = import.meta.env.BASE_URL;
 ---
 
-<!-- Floating menu button (bottom left) - mobile only -->
-<div id="mobile-nav-buttons" class="mobile-nav-buttons fixed bottom-6 left-4 z-[60] pointer-events-none opacity-0 translate-y-4 transition-all duration-300 lg:hidden">
-  <button
-    type="button"
-    id="mobile-menu-button"
-    class="pointer-events-auto flex items-center justify-center w-10 h-10 bg-background/80 backdrop-blur-sm border border-border/50 text-muted-foreground shadow-sm transition-all duration-200 hover:bg-background hover:text-foreground hover:shadow-md active:scale-95"
-    aria-label="Open menu"
-    aria-expanded="false"
-    aria-controls="mobile-sidebar-drawer"
-  >
-    <Icon name="PanelLeft" size={18} />
-  </button>
-</div>
-
-<!-- TOC button (bottom right on mobile, top right on tablet) -->
-{headings.length > 0 && (
-  <div id="mobile-toc-buttons" class="mobile-toc-buttons fixed z-[60] pointer-events-none opacity-0 transition-all duration-300 xl:hidden bottom-6 right-4 lg:bottom-auto lg:top-6 lg:opacity-100">
-    <button
-      type="button"
-      id="mobile-toc-button"
-      class="pointer-events-auto flex items-center justify-center w-10 h-10 bg-background/80 backdrop-blur-sm border border-border/50 text-muted-foreground shadow-sm transition-all duration-200 hover:bg-background hover:text-foreground hover:shadow-md active:scale-95"
-      aria-label="Table of contents"
-      aria-expanded="false"
-      aria-controls="mobile-toc-drawer"
-    >
-      <Icon name="List" size={18} />
-    </button>
-  </div>
-)}
-
-<!-- Backdrop overlay (shared) -->
-<div
-  id="mobile-nav-backdrop"
-  class="fixed inset-0 bg-black/50 backdrop-blur-sm z-[70] opacity-0 pointer-events-none transition-opacity duration-300 lg:hidden"
-  aria-hidden="true"
-></div>
-
-<!-- Sidebar drawer (slides from left) -->
-<aside
-  id="mobile-sidebar-drawer"
-  class="fixed top-0 left-0 h-screen w-72 max-w-[85vw] bg-sidebar border-r border-sidebar-border z-[80] -translate-x-full transition-transform duration-300 ease-out overflow-hidden lg:hidden"
-  aria-label="Navigation"
->
-  <div class="flex flex-col h-full">
-    <div class="flex items-center justify-between p-4 border-b border-sidebar-border">
-      <a href="/" class="flex items-center gap-2.5 no-underline">
-        <span class="flex items-center justify-center w-8 h-8 bg-primary text-primary-foreground">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-            <path d="M12 1L3 12l9 5 9-5L12 1z" stroke="currentColor" stroke-width="1.5" fill="none"/>
-            <path d="M12 17l-9-5 9 11 9-11-9 5z" stroke="currentColor" stroke-width="1.5" fill="none"/>
-            <path d="M12 1v16" stroke="currentColor" stroke-width="1.5" opacity="0.3"/>
-          </svg>
-        </span>
-        <span class="flex flex-col leading-none">
-          <span class="font-mono text-[0.75rem] font-bold tracking-wide text-foreground">ETH P2P</span>
-          <span class="font-serif text-[0.75rem] text-muted-foreground">Notebooks</span>
-        </span>
-      </a>
-      <button
-        type="button"
-        class="mobile-drawer-close flex items-center justify-center w-8 h-8 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-        aria-label="Close menu"
-      >
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-          <line x1="18" y1="6" x2="6" y2="18" />
-          <line x1="6" y1="6" x2="18" y2="18" />
-        </svg>
-      </button>
-    </div>
-    <div class="flex-1 overflow-y-auto p-4">
-      <Sidebar />
-    </div>
-  </div>
-</aside>
-
-<!-- TOC floating bubble (bottom-aligned) -->
-{headings.length > 0 && (
-  <div
-    id="mobile-toc-drawer"
-    class="fixed w-80 max-w-[calc(100vw-2rem)] max-h-[60vh] bg-card border border-border shadow-xl z-[80] opacity-0 scale-95 pointer-events-none transition-all duration-200 ease-out overflow-hidden xl:hidden bottom-20 right-4 origin-bottom-right lg:bottom-auto lg:top-16 lg:origin-top-right"
-    aria-label="Table of contents"
-  >
-    <div class="flex flex-col h-full max-h-[60vh]">
-      <div class="flex items-center justify-between p-3 border-b border-border shrink-0">
-        <div class="flex items-center gap-1.5 text-muted-foreground">
-          <Icon name="List" size={12} />
-          <span class="font-semibold text-[0.625rem] uppercase tracking-wide">On this page</span>
-        </div>
-        <button
-          type="button"
-          class="mobile-drawer-close flex items-center justify-center w-7 h-7 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-          aria-label="Close"
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-            <line x1="18" y1="6" x2="6" y2="18" />
-            <line x1="6" y1="6" x2="18" y2="18" />
-          </svg>
-        </button>
-      </div>
-      <div class="flex-1 overflow-y-auto p-2 min-h-0">
-        <ul class="list-none p-0 m-0 flex flex-col">
-          {headings.map((heading) => (
-            <li class:list={['m-0', heading.level === 3 ? 'pl-3' : '']}>
-              <a
-                href={`#${heading.id}`}
-                class="toc-link block py-1.5 px-2 text-muted-foreground no-underline text-[0.8125rem] leading-snug transition-all duration-200 hover:text-foreground hover:bg-muted"
-              >
-                {heading.text}
-              </a>
-            </li>
-          ))}
-        </ul>
-      </div>
-    </div>
-  </div>
-)}
-
-<script>
-  import { initMobileNav } from '../scripts/mobile-nav';
-
-  initMobileNav();
-  document.addEventListener('astro:page-load', initMobileNav);
-</script>
-
-<style>
-  #mobile-sidebar-drawer,
-  #mobile-toc-drawer {
-    box-shadow: 0 0 24px rgba(0, 0, 0, 0.15);
-  }
-
-  #mobile-sidebar-drawer::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(180deg, transparent 0%, var(--sidebar) 100%);
-    opacity: 0.5;
-    pointer-events: none;
-    z-index: -1;
-  }
-</style>
+<MobileNavReact client:idle headings={headings} notebooks={notebooks} latestDate={latestDate} historicalDates={historicalDates} currentPath={currentPath} base={base} />

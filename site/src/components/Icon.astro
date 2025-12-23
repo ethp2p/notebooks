@@ -1,16 +1,5 @@
 ---
-import {
-  Activity,
-  AlertCircle,
-  Calendar,
-  ChevronLeft,
-  ChevronRight,
-  FileText,
-  Grid3x3,
-  Layers,
-  List,
-  PanelLeft,
-} from 'lucide-static';
+import { Activity, AlertCircle, Calendar, ChevronLeft, ChevronRight, FileText, Grid3x3, Layers, List, PanelLeft } from 'lucide-react';
 
 interface Props {
   name: string;
@@ -21,7 +10,9 @@ interface Props {
 
 const { name, size = 24, class: className = '', strokeWidth = 2 } = Astro.props;
 
-const icons: Record<string, string> = {
+// Map simple string names to the corresponding Lucide React component.
+// These will be rendered statically on the server (Icon.astro is an Astro component).
+const icons: Record<string, any> = {
   Activity,
   AlertCircle,
   Calendar,
@@ -34,14 +25,7 @@ const icons: Record<string, string> = {
   PanelLeft,
 };
 
-const svgString = icons[name] || FileText;
-
-// Modify SVG attributes
-const modifiedSvg = svgString
-  .replace(/width="24"/, `width="${size}"`)
-  .replace(/height="24"/, `height="${size}"`)
-  .replace(/stroke-width="2"/, `stroke-width="${strokeWidth}"`)
-  .replace(/class="[^"]*"/, `class="${className}"`);
+const IconComponent = icons[name] || FileText;
 ---
 
-<Fragment set:html={modifiedSvg} />
+<IconComponent size={size} className={className} strokeWidth={strokeWidth} />

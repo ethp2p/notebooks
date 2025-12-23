@@ -122,9 +122,9 @@ export function initMobileNav() {
 
   // TOC button toggles TOC bubble
   if (tocButton) {
-     const newTocBtn = tocButton.cloneNode(true);
-     tocButton.parentNode?.replaceChild(newTocBtn, tocButton);
-     newTocBtn.addEventListener('click', () => {
+    const newTocBtn = tocButton.cloneNode(true);
+    tocButton.parentNode?.replaceChild(newTocBtn, tocButton);
+    newTocBtn.addEventListener('click', () => {
       showButtons(); // Ensure visible
       if (isTocOpen) {
         closeToc();
@@ -135,7 +135,7 @@ export function initMobileNav() {
   }
 
   // Close buttons
-  closeButtons.forEach(btn => {
+  closeButtons.forEach((btn) => {
     const newBtn = btn.cloneNode(true);
     btn.parentNode?.replaceChild(newBtn, btn);
     newBtn.addEventListener('click', () => {
@@ -156,7 +156,7 @@ export function initMobileNav() {
     // We need to re-query buttons because we cloned them
     const currentTocDrawer = document.getElementById('mobile-toc-drawer');
     const currentTocButton = document.getElementById('mobile-toc-button');
-    
+
     if (currentTocDrawer && !currentTocDrawer.contains(target) && currentTocButton && !currentTocButton.contains(target)) {
       closeToc();
     }
@@ -170,10 +170,10 @@ export function initMobileNav() {
   });
 
   // Links close their drawer
-  sidebarDrawer?.querySelectorAll('a').forEach(link => {
+  sidebarDrawer?.querySelectorAll('a').forEach((link) => {
     link.addEventListener('click', () => setTimeout(closeSidebar, 100));
   });
-  tocDrawer?.querySelectorAll('a').forEach(link => {
+  tocDrawer?.querySelectorAll('a').forEach((link) => {
     link.addEventListener('click', () => setTimeout(closeToc, 100));
   });
 

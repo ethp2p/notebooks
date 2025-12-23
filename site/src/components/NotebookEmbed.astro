@@ -1,76 +1,74 @@
 ---
-import fs from "node:fs";
-import path from "node:path";
-import CodeToggle from "./CodeToggle.astro";
-import Icon from "./Icon.astro";
-import "../styles/notebook.css";
+import fs from 'node:fs';
+import path from 'node:path';
+import CodeToggle from './CodeToggle.astro';
+import Icon from './Icon.astro';
+import '../styles/notebook.css';
 
 interface Props {
-    htmlPath: string;
-    title: string;
+  htmlPath: string;
+  title: string;
 }
 
 const { htmlPath, title } = Astro.props;
 
 // Read the pre-rendered HTML at build time
-const fullPath = path.join(process.cwd(), "public", "rendered", htmlPath);
+const fullPath = path.join(process.cwd(), 'public', 'rendered', htmlPath);
 
-let content = "";
-let error = "";
-let headContent = "";
+let content = '';
+let error = '';
+let headContent = '';
 
 if (fs.existsSync(fullPath)) {
-    const html = fs.readFileSync(fullPath, "utf-8");
+  const html = fs.readFileSync(fullPath, 'utf-8');
 
-    // Extract head content for styles (Plotly/Altair may inject styles)
-    const headMatch = html.match(/<head[^>]*>([\s\S]*?)<\/head>/i);
-    if (headMatch) {
-        // Extract only style tags from head
-        const styleMatches = headMatch[1].match(
-            /<style[^>]*>[\s\S]*?<\/style>/gi,
-        );
-        if (styleMatches) {
-            headContent = styleMatches.join("\n");
-        }
+  // Extract head content for styles (Plotly/Altair may inject styles)
+  const headMatch = html.match(/<head[^>]*>([\s\S]*?)<\/head>/i);
+  if (headMatch) {
+    // Extract only style tags from head
+    const styleMatches = headMatch[1].match(/<style[^>]*>[\s\S]*?<\/style>/gi);
+    if (styleMatches) {
+      headContent = styleMatches.join('\n');
     }
+  }
 
-    // Extract body content from the HTML
-    const bodyMatch = html.match(/<body[^>]*>([\s\S]*)<\/body>/i);
-    if (bodyMatch) {
-        content = bodyMatch[1];
-    } else {
-        content = html;
-    }
+  // Extract body content from the HTML
+  const bodyMatch = html.match(/<body[^>]*>([\s\S]*)<\/body>/i);
+  if (bodyMatch) {
+    content = bodyMatch[1];
+  } else {
+    content = html;
+  }
 } else {
-    error = `Notebook not found: ${htmlPath}`;
+  error = `Notebook not found: ${htmlPath}`;
 }
 ---
 
 {
-    error ? (
-        <div class="error-container">
-            <div class="error-icon">
-                <Icon name="AlertCircle" size={24} />
-            </div>
-            <h2>Error Loading Notebook</h2>
-            <p>{error}</p>
-        </div>
-    ) : (
-        <>
-            <article class="notebook-content">
-                <header class="notebook-header">
-                    <h1 class="notebook-title">{title}</h1>
-                    <div class="notebook-controls">
-                        <CodeToggle />
-                    </div>
-                </header>
-                <Fragment set:html={headContent} />
-                <div class="notebook-body" set:html={content} />
-            </article>
-        </>
-    )
+  error ? (
+    <div class="error-container">
+      <div class="error-icon">
+        <Icon name="AlertCircle" size={24} />
+      </div>
+      <h2>Error Loading Notebook</h2>
+      <p>{error}</p>
+    </div>
+  ) : (
+    <>
+      <article class="notebook-content">
+        <header class="notebook-header">
+          <h1 class="notebook-title">{title}</h1>
+          <div class="notebook-controls">
+            <CodeToggle />
+          </div>
+        </header>
+        <Fragment set:html={headContent} />
+        <div class="notebook-body" set:html={content} />
+      </article>
+    </>
+  )
 }
 
 <style>
-    /* Styles extracted to ../styles/notebook.css */
+  /* Styles extracted to ../styles/notebook.css */
 </style>

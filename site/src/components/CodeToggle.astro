@@ -1,71 +1,9 @@
 ---
 // Code toggle component - shows a checkbox to expand/collapse all code blocks
 // Persists state to localStorage
+import { CodeToggle as CodeToggleReact } from './CodeToggle';
 ---
 
 <div class="inline-block">
-  <label class="group inline-flex items-center gap-1.5 cursor-pointer text-[0.6875rem] font-mono text-muted-foreground select-none transition-all duration-150 opacity-60 hover:opacity-100 hover:text-foreground">
-    <input type="checkbox" id="show-all-code" class="peer absolute opacity-0 cursor-pointer h-0 w-0" />
-    <span class="relative h-3 w-3 border border-current  shrink-0 transition-all duration-150 peer-checked:bg-current after:content-[''] after:absolute after:hidden after:left-[3px] after:top-px after:w-[5px] after:h-[7px] after:border-background after:border-r-[1.5px] after:border-b-[1.5px] after:rotate-45 peer-checked:after:block"></span>
-    <span>Show all code</span>
-  </label>
+  <CodeToggleReact client:idle />
 </div>
-
-<script>
-  const STORAGE_KEY = 'notebook-show-all-code';
-
-  function initCodeToggle() {
-    const checkbox = document.getElementById('show-all-code') as HTMLInputElement;
-    if (!checkbox) return;
-
-    // Get all code details elements
-    const getCodeBlocks = () => document.querySelectorAll('.notebook-content details.code-fold');
-
-    // Load saved preference
-    const savedState = localStorage.getItem(STORAGE_KEY);
-    if (savedState === 'true') {
-      checkbox.checked = true;
-      // Apply saved state to code blocks
-      const codeBlocks = getCodeBlocks();
-      codeBlocks.forEach(block => {
-        block.setAttribute('open', '');
-      });
-    }
-
-    checkbox.addEventListener('change', () => {
-      const codeBlocks = getCodeBlocks();
-      codeBlocks.forEach(block => {
-        if (checkbox.checked) {
-          block.setAttribute('open', '');
-        } else {
-          block.removeAttribute('open');
-        }
-      });
-      // Save preference
-      localStorage.setItem(STORAGE_KEY, checkbox.checked.toString());
-    });
-
-    // Update checkbox state based on current state of code blocks
-    const updateCheckboxState = () => {
-      const codeBlocks = getCodeBlocks();
-      if (codeBlocks.length === 0) return;
-
-      const allOpen = Array.from(codeBlocks).every(block => block.hasAttribute('open'));
-      checkbox.checked = allOpen;
-      // Don't save on manual individual toggles - only on bulk toggle
-    };
-
-    // Listen for individual toggle changes
-    document.addEventListener('toggle', (e) => {
-      if ((e.target as HTMLElement)?.closest('.code-fold')) {
-        updateCheckboxState();
-      }
-    }, true);
-  }
-
-  // Run on initial load
-  initCodeToggle();
-
-  // Re-run on Astro page transitions
-  document.addEventListener('astro:page-load', initCodeToggle);
-</script>

@@ -6,8 +6,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 // Helper to convert YYYYMMDD to YYYY-MM-DD
-const toIsoDate = (compact: string) =>
-  `${compact.slice(0,4)}-${compact.slice(4,6)}-${compact.slice(6,8)}`;
+const toIsoDate = (compact: string) => `${compact.slice(0, 4)}-${compact.slice(4, 6)}-${compact.slice(6, 8)}`;
 
 // Helper to convert YYYY-MM-DD to YYYYMMDD
 const toCompactDate = (iso: string) => iso.replace(/-/g, '');
@@ -41,9 +40,9 @@ export function getStaticPaths() {
   const dates = Object.keys(manifest.dates || {});
 
   // Return compact date format (YYYYMMDD)
-  return dates.map(isoDate => ({
+  return dates.map((isoDate) => ({
     params: { date: isoDate.replace(/-/g, '') },
-    props: { isoDate }
+    props: { isoDate },
   }));
 }
 
@@ -56,7 +55,7 @@ const dateData = manifest.dates[dateIso] || {};
 const notebooks = config.notebooks.sort((a, b) => a.order - b.order);
 
 // Filter to notebooks that have been rendered for this date
-const availableNotebooks = notebooks.filter(nb => dateData[nb.id]);
+const availableNotebooks = notebooks.filter((nb) => dateData[nb.id]);
 
 // Get all dates for navigation (sorted newest first)
 const allDatesIso = Object.keys(manifest.dates).sort((a, b) => b.localeCompare(a));
@@ -71,13 +70,12 @@ const formattedDate = dateObj.toLocaleDateString('en-US', {
   month: 'long',
   day: 'numeric',
   year: 'numeric',
-  timeZone: 'UTC'
+  timeZone: 'UTC',
 });
 const dayOfWeek = dateObj.toLocaleDateString('en-US', { weekday: 'short', timeZone: 'UTC' });
 const monthShort = dateObj.toLocaleDateString('en-US', { month: 'short', timeZone: 'UTC' });
 const dayNum = dateObj.getDate();
 const year = dateObj.getFullYear();
-
 ---
 
 <BaseLayout title={`${formattedDate}`}>
@@ -115,37 +113,35 @@ const year = dateObj.getFullYear();
         <span class="section-title-line"></span>
       </h2>
 
-      {availableNotebooks.length > 0 ? (
-        <div class="notebooks-grid">
-          {availableNotebooks.map((nb, index) => (
-            <a
-              href={`/${date}/${nb.id}`}
-              class="notebook-card"
-              style={`--delay: ${index * 0.08}s`}
-            >
-              <div class="notebook-icon">
-                <Icon name={nb.icon || 'FileText'} size={24} />
-              </div>
-              <div class="notebook-content">
-                <h3 class="notebook-title">{nb.title}</h3>
-                <p class="notebook-description">{nb.description}</p>
-              </div>
-              <div class="notebook-arrow">
-                <Icon name="ArrowRight" size={18} />
-              </div>
-              <div class="notebook-glow"></div>
-            </a>
-          ))}
-        </div>
-      ) : (
-        <div class="empty-state">
-          <div class="empty-icon">
-            <Icon name="FilePlus" size={48} strokeWidth={1} />
+      {
+        availableNotebooks.length > 0 ? (
+          <div class="notebooks-grid">
+            {availableNotebooks.map((nb, index) => (
+              <a href={`/${date}/${nb.id}`} class="notebook-card" style={`--delay: ${index * 0.08}s`}>
+                <div class="notebook-icon">
+                  <Icon name={nb.icon || 'FileText'} size={24} />
+                </div>
+                <div class="notebook-content">
+                  <h3 class="notebook-title">{nb.title}</h3>
+                  <p class="notebook-description">{nb.description}</p>
+                </div>
+                <div class="notebook-arrow">
+                  <Icon name="ArrowRight" size={18} />
+                </div>
+                <div class="notebook-glow" />
+              </a>
+            ))}
           </div>
-          <h3 class="empty-title">No Notebooks Available</h3>
-          <p class="empty-text">No analysis notebooks have been rendered for this date.</p>
-        </div>
-      )}
+        ) : (
+          <div class="empty-state">
+            <div class="empty-icon">
+              <Icon name="FilePlus" size={48} strokeWidth={1} />
+            </div>
+            <h3 class="empty-title">No Notebooks Available</h3>
+            <p class="empty-text">No analysis notebooks have been rendered for this date.</p>
+          </div>
+        )
+      }
     </section>
 
     <!-- Back link -->
@@ -168,11 +164,11 @@ const year = dateObj.getFullYear();
 
   /* Breadcrumb */
   .breadcrumb {
-    @apply flex items-center gap-2 mb-8 font-mono text-sm;
+    @apply mb-8 flex items-center gap-2 font-mono text-sm;
   }
 
   .breadcrumb-link {
-    @apply flex items-center gap-1.5 text-muted-foreground no-underline transition-colors duration-200;
+    @apply text-muted-foreground flex items-center gap-1.5 no-underline transition-colors duration-200;
   }
 
   .breadcrumb-link:hover {
@@ -197,7 +193,7 @@ const year = dateObj.getFullYear();
   }
 
   .date-calendar-badge {
-    @apply flex flex-col items-center justify-center w-16 h-20  border-2 border-primary bg-primary/5;
+    @apply border-primary bg-primary/5 flex h-20 w-16 flex-col items-center justify-center border-2;
     animation: fadeUp 0.4s ease-out 0.1s backwards;
   }
 
@@ -206,15 +202,15 @@ const year = dateObj.getFullYear();
   }
 
   .date-month {
-    @apply font-mono text-[0.625rem] font-bold uppercase tracking-wider text-primary;
+    @apply text-primary font-mono text-[0.625rem] font-bold tracking-wider uppercase;
   }
 
   .date-day {
-    @apply font-serif text-2xl font-normal text-foreground leading-none -tracking-tight;
+    @apply text-foreground font-serif text-2xl leading-none font-normal -tracking-tight;
   }
 
   .date-year {
-    @apply font-mono text-[0.625rem] text-muted-foreground;
+    @apply text-muted-foreground font-mono text-[0.625rem];
   }
 
   .date-info {
@@ -223,15 +219,15 @@ const year = dateObj.getFullYear();
   }
 
   .date-weekday {
-    @apply font-mono text-[0.625rem] font-semibold uppercase tracking-widest text-primary mb-0.5;
+    @apply text-primary mb-0.5 font-mono text-[0.625rem] font-semibold tracking-widest uppercase;
   }
 
   .date-title {
-    @apply font-serif text-2xl font-normal text-foreground m-0 mb-0.5 leading-tight -tracking-wide;
+    @apply text-foreground m-0 mb-0.5 font-serif text-2xl leading-tight font-normal -tracking-wide;
   }
 
   .date-subtitle {
-    @apply font-sans text-sm text-muted-foreground m-0;
+    @apply text-muted-foreground m-0 font-sans text-sm;
   }
 
   /* Section */
@@ -241,7 +237,7 @@ const year = dateObj.getFullYear();
   }
 
   .section-title {
-    @apply flex items-center gap-4 font-serif text-xl font-normal text-foreground m-0 mb-6;
+    @apply text-foreground m-0 mb-6 flex items-center gap-4 font-serif text-xl font-normal;
   }
 
   .section-title-text {
@@ -249,7 +245,7 @@ const year = dateObj.getFullYear();
   }
 
   .section-title-line {
-    @apply flex-1 h-px bg-border;
+    @apply bg-border h-px flex-1;
   }
 
   /* Notebooks grid */
@@ -258,7 +254,7 @@ const year = dateObj.getFullYear();
   }
 
   .notebook-card {
-    @apply relative flex items-center gap-5 p-5  border border-border bg-card no-underline transition-all duration-250 overflow-hidden;
+    @apply border-border bg-card relative flex items-center gap-5 overflow-hidden border p-5 no-underline transition-all duration-250;
     animation: fadeUp 0.4s ease-out calc(0.4s + var(--delay)) backwards;
   }
 
@@ -273,7 +269,7 @@ const year = dateObj.getFullYear();
   }
 
   .notebook-icon {
-    @apply flex items-center justify-center w-12 h-12  bg-primary/10 text-primary shrink-0 transition-all duration-250;
+    @apply bg-primary/10 text-primary flex h-12 w-12 shrink-0 items-center justify-center transition-all duration-250;
   }
 
   .notebook-card:hover .notebook-icon {
@@ -281,27 +277,27 @@ const year = dateObj.getFullYear();
   }
 
   .notebook-content {
-    @apply flex-1 min-w-0;
+    @apply min-w-0 flex-1;
   }
 
   .notebook-title {
-    @apply font-serif text-lg font-normal text-foreground m-0 mb-1 leading-snug;
+    @apply text-foreground m-0 mb-1 font-serif text-lg leading-snug font-normal;
   }
 
   .notebook-description {
-    @apply text-sm text-muted-foreground m-0 leading-relaxed line-clamp-2;
+    @apply text-muted-foreground m-0 line-clamp-2 text-sm leading-relaxed;
   }
 
   .notebook-arrow {
-    @apply flex items-center justify-center w-10 h-10  text-muted-foreground opacity-0 -translate-x-2 transition-all duration-250;
+    @apply text-muted-foreground flex h-10 w-10 -translate-x-2 items-center justify-center opacity-0 transition-all duration-250;
   }
 
   .notebook-card:hover .notebook-arrow {
-    @apply opacity-100 translate-x-0 text-primary;
+    @apply text-primary translate-x-0 opacity-100;
   }
 
   .notebook-glow {
-    @apply absolute inset-0 opacity-0 transition-opacity duration-300 pointer-events-none;
+    @apply pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300;
     background: radial-gradient(circle at 50% 50%, oklch(0.6 0.15 280 / 8%) 0%, transparent 70%);
   }
 
@@ -311,29 +307,29 @@ const year = dateObj.getFullYear();
 
   /* Empty state */
   .empty-state {
-    @apply text-center py-16 px-8  bg-muted/50 border border-border;
+    @apply bg-muted/50 border-border border px-8 py-16 text-center;
   }
 
   .empty-icon {
-    @apply inline-flex text-muted-foreground opacity-40 mb-6;
+    @apply text-muted-foreground mb-6 inline-flex opacity-40;
   }
 
   .empty-title {
-    @apply font-serif text-xl font-normal text-foreground m-0 mb-2;
+    @apply text-foreground m-0 mb-2 font-serif text-xl font-normal;
   }
 
   .empty-text {
-    @apply text-sm text-muted-foreground m-0;
+    @apply text-muted-foreground m-0 text-sm;
   }
 
   /* Back section */
   .back-section {
-    @apply pt-8 border-t border-border;
+    @apply border-border border-t pt-8;
     animation: fadeUp 0.4s ease-out 0.5s backwards;
   }
 
   .back-link {
-    @apply inline-flex items-center gap-2 font-mono text-sm text-muted-foreground no-underline transition-colors duration-200;
+    @apply text-muted-foreground inline-flex items-center gap-2 font-mono text-sm no-underline transition-colors duration-200;
   }
 
   .back-link:hover {
@@ -347,7 +343,7 @@ const year = dateObj.getFullYear();
     }
 
     .date-calendar-badge {
-      @apply w-14 h-16;
+      @apply h-16 w-14;
     }
 
     .date-day {
@@ -359,11 +355,11 @@ const year = dateObj.getFullYear();
     }
 
     .notebook-card {
-      @apply p-4 gap-4;
+      @apply gap-4 p-4;
     }
 
     .notebook-icon {
-      @apply w-10 h-10;
+      @apply h-10 w-10;
     }
   }
 </style>

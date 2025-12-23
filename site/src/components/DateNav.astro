@@ -22,7 +22,9 @@ let latestDate = '';
 
 if (fs.existsSync(manifestPath)) {
   const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'));
-  dates = Object.keys(manifest.dates || {}).sort().reverse();
+  dates = Object.keys(manifest.dates || {})
+    .sort()
+    .reverse();
   latestDate = manifest.latest_date || dates[0] || '';
 }
 
@@ -52,7 +54,7 @@ const formatDate = (dateStr: string) => {
     month: 'short',
     day: 'numeric',
     year: 'numeric',
-    timeZone: 'UTC'
+    timeZone: 'UTC',
   });
 };
 
@@ -61,52 +63,56 @@ const formatShortDate = (dateStr: string) => {
   return date.toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',
-    timeZone: 'UTC'
+    timeZone: 'UTC',
   });
 };
 ---
 
-<div class="flex items-center justify-between gap-4 py-3.5 px-5 bg-card border border-border  mb-8 sticky top-4 z-40 backdrop-blur-xl transition-all dark:bg-[oklch(0.14_0.018_260/90%)] dark:shadow-[0_1px_2px_oklch(0_0_0/20%),0_0_30px_oklch(0.55_0.12_280/8%)]">
+<div
+  class="bg-card border-border sticky top-4 z-40 mb-8 flex items-center justify-between gap-4 border px-5 py-3.5 backdrop-blur-xl transition-all dark:bg-[oklch(0.14_0.018_260/90%)] dark:shadow-[0_1px_2px_oklch(0_0_0/20%),0_0_30px_oklch(0.55_0.12_280/8%)]"
+>
   <a
     href={prevUrl || '#'}
     class:list={[
-      'group flex items-center gap-2 py-2.5 px-3.5  text-muted-foreground no-underline text-xs transition-colors min-w-[90px] justify-start',
+      'group text-muted-foreground flex min-w-[90px] items-center justify-start gap-2 px-3.5 py-2.5 text-xs no-underline transition-colors',
       'hover:bg-muted hover:text-foreground',
-      { 'opacity-25 cursor-not-allowed pointer-events-none': !prevUrl }
+      { 'pointer-events-none cursor-not-allowed opacity-25': !prevUrl },
     ]}
     aria-label="Previous date"
     aria-disabled={!prevUrl}
   >
     <Icon name="ChevronLeft" size={18} />
-    {prevDate && <span class="font-mono text-[0.6875rem] tracking-wide hidden sm:inline">{formatShortDate(prevDate)}</span>}
+    {prevDate && <span class="hidden font-mono text-[0.6875rem] tracking-wide sm:inline">{formatShortDate(prevDate)}</span>}
   </a>
 
-  <div class="flex flex-col items-center gap-1 flex-1 text-center">
-    <span class="flex items-center gap-1.5 font-mono text-[0.625rem] text-muted-foreground uppercase tracking-widest">
+  <div class="flex flex-1 flex-col items-center gap-1 text-center">
+    <span class="text-muted-foreground flex items-center gap-1.5 font-mono text-[0.625rem] tracking-widest uppercase">
       <Icon name="Calendar" size={14} />
       Data snapshot
     </span>
-    <span class="font-serif font-normal text-base text-foreground flex items-center gap-2.5 -tracking-tight sm:text-base text-sm">
+    <span class="text-foreground flex items-center gap-2.5 font-serif text-base text-sm font-normal -tracking-tight sm:text-base">
       {formatDate(currentDate)}
-      {isLatest && (
-        <span class="font-mono text-[0.5625rem] font-semibold uppercase tracking-widest py-0.5 px-2 bg-gradient-to-br from-primary to-accent text-primary-foreground  animate-pulse-glow">
-          Latest
-        </span>
-      )}
+      {
+        isLatest && (
+          <span class="from-primary to-accent text-primary-foreground animate-pulse-glow bg-gradient-to-br px-2 py-0.5 font-mono text-[0.5625rem] font-semibold tracking-widest uppercase">
+            Latest
+          </span>
+        )
+      }
     </span>
   </div>
 
   <a
     href={nextUrl || '#'}
     class:list={[
-      'group flex items-center gap-2 py-2.5 px-3.5  text-muted-foreground no-underline text-xs transition-colors min-w-[90px] justify-end',
+      'group text-muted-foreground flex min-w-[90px] items-center justify-end gap-2 px-3.5 py-2.5 text-xs no-underline transition-colors',
       'hover:bg-muted hover:text-foreground',
-      { 'opacity-25 cursor-not-allowed pointer-events-none': !nextUrl }
+      { 'pointer-events-none cursor-not-allowed opacity-25': !nextUrl },
     ]}
     aria-label="Next date"
     aria-disabled={!nextUrl}
   >
-    {nextDate && <span class="font-mono text-[0.6875rem] tracking-wide hidden sm:inline">{formatShortDate(nextDate)}</span>}
+    {nextDate && <span class="hidden font-mono text-[0.6875rem] tracking-wide sm:inline">{formatShortDate(nextDate)}</span>}
     <Icon name="ChevronRight" size={18} />
   </a>
 </div>

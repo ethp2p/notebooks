@@ -1,367 +1,377 @@
 @reference "./global.css";
 
 .error-container {
-    @apply p-10 text-center;
-    background: oklch(0.95 0.03 25 / 50%);
-    border: 1px solid oklch(0.85 0.08 25);
-    color: oklch(0.45 0.15 25);
+  @apply p-10 text-center;
+  background: oklch(0.95 0.03 25 / 50%);
+  border: 1px solid oklch(0.85 0.08 25);
+  color: oklch(0.45 0.15 25);
 }
 
 :is(.dark .error-container) {
-    background: oklch(0.2 0.05 25 / 30%);
-    border-color: oklch(0.4 0.12 25);
-    color: oklch(0.75 0.12 25);
+  background: oklch(0.2 0.05 25 / 30%);
+  border-color: oklch(0.4 0.12 25);
+  color: oklch(0.75 0.12 25);
 }
 
 .error-icon {
-    @apply inline-flex mb-4 opacity-70;
+  @apply mb-4 inline-flex opacity-70;
 }
 
 .error-container h2 {
-    @apply font-serif text-xl font-normal mb-2;
+  @apply mb-2 font-serif text-xl font-normal;
 }
 
 .error-container p {
-    @apply font-mono text-sm opacity-80;
+  @apply font-mono text-sm opacity-80;
 }
 
 /* Notebook header */
 .notebook-header {
-    @apply mb-10 pb-8 border-b border-border;
-    animation: fadeUp 0.5s ease-out;
+  @apply border-border mb-10 border-b pb-8;
+  animation: fadeUp 0.5s ease-out;
 }
 
 .notebook-title {
-    @apply font-serif text-4xl font-normal text-foreground m-0 mb-5 leading-tight;
-    letter-spacing: -0.03em;
+  @apply text-foreground m-0 mb-5 font-serif text-4xl leading-tight font-normal;
+  letter-spacing: -0.03em;
 }
 
 :is(.dark .notebook-title) {
-    background: linear-gradient(135deg, var(--foreground) 0%, var(--mauve-11) 100%);
-    @apply bg-clip-text;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+  background: linear-gradient(135deg, var(--foreground) 0%, var(--mauve-11) 100%);
+  @apply bg-clip-text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .notebook-controls {
-    @apply flex items-center gap-4;
+  @apply flex items-center gap-4;
 }
 
 /* Section headings */
 .notebook-content h2 {
-    @apply font-serif font-normal text-foreground relative pb-2.5 border-b border-border;
-    font-size: 1.625rem;
-    margin: 3.5rem 0 1.5rem 0;
-    letter-spacing: -0.02em;
-    line-height: 1.25;
+  @apply text-foreground border-border relative border-b pb-2.5 font-serif font-normal;
+  font-size: 1.625rem;
+  margin: 3.5rem 0 1.5rem 0;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
 }
 
 .notebook-content h2::before {
-    @apply absolute bottom-[-1px] left-0 w-12 h-0.5 bg-primary;
-    content: "";
+  @apply bg-primary absolute bottom-[-1px] left-0 h-0.5 w-12;
+  content: '';
 }
 
 .notebook-content h2:first-of-type {
-    @apply mt-0;
+  @apply mt-0;
 }
 
 .notebook-content h3 {
-    @apply font-serif text-xl font-normal text-foreground;
-    margin: 2.5rem 0 1rem 0;
-    letter-spacing: -0.01em;
-    line-height: 1.35;
+  @apply text-foreground font-serif text-xl font-normal;
+  margin: 2.5rem 0 1rem 0;
+  letter-spacing: -0.01em;
+  line-height: 1.35;
 }
 
 .notebook-content h4 {
-    @apply font-sans text-base font-semibold text-foreground;
-    margin: 2rem 0 0.75rem 0;
+  @apply text-foreground font-sans text-base font-semibold;
+  margin: 2rem 0 0.75rem 0;
 }
 
 /* Paragraphs and text */
 .notebook-content p {
-    @apply mb-5 leading-relaxed text-foreground;
-    margin-top: 0;
+  @apply text-foreground mb-5 leading-relaxed;
+  margin-top: 0;
 }
 
 .notebook-content a {
-    @apply text-primary no-underline transition-colors duration-200;
+  @apply text-primary no-underline transition-colors duration-200;
 }
 
 .notebook-content a:hover {
-    @apply text-accent;
+  @apply text-accent;
 }
 
 /* Anchor links on headings - hide text, show pilcrow via ::after on hover */
 .notebook-content .anchor-link {
-    @apply ml-2 text-muted-foreground no-underline;
-    font-size: 0;
+  @apply text-muted-foreground ml-2 no-underline;
+  font-size: 0;
 }
 
 .notebook-content .anchor-link::after {
-    content: '¶';
-    font-size: 1rem;
-    @apply opacity-0 transition-opacity duration-200;
+  content: '¶';
+  font-size: 1rem;
+  @apply opacity-0 transition-opacity duration-200;
 }
 
 .notebook-content h2:hover .anchor-link::after,
 .notebook-content h3:hover .anchor-link::after,
 .notebook-content h4:hover .anchor-link::after {
-    @apply opacity-50;
+  @apply opacity-50;
 }
 
 .notebook-content .anchor-link:hover::after {
-    @apply opacity-100 text-primary;
+  @apply text-primary opacity-100;
 }
 
 /* Lists */
 .notebook-content ul,
 .notebook-content ol {
-    @apply mb-5 pl-7;
-    margin-top: 0;
+  @apply mb-5 pl-7;
+  margin-top: 0;
 }
 
 .notebook-content li {
-    @apply mb-2;
-    line-height: 1.7;
+  @apply mb-2;
+  line-height: 1.7;
 }
 
 .notebook-content li::marker {
-    @apply text-primary;
+  @apply text-primary;
 }
 
 /* Code blocks - nbconvert uses .highlight for syntax highlighting */
 .notebook-content .highlight,
 .notebook-content .input_area {
-    @apply bg-muted overflow-x-auto relative;
-    font-size: 0.8125rem;
-    line-height: 1.65;
+  @apply bg-muted relative overflow-x-auto;
+  font-size: 0.8125rem;
+  line-height: 1.65;
 }
 
 :is(.dark .notebook-content) .highlight,
 :is(.dark .notebook-content) .input_area {
-    background: oklch(0.14 0.02 260) !important;
+  background: oklch(0.14 0.02 260) !important;
 }
 
 .notebook-content .highlight pre {
-    @apply m-0 py-5 px-6 bg-transparent;
+  @apply m-0 bg-transparent px-6 py-5;
 }
 
 .notebook-content .highlight code,
 .notebook-content .input_area code {
-    @apply font-mono text-sm bg-transparent p-0;
+  @apply bg-transparent p-0 font-mono text-sm;
 }
 
 /* Pygments token colors - Light mode */
 .notebook-content .highlight .k,
 .notebook-content .highlight .kn,
 .notebook-content .highlight .kd {
-    color: oklch(0.5 0.2 330);
-    font-weight: 500;
+  color: oklch(0.5 0.2 330);
+  font-weight: 500;
 } /* Keywords */
 .notebook-content .highlight .n,
 .notebook-content .highlight .nn {
-    color: var(--foreground);
+  color: var(--foreground);
 } /* Names */
 .notebook-content .highlight .o,
 .notebook-content .highlight .p {
-    color: var(--foreground);
+  color: var(--foreground);
 } /* Operators, punctuation */
 .notebook-content .highlight .s,
 .notebook-content .highlight .s1,
 .notebook-content .highlight .s2 {
-    color: oklch(0.45 0.12 145);
+  color: oklch(0.45 0.12 145);
 } /* Strings */
 .notebook-content .highlight .mi,
 .notebook-content .highlight .mf {
-    color: oklch(0.5 0.15 180);
+  color: oklch(0.5 0.15 180);
 } /* Numbers */
 .notebook-content .highlight .c,
 .notebook-content .highlight .c1 {
-    color: var(--muted-foreground);
-    font-style: italic;
+  color: var(--muted-foreground);
+  font-style: italic;
 } /* Comments */
 .notebook-content .highlight .nb {
-    color: oklch(0.45 0.18 260);
+  color: oklch(0.45 0.18 260);
 } /* Built-in */
 .notebook-content .highlight .nf {
-    color: oklch(0.5 0.18 280);
+  color: oklch(0.5 0.18 280);
 } /* Function */
 
 /* Dark mode token colors */
 :is(.dark .notebook-content) .highlight .k,
 :is(.dark .notebook-content) .highlight .kn,
 :is(.dark .notebook-content) .highlight .kd {
-    color: oklch(0.75 0.18 330);
+  color: oklch(0.75 0.18 330);
 }
 :is(.dark .notebook-content) .highlight .s,
 :is(.dark .notebook-content) .highlight .s1,
 :is(.dark .notebook-content) .highlight .s2 {
-    color: oklch(0.72 0.12 145);
+  color: oklch(0.72 0.12 145);
 }
 :is(.dark .notebook-content) .highlight .mi,
 :is(.dark .notebook-content) .highlight .mf {
-    color: oklch(0.75 0.14 180);
+  color: oklch(0.75 0.14 180);
 }
 :is(.dark .notebook-content) .highlight .nb {
-    color: oklch(0.72 0.15 260);
+  color: oklch(0.72 0.15 260);
 }
 :is(.dark .notebook-content) .highlight .nf {
-    color: oklch(0.75 0.15 280);
+  color: oklch(0.75 0.15 280);
 }
 
 /* Code folding - our custom template uses details.code-fold */
 .notebook-content details.code-fold {
-    @apply mb-3;
+  @apply mb-3;
 }
 
 .notebook-content details.code-fold > summary {
-    @apply cursor-pointer font-mono text-muted-foreground p-0 bg-transparent border-none inline-flex items-center gap-1.5 select-none list-none opacity-60;
-    font-size: 0.6875rem;
-    transition: color 0.15s ease;
+  @apply text-muted-foreground inline-flex cursor-pointer list-none items-center gap-1.5 border-none bg-transparent p-0 font-mono opacity-60 select-none;
+  font-size: 0.6875rem;
+  transition: color 0.15s ease;
 }
 
 .notebook-content details.code-fold > summary:hover {
-    @apply text-foreground opacity-100;
+  @apply text-foreground opacity-100;
 }
 
 .notebook-content details.code-fold > summary::marker,
 .notebook-content details.code-fold > summary::-webkit-details-marker {
-    @apply hidden;
+  @apply hidden;
 }
 
 .notebook-content details.code-fold > summary::before {
-    content: "▸";
-    font-size: 0.625rem;
-    transition: transform 0.15s ease;
+  content: '▸';
+  font-size: 0.625rem;
+  transition: transform 0.15s ease;
 }
 
 .notebook-content details.code-fold[open] > summary::before {
-    @apply rotate-90;
+  @apply rotate-90;
 }
 
 .notebook-content details.code-fold[open] > summary {
-    @apply mb-2;
+  @apply mb-2;
 }
 
 /* Charts - Plotly and Altair */
 .notebook-content .js-plotly-plot,
 .notebook-content .plotly-graph-div {
-    @apply w-full my-6 overflow-hidden;
+  @apply my-6 w-full overflow-hidden;
 }
 
 .notebook-content .vega-embed {
-    @apply w-full my-6;
+  @apply my-6 w-full;
 }
 
 /* nbconvert cell structure */
 .notebook-content .cell {
-    @apply mb-6;
+  @apply mb-6;
 }
 
 .notebook-content .code_cell {
-    @apply mb-6;
+  @apply mb-6;
 }
 
 .notebook-content .text_cell {
-    @apply mb-4;
+  @apply mb-4;
 }
 
 .notebook-content .output_wrapper {
-    @apply mt-4;
+  @apply mt-4;
 }
 
 .notebook-content .output_area {
-    @apply my-2;
+  @apply my-2;
 }
 
 /* Tables */
 .notebook-content table {
-    @apply w-full border-collapse my-6 text-sm border border-border overflow-hidden;
+  @apply border-border my-6 w-full border-collapse overflow-hidden border text-sm;
 }
 
 .notebook-content th,
 .notebook-content td {
-    @apply py-3 px-4 text-left border-b border-border;
+  @apply border-border border-b px-4 py-3 text-left;
 }
 
 .notebook-content th {
-    @apply font-mono font-semibold uppercase tracking-wider bg-muted text-muted-foreground;
-    font-size: 0.6875rem;
+  @apply bg-muted text-muted-foreground font-mono font-semibold tracking-wider uppercase;
+  font-size: 0.6875rem;
 }
 
 .notebook-content td {
-    @apply font-mono text-sm;
+  @apply font-mono text-sm;
 }
 
 .notebook-content tr:last-child td {
-    @apply border-b-0;
+  @apply border-b-0;
 }
 
 .notebook-content tr:hover td {
-    background: var(--mauve-2);
+  background: var(--mauve-2);
 }
 
 :is(.dark .notebook-content) tr:hover td {
-    background: oklch(0.18 0.02 260);
+  background: oklch(0.18 0.02 260);
 }
 
 /* Blockquotes */
 .notebook-content blockquote {
-    @apply my-8 py-5 px-6 border-l-[3px] border-l-primary;
-    background: var(--mauve-2);
+  @apply border-l-primary my-8 border-l-[3px] px-6 py-5;
+  background: var(--mauve-2);
 }
 
 :is(.dark .notebook-content) blockquote {
-    background: oklch(0.16 0.02 260);
+  background: oklch(0.16 0.02 260);
 }
 
 .notebook-content blockquote p:last-child {
-    @apply mb-0;
+  @apply mb-0;
 }
 
 /* Inline code */
 .notebook-content :not(pre) > code {
-    @apply bg-muted py-0.5 px-2 font-mono text-primary;
-    font-size: 0.875em;
+  @apply bg-muted text-primary px-2 py-0.5 font-mono;
+  font-size: 0.875em;
 }
 
 :is(.dark .notebook-content) :not(pre) > code {
-    background: oklch(0.2 0.02 260);
+  background: oklch(0.2 0.02 260);
 }
 
 /* Images */
 .notebook-content img {
-    @apply max-w-full h-auto;
+  @apply h-auto max-w-full;
 }
 
 /* Horizontal rules */
 .notebook-content hr {
-    @apply border-none border-t border-border my-12;
+  @apply border-border my-12 border-t border-none;
 }
 
 /* Animation for cells appearing */
 @keyframes cellReveal {
-    from {
-        opacity: 0;
-        transform: translateY(12px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .notebook-content .cell {
-    animation: cellReveal 0.5s ease-out backwards;
+  animation: cellReveal 0.5s ease-out backwards;
 }
 
-.notebook-content .cell:nth-child(1) { animation-delay: 0.1s; }
-.notebook-content .cell:nth-child(2) { animation-delay: 0.15s; }
-.notebook-content .cell:nth-child(3) { animation-delay: 0.2s; }
-.notebook-content .cell:nth-child(4) { animation-delay: 0.25s; }
-.notebook-content .cell:nth-child(5) { animation-delay: 0.3s; }
+.notebook-content .cell:nth-child(1) {
+  animation-delay: 0.1s;
+}
+.notebook-content .cell:nth-child(2) {
+  animation-delay: 0.15s;
+}
+.notebook-content .cell:nth-child(3) {
+  animation-delay: 0.2s;
+}
+.notebook-content .cell:nth-child(4) {
+  animation-delay: 0.25s;
+}
+.notebook-content .cell:nth-child(5) {
+  animation-delay: 0.3s;
+}
 
 /* Hide parameter cells (they have celltag_parameters class) */
 .notebook-content .celltag_parameters {
-    @apply hidden;
+  @apply hidden;
 }

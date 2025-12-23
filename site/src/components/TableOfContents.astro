@@ -16,28 +16,31 @@ interface Props {
 const { headings = [] } = Astro.props;
 ---
 
-{headings.length > 0 && (
-  <nav class="sticky top-8 max-h-[calc(100vh-4rem)] overflow-y-auto p-4 bg-card border border-border text-[0.75rem] dark:bg-[oklch(0.14_0.018_260/80%)] dark:backdrop-blur-lg max-xl:hidden" id="toc">
-    <div class="flex items-center gap-1.5 mb-3 pb-2 border-b border-border text-muted-foreground">
-      <Icon name="List" size={12} />
-      <span class="font-semibold text-[0.625rem] uppercase tracking-wide">On this page</span>
-    </div>
-    <ul class="list-none p-0 m-0 flex flex-col" id="toc-list">
-      {headings.map((heading, index) => (
-        <li
-          class:list={['m-0', heading.level === 3 ? 'pl-3' : '']}
-        >
-          <a
-            href={`#${heading.id}`}
-            class="toc-link block py-1 px-2 text-muted-foreground no-underline border-l border-transparent -ml-2 leading-snug text-[0.8125rem] hover:text-foreground hover:bg-muted hover:border-l-[var(--mauve-6)]"
-          >
-            {heading.text}
-          </a>
-        </li>
-      ))}
-    </ul>
-  </nav>
-)}
+{
+  headings.length > 0 && (
+    <nav
+      class="bg-card border-border sticky top-8 max-h-[calc(100vh-4rem)] overflow-y-auto border p-4 text-[0.75rem] max-xl:hidden dark:bg-[oklch(0.14_0.018_260/80%)] dark:backdrop-blur-lg"
+      id="toc"
+    >
+      <div class="border-border text-muted-foreground mb-3 flex items-center gap-1.5 border-b pb-2">
+        <Icon name="List" size={12} />
+        <span class="text-[0.625rem] font-semibold tracking-wide uppercase">On this page</span>
+      </div>
+      <ul class="m-0 flex list-none flex-col p-0" id="toc-list">
+        {headings.map((heading, index) => (
+          <li class:list={['m-0', heading.level === 3 ? 'pl-3' : '']}>
+            <a
+              href={`#${heading.id}`}
+              class="toc-link text-muted-foreground hover:text-foreground hover:bg-muted -ml-2 block border-l border-transparent px-2 py-1 text-[0.8125rem] leading-snug no-underline hover:border-l-[var(--mauve-6)]"
+            >
+              {heading.text}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </nav>
+  )
+}
 
 <script>
   function initTOC() {
@@ -45,35 +48,48 @@ const { headings = [] } = Astro.props;
     if (!tocList) return;
 
     const tocLinks = tocList.querySelectorAll('.toc-link');
-    const headingIds = Array.from(tocLinks).map(link => link.getAttribute('href')?.slice(1)).filter(Boolean);
+    const headingIds = Array.from(tocLinks)
+      .map((link) => link.getAttribute('href')?.slice(1))
+      .filter(Boolean);
 
     if (headingIds.length === 0) return;
 
-    const activeClasses = ['active', 'text-foreground', 'border-l-primary', 'bg-[var(--mauve-3)]', 'font-medium', 'dark:bg-[oklch(0.25_0.03_280/50%)]', 'dark:shadow-[0_0_20px_oklch(0.55_0.12_280/10%)]'];
+    const activeClasses = [
+      'active',
+      'text-foreground',
+      'border-l-primary',
+      'bg-[var(--mauve-3)]',
+      'font-medium',
+      'dark:bg-[oklch(0.25_0.03_280/50%)]',
+      'dark:shadow-[0_0_20px_oklch(0.55_0.12_280/10%)]',
+    ];
 
     const setActive = (link: Element) => {
-      tocLinks.forEach(l => {
+      tocLinks.forEach((l) => {
         l.classList.remove(...activeClasses);
       });
       link.classList.add(...activeClasses);
     };
 
     // Highlight active section on scroll
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          const tocLink = tocList.querySelector(`a[href="#${entry.target.id}"]`);
-          if (tocLink) {
-            setActive(tocLink);
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const tocLink = tocList.querySelector(`a[href="#${entry.target.id}"]`);
+            if (tocLink) {
+              setActive(tocLink);
+            }
           }
-        }
-      });
-    }, {
-      rootMargin: '-80px 0px -70% 0px',
-      threshold: 0
-    });
+        });
+      },
+      {
+        rootMargin: '-80px 0px -70% 0px',
+        threshold: 0,
+      },
+    );
 
-    headingIds.forEach(id => {
+    headingIds.forEach((id) => {
       const heading = document.getElementById(id!);
       if (heading) {
         observer.observe(heading);

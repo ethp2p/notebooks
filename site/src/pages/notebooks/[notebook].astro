@@ -25,13 +25,13 @@ export function getStaticPaths() {
   const configContent = fs.readFileSync(configPath, 'utf-8');
   const config = yaml.load(configContent) as { notebooks: Array<{ id: string }> };
 
-  return config.notebooks.map(nb => ({
+  return config.notebooks.map((nb) => ({
     params: { notebook: nb.id },
   }));
 }
 
 const { notebook: notebookId } = Astro.params;
-const notebook = config.notebooks.find(nb => nb.id === notebookId);
+const notebook = config.notebooks.find((nb) => nb.id === notebookId);
 
 if (!notebook) {
   return Astro.redirect('/404');

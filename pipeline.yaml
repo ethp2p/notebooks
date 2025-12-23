@@ -12,7 +12,7 @@ dates:
 
   # For mode: rolling - relative to today
   rolling:
-    window: 14  # Number of days to keep (yesterday through N days ago)
+    window: 14 # Number of days to keep (yesterday through N days ago)
 
   # For mode: range - fixed date boundaries
   range:
