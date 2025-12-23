@@ -77,7 +77,7 @@ export function SidebarList({ notebooks, latestDate, historicalDates, currentPat
             <span className="text-muted-foreground text-[0.5625rem] font-normal opacity-70">{historicalDates.length} dates</span>
           </div>
           <ul className="m-0 flex list-none flex-col p-0">
-            {historicalDates.slice(0, 7).map((date) => {
+            {historicalDates.map((date) => {
               const compactDate = toCompactDate(date);
               const href = `${base}${compactDate}`;
               const isActive = currentPath.startsWith(`/${compactDate}`);

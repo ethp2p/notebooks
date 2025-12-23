@@ -36,6 +36,7 @@ from scripts.pipeline import (
     load_data_manifest,
     check_staleness,
     print_staleness_report,
+    resolve_dates,
 )
 
 DATA_ROOT = Path("notebooks/data")
@@ -280,6 +281,9 @@ def main() -> None:
         print("No data available to render")
         return
 
+    # Get configured date range (rolling window, range, or list)
+    configured_dates = set(resolve_dates(pipeline_config))
+
     if args.date:
         if args.date not in available_dates:
             print(f"Date {args.date} not available. Available: {available_dates}")
@@ -288,13 +292,17 @@ def main() -> None:
     elif args.latest_only:
         dates_to_render = [available_dates[0]]
     else:
-        dates_to_render = available_dates
+        # Default: render dates in configured window that have data
+        dates_to_render = [d for d in available_dates if d in configured_dates]
+        if not dates_to_render:
+            print("No dates in configured window have data")
+            sys.exit(1)
 
     # Check for stale data
     stale_reports = check_staleness(pipeline_config, data_manifest, dates_to_render)
     if stale_reports and not args.allow_stale:
         print("WARNING: Data is stale for some queries!")
-        print("Run 'just fetch-regen' first, or use --allow-stale to proceed anyway")
+        print("Run 'just fetch' first, or use --allow-stale to proceed anyway")
         print()
         for r in stale_reports[:5]:
             print(f"  - {r.date}/{r.query_id}: {r.reason.value}")

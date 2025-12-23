@@ -415,7 +415,7 @@ pre code {
   ol,
   blockquote,
   dl {
-    @apply max-w-prose;
+    max-width: 80ch;
   }
 
   /* Charts/figures use full width */

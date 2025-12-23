@@ -7,8 +7,8 @@ Tracks query hashes for staleness detection.
 
 Usage:
     python fetch_data.py [--date YYYY-MM-DD] [--output-dir PATH] [--max-days N]
-    python fetch_data.py --auto-regenerate  # Re-fetch stale data
-    python fetch_data.py --check-only       # Report staleness without fetching
+    python fetch_data.py --sync        # Fetch missing + re-fetch stale data
+    python fetch_data.py --check-only  # Report staleness without fetching
 """
 
 import argparse
@@ -185,9 +185,9 @@ def main() -> None:
     parser.add_argument("--max-days", type=int, help="Max days to keep")
     parser.add_argument("--network", default="mainnet")
     parser.add_argument(
-        "--auto-regenerate",
+        "--sync",
         action="store_true",
-        help="Automatically re-fetch stale data",
+        help="Fetch missing data and re-fetch stale data",
     )
     parser.add_argument(
         "--check-only", action="store_true", help="Only check staleness, don't fetch"
@@ -216,11 +216,11 @@ def main() -> None:
     # Determine what to fetch
     to_fetch: dict[str, list[str]] = {}  # date -> [query_ids]
 
-    if args.auto_regenerate and stale_reports:
-        # Fetch only stale query/date combinations
+    if args.sync and stale_reports:
+        # Fetch stale query/date combinations
         for r in stale_reports:
             to_fetch.setdefault(r.date, []).append(r.query_id)
-        print(f"Auto-regenerating {len(stale_reports)} stale items...")
+        print(f"Syncing {len(stale_reports)} stale items...")
     elif args.date:
         # Fetch all queries for specified date
         to_fetch = {args.date: list(config["queries"].keys())}

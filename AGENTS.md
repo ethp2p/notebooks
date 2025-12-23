@@ -19,25 +19,23 @@ just dev              # Start Astro dev server (site/)
 just install          # Install all dependencies (uv + pnpm)
 
 # Data Pipeline
-just fetch            # Fetch yesterday's data from ClickHouse
-just fetch-date 2025-01-15    # Fetch specific date
-just fetch-regen      # Auto-regenerate stale data
+just fetch               # Fetch all data (missing + stale)
+just fetch 2025-12-15    # Fetch specific date
 
 # Staleness Detection
-just check-stale      # Report stale data (exit 1 if any)
-just show-dates       # Show resolved date range from config
-just show-hashes      # Show current query hashes
+just check-stale         # Report stale data (exit 1 if any)
+just show-dates          # Show resolved date range from config
+just show-hashes         # Show current query hashes
 
 # Rendering
-just render           # Render notebooks for latest date
-just render-all       # Render all available dates
-just render-force     # Force re-render (bypass cache)
-just render-notebook blob-inclusion  # Render single notebook
+just render              # Render all dates (cached)
+just render latest       # Render latest date only
+just render 2025-12-15   # Render specific date
 
 # Build
-just build            # Build Astro site
-just publish          # render + build
-just sync             # Full pipeline: fetch + render + build
+just build               # Build Astro site
+just publish             # render + build
+just sync                # Full pipeline: fetch + render + build
 
 # Type check
 just typecheck
@@ -102,7 +100,7 @@ The pipeline tracks query source code hashes to detect when queries change:
 1. **Query hash**: SHA256 of function AST (excludes docstrings)
 2. **Stored in manifest**: `notebooks/data/manifest.json` has `query_hashes` and per-date metadata
 3. **Check**: `just check-stale` compares current hashes to stored hashes
-4. **Auto-fix**: `just fetch-regen` re-fetches only stale query/date combinations
+4. **Auto-fix**: `just fetch` re-fetches stale query/date combinations automatically
 
 ## Design Preferences
 
@@ -166,7 +164,7 @@ Two React components wrap Lucide icons:
    target_date = None  # Set via papermill
    ```
 
-4. Run `just fetch && just render && just build`
+4. Run `just sync`
 
 ## Code Conventions
 
@@ -248,12 +246,12 @@ cd site && npx shadcn@latest add <component-name>
 
 - Check `notebooks/data/` has Parquet files for target date
 - Verify `notebooks/data/manifest.json` lists the date
-- Run `just render-force` to bypass cache
+- Delete `site/public/rendered/` and re-run `just render`
 
 ### Stale data issues
 
 - Run `just check-stale` to see what's outdated
-- Run `just fetch-regen` to auto-fix
+- Run `just fetch` to sync (handles stale automatically)
 - Check `just show-hashes` vs stored hashes in manifest
 
 ### Site build issues

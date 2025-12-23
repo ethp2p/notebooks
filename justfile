@@ -25,17 +25,14 @@ install:
 # Data Pipeline
 # ============================================
 
-# Fetch yesterday's data from ClickHouse
-fetch:
-    uv run python scripts/fetch_data.py --output-dir notebooks/data
-
-# Fetch data for a specific date
-fetch-date date:
-    uv run python scripts/fetch_data.py --date {{date}} --output-dir notebooks/data
-
-# Fetch and auto-regenerate any stale data
-fetch-regen:
-    uv run python scripts/fetch_data.py --output-dir notebooks/data --auto-regenerate
+# Fetch data: all (default) or specific date (YYYY-MM-DD)
+fetch target="all":
+    #!/usr/bin/env bash
+    if [ "{{target}}" = "all" ]; then
+        uv run python scripts/fetch_data.py --output-dir notebooks/data --sync
+    else
+        uv run python scripts/fetch_data.py --output-dir notebooks/data --date {{target}}
+    fi
 
 # Check for stale data without fetching
 check-stale:
@@ -53,29 +50,16 @@ show-hashes:
 # Notebook Rendering
 # ============================================
 
-# Render notebooks for latest date only
-render:
-    uv run python scripts/render_notebooks.py --output-dir site/public/rendered --latest-only
-
-# Render notebooks for all available dates
-render-all:
-    uv run python scripts/render_notebooks.py --output-dir site/public/rendered
-
-# Render notebooks for a specific date
-render-date date:
-    uv run python scripts/render_notebooks.py --output-dir site/public/rendered --date {{date}}
-
-# Render a specific notebook for all dates
-render-notebook notebook:
-    uv run python scripts/render_notebooks.py --output-dir site/public/rendered --notebook {{notebook}}
-
-# Force re-render all notebooks (ignores cache)
-render-force:
-    uv run python scripts/render_notebooks.py --output-dir site/public/rendered --force
-
-# Render even if data is stale (skip staleness check)
-render-stale:
-    uv run python scripts/render_notebooks.py --output-dir site/public/rendered --allow-stale --latest-only
+# Render notebooks: all (default), "latest", or specific date (YYYY-MM-DD)
+render target="all":
+    #!/usr/bin/env bash
+    if [ "{{target}}" = "all" ]; then
+        uv run python scripts/render_notebooks.py --output-dir site/public/rendered
+    elif [ "{{target}}" = "latest" ]; then
+        uv run python scripts/render_notebooks.py --output-dir site/public/rendered --latest-only
+    else
+        uv run python scripts/render_notebooks.py --output-dir site/public/rendered --date {{target}}
+    fi
 
 # ============================================
 # Build & Deploy
@@ -85,18 +69,15 @@ render-stale:
 build:
     cd site && pnpm run build
 
-# Full publish: render latest + build Astro
+# Render all + build Astro
 publish: render build
-
-# Full publish with all dates: render all + build Astro
-publish-all: render-all build
 
 # ============================================
 # CI / Full Pipeline
 # ============================================
 
-# Full sync: fetch + render + build (used by CI)
-sync: fetch-regen render build
+# Full sync: fetch + render + build
+sync: fetch render build
 
 # CI: Check data staleness (exit 1 if stale)
 check-stale-ci:

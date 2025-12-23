@@ -100,8 +100,8 @@ The pipeline tracks query source code hashes to detect when queries change:
 # Check for stale data
 just check-stale
 
-# Auto-regenerate stale data only
-just fetch-regen
+# Fetch handles missing + stale automatically
+just fetch
 
 # View current query hashes
 just show-hashes
@@ -115,24 +115,23 @@ just dev              # Start Astro dev server
 just install          # Install all dependencies
 
 # Data Pipeline
-just fetch            # Fetch yesterday's data
-just fetch-date DATE  # Fetch specific date
-just fetch-regen      # Auto-regenerate stale data
+just fetch               # Fetch all data (missing + stale)
+just fetch 2025-12-15    # Fetch specific date
 
 # Staleness
-just check-stale      # Report stale data
-just show-dates       # Show resolved date range
-just show-hashes      # Show query hashes
+just check-stale         # Report stale data
+just show-dates          # Show resolved date range
+just show-hashes         # Show query hashes
 
 # Rendering
-just render           # Render latest date
-just render-all       # Render all dates
-just render-force     # Force re-render
+just render              # Render all dates (cached)
+just render latest       # Render latest date only
+just render 2025-12-15   # Render specific date
 
 # Build
-just build            # Build Astro site
-just publish          # render + build
-just sync             # Full pipeline: fetch + render + build
+just build               # Build Astro site
+just publish             # render + build
+just sync                # Full pipeline: fetch + render + build
 ```
 
 ## CI/CD
@@ -157,15 +156,14 @@ Data and rendered outputs are cached in GitHub Actions cache (keyed by query/not
 ### Fetching Data
 
 ```bash
-# Fetch yesterday's data (default)
+# Fetch all data (missing + stale)
 just fetch
 
 # Fetch specific date
-just fetch-date 2025-01-15
+just fetch 2025-01-15
 
-# Check what's stale and auto-fix
+# Check what's stale
 just check-stale
-just fetch-regen
 ```
 
 ### Running Notebooks Locally

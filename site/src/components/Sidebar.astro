@@ -95,7 +95,7 @@ const formatDate = (dateStr: string) => {
           <span class="text-muted-foreground text-[0.5625rem] font-normal opacity-70">{historicalDates.length} dates</span>
         </div>
         <ul class="m-0 flex list-none flex-col p-0">
-          {historicalDates.slice(0, 7).map((date, index) => {
+          {historicalDates.map((date, index) => {
             const compactDate = toCompactDate(date);
             const href = `${base}${compactDate}`;
             const isActive = currentPath.startsWith(`/${compactDate}`);
