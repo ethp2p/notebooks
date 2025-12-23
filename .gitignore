@@ -28,8 +28,6 @@ site/public/rendered/
 # Notebook rendering artifacts
 _site/
 site_libs/
-.quarto/
-_freeze/
 
 # Executed notebooks (papermill output)
 *_executed.ipynb
