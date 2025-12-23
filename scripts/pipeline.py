@@ -71,17 +71,32 @@ def resolve_dates(config: dict, override_date: str | None = None) -> list[str]:
     dates_config = config["dates"]
     mode = dates_config["mode"]
 
+    today = datetime.now(timezone.utc).date()
+    yesterday = today - timedelta(days=1)
+
     if mode == "rolling":
-        window = dates_config["rolling"]["window"]
-        today = datetime.now(timezone.utc).date()
-        return [
-            (today - timedelta(days=i)).strftime("%Y-%m-%d")
-            for i in range(1, window + 1)  # Start from yesterday
-        ]
+        rolling_config = dates_config["rolling"]
+        window = rolling_config["window"]
+        # Optional start date - won't go earlier than this
+        start_limit = None
+        if "start" in rolling_config and rolling_config["start"]:
+            start_limit = datetime.strptime(rolling_config["start"], "%Y-%m-%d").date()
+
+        dates = []
+        for i in range(1, window + 1):  # Start from yesterday
+            date = today - timedelta(days=i)
+            if start_limit and date < start_limit:
+                break
+            dates.append(date.strftime("%Y-%m-%d"))
+        return dates
 
     elif mode == "range":
-        start = datetime.strptime(dates_config["range"]["start"], "%Y-%m-%d").date()
-        end = datetime.strptime(dates_config["range"]["end"], "%Y-%m-%d").date()
+        range_config = dates_config["range"]
+        start = datetime.strptime(range_config["start"], "%Y-%m-%d").date()
+        # Optional end date - defaults to yesterday
+        end = yesterday
+        if "end" in range_config and range_config["end"]:
+            end = datetime.strptime(range_config["end"], "%Y-%m-%d").date()
         dates = []
         current = start
         while current <= end:
