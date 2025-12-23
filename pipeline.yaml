@@ -132,5 +132,5 @@ settings:
   network: mainnet
   timezone: UTC
   data_dir: notebooks/data
-  rendered_dir: site/public/rendered
+  rendered_dir: site/rendered
   parallel_workers: 4

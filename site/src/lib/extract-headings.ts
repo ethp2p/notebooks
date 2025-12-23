@@ -13,7 +13,7 @@ export interface Heading {
  * Uses a proper HTML parser for safety.
  */
 export function extractHeadings(htmlPath: string): Heading[] {
-  const fullPath = path.join(process.cwd(), 'public', 'rendered', htmlPath);
+  const fullPath = path.join(process.cwd(), 'rendered', htmlPath);
 
   if (!fs.existsSync(fullPath)) {
     return [];

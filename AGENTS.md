@@ -49,14 +49,14 @@ queries/               # ClickHouse query modules -> Parquet
 scripts/
 ├── pipeline.py        # Coordinator: config, hashes, staleness
 ├── fetch_data.py      # CLI: ClickHouse -> notebooks/data/*.parquet
-└── render_notebooks.py # CLI: .ipynb -> site/public/rendered/*.html
+└── render_notebooks.py # CLI: .ipynb -> site/rendered/*.html
 notebooks/
 ├── *.ipynb            # Jupyter notebooks (Plotly visualizations)
 ├── loaders.py         # load_parquet() utility
 ├── templates/         # nbconvert HTML templates
 └── data/              # Parquet cache + manifest.json (gitignored)
 site/                  # Astro static site
-├── public/rendered/   # Pre-rendered HTML + manifest.json
+├── rendered/          # Pre-rendered HTML + manifest.json (gitignored)
 └── src/
     ├── layouts/BaseLayout.astro
     ├── pages/         # index, [date]/[notebook]
@@ -223,7 +223,7 @@ cd site && npx shadcn@latest add <component-name>
 }
 ```
 
-### Rendered Manifest (`site/public/rendered/manifest.json`)
+### Rendered Manifest (`site/rendered/manifest.json`)
 
 ```json
 {
@@ -246,7 +246,7 @@ cd site && npx shadcn@latest add <component-name>
 
 - Check `notebooks/data/` has Parquet files for target date
 - Verify `notebooks/data/manifest.json` lists the date
-- Delete `site/public/rendered/` and re-run `just render`
+- Delete `site/rendered/` and re-run `just render`
 
 ### Stale data issues
 
@@ -256,8 +256,8 @@ cd site && npx shadcn@latest add <component-name>
 
 ### Site build issues
 
-- Check `site/public/rendered/manifest.json` exists
-- Verify HTML files in `site/public/rendered/{date}/`
+- Check `site/rendered/manifest.json` exists
+- Verify HTML files in `site/rendered/{date}/`
 - Run `pnpm run build` from `site/` for detailed errors
 
 ### Data fetch issues
@@ -270,16 +270,36 @@ cd site && npx shadcn@latest add <component-name>
 Single unified workflow (`sync.yml`) handles everything:
 
 - **Schedule**: Daily at 1am UTC
-- **Push to main**: Full sync and deploy to GitHub Pages
-- **Pull requests**: Preview deploy to Cloudflare Pages
+- **Push to main**: Full sync and deploy to production
+- **Pull requests**: Preview deploy to staging
 
 Caching: Data and rendered artifacts are cached in GitHub Actions cache (keyed by query/notebook hashes and date) to avoid redundant fetching and rendering.
 
-Artifacts: Data and rendered outputs are uploaded as workflow artifacts (90-day retention) for traceability.
+## R2 Deployment
 
-## Branches
+Site deployed to Cloudflare R2 with content-addressed storage (CAS):
 
-| Branch     | Purpose        |
-| ---------- | -------------- |
-| `main`     | Source code    |
-| `gh-pages` | Deployed site  |
+```
+r2-bucket/
+├── blobs/                    # Immutable content-addressed files
+│   ├── {sha256}.html
+│   └── {sha256}.js
+└── manifests/
+    ├── main.json             # Production manifest
+    └── pr-14.json            # PR preview manifest
+```
+
+**Request flow:**
+1. Worker receives request to `observatory.ethp2p.dev/page`
+2. Loads `manifests/main.json` (cached 60s)
+3. Resolves `/page` → blob hash
+4. Serves `blobs/{hash}.html` with immutable caching
+
+**Domains:**
+- Production: `observatory.ethp2p.dev`
+- PR previews: `observatory-staging.ethp2p.dev/pr-{number}/`
+
+**Key files:**
+- `scripts/upload_r2.py` - CAS upload script (parallel blob uploads, deduplication)
+- `worker/src/index.ts` - Cloudflare Worker (manifest resolution, blob serving)
+- `worker/wrangler.toml` - Worker config (routes, R2 binding)

@@ -21,7 +21,7 @@ const config = yaml.load(configContent) as {
 
 // Load manifest for available dates
 let manifest: { latest_date: string; dates: Record<string, unknown> } = { latest_date: '', dates: {} };
-const manifestPath = path.join(process.cwd(), 'public', 'rendered', 'manifest.json');
+const manifestPath = path.join(process.cwd(), 'rendered', 'manifest.json');
 if (fs.existsSync(manifestPath)) {
   manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'));
 }

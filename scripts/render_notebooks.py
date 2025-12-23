@@ -40,7 +40,7 @@ from scripts.pipeline import (
 )
 
 DATA_ROOT = Path("notebooks/data")
-OUTPUT_DIR = Path("site/public/rendered")
+OUTPUT_DIR = Path("site/rendered")
 MANIFEST_PATH = OUTPUT_DIR / "manifest.json"
 TEMPLATE_DIR = Path("notebooks/templates")
 

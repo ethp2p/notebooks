@@ -13,7 +13,7 @@ interface Props {
 const { htmlPath, title } = Astro.props;
 
 // Read the pre-rendered HTML at build time
-const fullPath = path.join(process.cwd(), 'public', 'rendered', htmlPath);
+const fullPath = path.join(process.cwd(), 'rendered', htmlPath);
 
 let content = '';
 let error = '';

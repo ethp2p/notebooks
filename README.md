@@ -45,14 +45,14 @@ queries/                   # ClickHouse query modules -> Parquet
 scripts/
 ├── pipeline.py            # Coordinator: config loading, hash computation, staleness
 ├── fetch_data.py          # CLI: ClickHouse -> notebooks/data/*.parquet
-└── render_notebooks.py    # CLI: .ipynb -> site/public/rendered/*.html
+└── render_notebooks.py    # CLI: .ipynb -> site/rendered/*.html
 notebooks/
 ├── *.ipynb                # Jupyter notebooks (Plotly visualizations)
 ├── loaders.py             # load_parquet() utility
 ├── templates/             # nbconvert HTML templates
 └── data/                  # Parquet cache + manifest.json (gitignored)
 site/                      # Astro static site
-├── public/rendered/       # Pre-rendered HTML + manifest.json
+├── rendered/              # Pre-rendered HTML + manifest.json (gitignored)
 └── src/                   # Pages, components, styles
 ```
 
@@ -61,8 +61,8 @@ site/                      # Astro static site
 ```
 ClickHouse ──[fetch_data.py]──> Parquet files ──[render_notebooks.py]──> HTML ──[Astro]──> Static site
                                      │
-                                     └── Stored on `data` branch (CI)
-                                         or `notebooks/data/` (local dev)
+                                     └── Cached in GitHub Actions (CI)
+                                         or notebooks/data/ (local dev)
 ```
 
 ### Pipeline Configuration
@@ -162,12 +162,6 @@ Site is deployed to Cloudflare R2 with content-addressed storage (site is ~1.3GB
 - CSS change: ~1MB upload (just new asset blobs)
 - New date: ~40MB upload (only new notebook renders)
 - PR preview: Just manifest (~100KB) if content unchanged
-
-### Branches
-
-| Branch | Purpose     |
-| ------ | ----------- |
-| `main` | Source code |
 
 ## Development
 

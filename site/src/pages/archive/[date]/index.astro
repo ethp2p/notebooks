@@ -19,14 +19,14 @@ const config = yaml.load(configContent) as {
 };
 
 // Load manifest
-const manifestPath = path.join(process.cwd(), 'public', 'rendered', 'manifest.json');
+const manifestPath = path.join(process.cwd(), 'rendered', 'manifest.json');
 let manifest: { dates: Record<string, Record<string, unknown>> } = { dates: {} };
 if (fs.existsSync(manifestPath)) {
   manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'));
 }
 
 export function getStaticPaths() {
-  const manifestPath = path.join(process.cwd(), 'public', 'rendered', 'manifest.json');
+  const manifestPath = path.join(process.cwd(), 'rendered', 'manifest.json');
   if (!fs.existsSync(manifestPath)) {
     return [];
   }

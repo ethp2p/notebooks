@@ -27,7 +27,7 @@ const config = yaml.load(configContent) as {
 };
 
 // Load manifest
-const manifestPath = path.join(process.cwd(), 'public', 'rendered', 'manifest.json');
+const manifestPath = path.join(process.cwd(), 'rendered', 'manifest.json');
 let manifest: { latest_date?: string; dates: Record<string, Record<string, { html_path: string }>> } = { dates: {} };
 if (fs.existsSync(manifestPath)) {
   manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'));
@@ -38,7 +38,7 @@ export function getStaticPaths() {
   const configContent = fs.readFileSync(configPath, 'utf-8');
   const config = yaml.load(configContent) as { notebooks: Array<{ id: string }> };
 
-  const manifestPath = path.join(process.cwd(), 'public', 'rendered', 'manifest.json');
+  const manifestPath = path.join(process.cwd(), 'rendered', 'manifest.json');
   if (!fs.existsSync(manifestPath)) {
     return [];
   }

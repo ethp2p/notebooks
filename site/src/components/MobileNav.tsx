@@ -37,15 +37,17 @@ export function MobileNav({ headings, notebooks, latestDate, historicalDates, cu
       {/* Menu Button (Bottom Left) */}
       <div className="fixed bottom-6 left-4 z-[60] lg:hidden">
         <Sheet open={openMenu} onOpenChange={setOpenMenu}>
-          <SheetTrigger asChild>
-            <Button
-              variant="outline"
-              size="icon"
-              className="border-border/50 bg-background/80 hover:bg-background h-10 w-10 rounded-none shadow-sm backdrop-blur-sm hover:shadow-md"
-            >
-              <PanelLeft size={18} />
-              <span className="sr-only">Open menu</span>
-            </Button>
+          <SheetTrigger
+            render={
+              <Button
+                variant="outline"
+                size="icon"
+                className="border-border/50 bg-background/80 hover:bg-background h-10 w-10 rounded-none shadow-sm backdrop-blur-sm hover:shadow-md"
+              />
+            }
+          >
+            <PanelLeft size={18} />
+            <span className="sr-only">Open menu</span>
           </SheetTrigger>
           <SheetContent side="left" className="border-sidebar-border bg-sidebar w-72 max-w-[85vw] gap-0 border-r p-0">
             {/* Header */}
@@ -79,15 +81,17 @@ export function MobileNav({ headings, notebooks, latestDate, historicalDates, cu
       {headings.length > 0 && (
         <div className="fixed right-4 bottom-6 z-[60] lg:top-6 lg:right-6 lg:bottom-auto xl:hidden">
           <Sheet open={openToc} onOpenChange={setOpenToc}>
-            <SheetTrigger asChild>
-              <Button
-                variant="outline"
-                size="icon"
-                className="border-border/50 bg-background/80 hover:bg-background h-10 w-10 rounded-none shadow-sm backdrop-blur-sm hover:shadow-md"
-              >
-                <List size={18} />
-                <span className="sr-only">Table of contents</span>
-              </Button>
+            <SheetTrigger
+              render={
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="border-border/50 bg-background/80 hover:bg-background h-10 w-10 rounded-none shadow-sm backdrop-blur-sm hover:shadow-md"
+                />
+              }
+            >
+              <List size={18} />
+              <span className="sr-only">Table of contents</span>
             </SheetTrigger>
             {/* TOC Sheet - Using a custom approach to match the "floating bubble" look if possible, or just standard sheet */}
             <SheetContent side="right" className="border-border w-80 max-w-[calc(100vw-2rem)] border p-0 sm:max-w-xs">

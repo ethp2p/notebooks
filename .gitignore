@@ -23,7 +23,7 @@ wheels/
 site/dist/
 site/.astro/
 site/node_modules/
-site/public/rendered/
+site/rendered/
 
 # Notebook rendering artifacts
 _site/
