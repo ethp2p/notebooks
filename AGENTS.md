@@ -37,12 +37,7 @@ just render-notebook blob-inclusion  # Render single notebook
 # Build
 just build            # Build Astro site
 just publish          # render + build
-just daily            # Full pipeline: fetch + render + build
-
-# CI Commands (called by GitHub Actions)
-just ci-daily         # fetch -> render -> build
-just ci-rebuild       # fetch-regen -> render-all -> build
-just ci-preview       # render-stale -> build
+just sync             # Full pipeline: fetch + render + build
 
 # Type check
 just typecheck
@@ -274,17 +269,19 @@ cd site && npx shadcn@latest add <component-name>
 
 ## CI/CD
 
-GitHub workflows call `just` commands for local/CI parity:
+Single unified workflow (`sync.yml`) handles everything:
 
-- `fetch-data.yml` - Daily at 1am UTC, runs `just fetch`, commits to `data` branch
-- `build-site.yml` - Runs `just render` + `just build`, deploys to GitHub Pages
-- `preview-site.yml` - Runs `just ci-preview` for PR previews on Cloudflare
+- **Schedule**: Daily at 1am UTC
+- **Push to main**: Full sync and deploy to GitHub Pages
+- **Pull requests**: Preview deploy to Cloudflare Pages
+
+Caching: Data and rendered artifacts are cached in GitHub Actions cache (keyed by query/notebook hashes and date) to avoid redundant fetching and rendering.
+
+Artifacts: Data and rendered outputs are uploaded as workflow artifacts (90-day retention) for traceability.
 
 ## Branches
 
-| Branch     | Purpose                     |
-| ---------- | --------------------------- |
-| `main`     | Source code                 |
-| `data`     | Parquet data files          |
-| `rendered` | Pre-rendered HTML artifacts |
-| `gh-pages` | Deployed site               |
+| Branch     | Purpose        |
+| ---------- | -------------- |
+| `main`     | Source code    |
+| `gh-pages` | Deployed site  |

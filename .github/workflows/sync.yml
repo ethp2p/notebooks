@@ -1,0 +1,238 @@
+name: Sync
+
+on:
+  schedule:
+    - cron: "0 1 * * *" # 1am UTC daily
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      force_fetch:
+        description: "Force re-fetch all data (ignores cache)"
+        type: boolean
+        default: false
+      force_render:
+        description: "Force re-render all notebooks (ignores cache)"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+  deployments: write
+
+concurrency:
+  group: "sync-${{ github.head_ref || github.ref_name }}"
+  cancel-in-progress: true
+
+env:
+  CACHE_VERSION: v1 # Increment to invalidate all caches
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    outputs:
+      has_changes: ${{ steps.check.outputs.has_changes }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # ============================================
+      # Setup Tools
+      # ============================================
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+
+      - name: Set up Python
+        run: uv python install 3.13
+
+      - name: Install Python dependencies
+        run: uv sync
+
+      - name: Install just
+        uses: extractions/setup-just@v2
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "pnpm"
+          cache-dependency-path: site/pnpm-lock.yaml
+
+      - name: Install Node dependencies
+        run: cd site && pnpm install
+
+      # ============================================
+      # Restore Caches
+      # ============================================
+      - name: Get cache keys
+        id: cache-keys
+        run: |
+          # Hash of query source files for data cache
+          QUERY_HASH=$(find queries -name "*.py" -type f -exec sha256sum {} \; | sort | sha256sum | cut -c1-16)
+          echo "query_hash=$QUERY_HASH" >> $GITHUB_OUTPUT
+
+          # Hash of notebook source files for render cache
+          NOTEBOOK_HASH=$(find notebooks -name "*.ipynb" -type f -exec sha256sum {} \; | sort | sha256sum | cut -c1-16)
+          echo "notebook_hash=$NOTEBOOK_HASH" >> $GITHUB_OUTPUT
+
+          # Today's date for cache partitioning
+          echo "date=$(date -u +%Y-%m-%d)" >> $GITHUB_OUTPUT
+
+      - name: Restore data cache
+        if: github.event.inputs.force_fetch != 'true'
+        uses: actions/cache/restore@v4
+        id: data-cache
+        with:
+          path: notebooks/data
+          key: ${{ env.CACHE_VERSION }}-data-${{ steps.cache-keys.outputs.query_hash }}-${{ steps.cache-keys.outputs.date }}
+          restore-keys: |
+            ${{ env.CACHE_VERSION }}-data-${{ steps.cache-keys.outputs.query_hash }}-
+            ${{ env.CACHE_VERSION }}-data-
+
+      - name: Restore rendered cache
+        if: github.event.inputs.force_render != 'true'
+        uses: actions/cache/restore@v4
+        id: rendered-cache
+        with:
+          path: site/public/rendered
+          key: ${{ env.CACHE_VERSION }}-rendered-${{ steps.cache-keys.outputs.notebook_hash }}-${{ steps.cache-keys.outputs.date }}
+          restore-keys: |
+            ${{ env.CACHE_VERSION }}-rendered-${{ steps.cache-keys.outputs.notebook_hash }}-
+            ${{ env.CACHE_VERSION }}-rendered-
+
+      - name: Initialize directories
+        run: |
+          mkdir -p notebooks/data site/public/rendered
+          # Create empty manifest if none exists
+          if [ ! -f "notebooks/data/manifest.json" ]; then
+            echo '{"schema_version": "2.0", "dates": [], "latest": null, "query_hashes": {}, "date_queries": {}}' > notebooks/data/manifest.json
+          fi
+          if [ ! -f "site/public/rendered/manifest.json" ]; then
+            echo '{"latest_date": null, "dates": {}}' > site/public/rendered/manifest.json
+          fi
+
+      # ============================================
+      # Fetch Data (only on main branch or schedule)
+      # ============================================
+      - name: Fetch data
+        if: github.ref == 'refs/heads/main' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+        env:
+          CLICKHOUSE_HOST: ${{ secrets.CLICKHOUSE_HOST }}
+          CLICKHOUSE_PORT: ${{ secrets.CLICKHOUSE_PORT }}
+          CLICKHOUSE_USER: ${{ secrets.CLICKHOUSE_USER }}
+          CLICKHOUSE_PASSWORD: ${{ secrets.CLICKHOUSE_PASSWORD }}
+        run: |
+          if [ "${{ github.event.inputs.force_fetch }}" = "true" ]; then
+            echo "Force fetching all data..."
+            just fetch-regen
+          else
+            echo "Fetching missing data..."
+            just fetch-regen
+          fi
+
+      # ============================================
+      # Render Notebooks
+      # ============================================
+      - name: Render notebooks
+        run: |
+          if [ "${{ github.event.inputs.force_render }}" = "true" ]; then
+            echo "Force rendering all notebooks..."
+            just render-force
+          else
+            echo "Rendering notebooks (with cache)..."
+            just render
+          fi
+
+      # ============================================
+      # Build Site
+      # ============================================
+      - name: Build site
+        env:
+          ASTRO_SITE: ${{ github.event_name == 'pull_request' && 'https://preview.example.com' || 'https://ethp2p.github.io' }}
+          ASTRO_BASE: ${{ github.event_name == 'pull_request' && '/' || '/notebooks' }}
+        run: just build
+
+      # ============================================
+      # Save Caches
+      # ============================================
+      - name: Save data cache
+        if: github.ref == 'refs/heads/main' || github.event_name == 'schedule'
+        uses: actions/cache/save@v4
+        with:
+          path: notebooks/data
+          key: ${{ env.CACHE_VERSION }}-data-${{ steps.cache-keys.outputs.query_hash }}-${{ steps.cache-keys.outputs.date }}
+
+      - name: Save rendered cache
+        if: github.ref == 'refs/heads/main' || github.event_name == 'schedule'
+        uses: actions/cache/save@v4
+        with:
+          path: site/public/rendered
+          key: ${{ env.CACHE_VERSION }}-rendered-${{ steps.cache-keys.outputs.notebook_hash }}-${{ steps.cache-keys.outputs.date }}
+
+      # ============================================
+      # Upload Artifacts (for traceability)
+      # ============================================
+      - name: Upload data artifact
+        if: github.ref == 'refs/heads/main' || github.event_name == 'schedule'
+        uses: actions/upload-artifact@v4
+        with:
+          name: data-${{ steps.cache-keys.outputs.date }}
+          path: notebooks/data
+          retention-days: 90
+
+      - name: Upload rendered artifact
+        if: github.ref == 'refs/heads/main' || github.event_name == 'schedule'
+        uses: actions/upload-artifact@v4
+        with:
+          name: rendered-${{ steps.cache-keys.outputs.date }}
+          path: site/public/rendered
+          retention-days: 90
+
+      # ============================================
+      # Deploy
+      # ============================================
+      - name: Upload Pages artifact
+        if: github.ref == 'refs/heads/main'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site/dist
+
+      - name: Upload preview artifact
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: site-preview
+          path: site/dist
+          retention-days: 7
+
+      - name: Deploy to Cloudflare Pages (PR preview)
+        if: github.event_name == 'pull_request'
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy site/dist --project-name=${{ secrets.CLOUDFLARE_PROJECT_NAME }} --branch=${{ github.head_ref }}
+          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+
+  deploy-pages:
+    if: github.ref == 'refs/heads/main'
+    needs: sync
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

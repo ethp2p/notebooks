@@ -15,7 +15,7 @@ dates:
   # Optional start: won't go earlier than this date
   rolling:
     window: 30 # Number of days to keep (yesterday through N days ago)
-    # start: "2025-12-01"  # Optional: earliest date to include
+    start: "2025-12-03" # Optional: earliest date to include
 
   # For mode: range - fixed date boundaries
   # Required: start date

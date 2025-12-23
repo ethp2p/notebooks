@@ -92,24 +92,15 @@ publish: render build
 publish-all: render-all build
 
 # ============================================
-# CI Workflows (called by GitHub Actions)
+# CI / Full Pipeline
 # ============================================
 
-# CI: Daily pipeline (fetch + render + build)
-ci-daily: fetch render build
-
-# CI: Full rebuild (auto-regenerate stale + render all + build)
-ci-rebuild: fetch-regen render-all build
-
-# CI: Preview build (render latest only, allow stale)
-ci-preview: render-stale build
+# Full sync: fetch + render + build (used by CI)
+sync: fetch-regen render build
 
 # CI: Check data staleness (exit 1 if stale)
-ci-check-stale:
+check-stale-ci:
     uv run python scripts/fetch_data.py --output-dir notebooks/data --check-only
-
-# Daily CI workflow: fetch yesterday's data + render + build
-daily: fetch publish
 
 # ============================================
 # Utilities
