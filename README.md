@@ -139,17 +139,35 @@ just sync                # Full pipeline: fetch + render + build
 Single unified workflow (`sync.yml`) handles everything:
 
 - **Schedule**: Daily at 1am UTC - fetches data, renders notebooks, deploys
-- **Push to main**: Full sync and deploy to GitHub Pages
-- **Pull requests**: Preview deploy to Cloudflare Pages
+- **Push to main**: Full sync and deploy to production
+- **Pull requests**: Preview deploy to staging
 
-Data and rendered outputs are cached in GitHub Actions cache (keyed by query/notebook hashes and date) to avoid redundant work. Artifacts are also uploaded for traceability (90-day retention).
+Data and rendered outputs are cached in GitHub Actions cache (keyed by query/notebook hashes and date) to avoid redundant work.
+
+### R2 Deployment
+
+Site is deployed to Cloudflare R2 with content-addressed storage (site is ~1.3GB with rendered Plotly notebooks, exceeds Cloudflare Pages 25MB limit).
+
+**Architecture:**
+- Blobs stored at `blobs/{sha256-hash}.{ext}` (immutable, cached forever)
+- Manifests at `manifests/{name}.json` map paths to blob hashes
+- Cloudflare Worker resolves requests to blobs
+
+**Domains:**
+- Production: `observatory.ethp2p.dev` (serves `main` manifest)
+- PR previews: `observatory-staging.ethp2p.dev/pr-{number}/`
+
+**Benefits:**
+- Only uploads changed files (deduplication via SHA256)
+- CSS change: ~1MB upload (just new asset blobs)
+- New date: ~40MB upload (only new notebook renders)
+- PR preview: Just manifest (~100KB) if content unchanged
 
 ### Branches
 
-| Branch     | Purpose       |
-| ---------- | ------------- |
-| `main`     | Source code   |
-| `gh-pages` | Deployed site |
+| Branch | Purpose     |
+| ------ | ----------- |
+| `main` | Source code |
 
 ## Development
 
