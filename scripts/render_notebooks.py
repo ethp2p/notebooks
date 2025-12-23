@@ -15,9 +15,11 @@ import argparse
 import hashlib
 import json
 import os
+import random
 import shutil
 import sys
 import tempfile
+import time
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from datetime import datetime, timezone
 from pathlib import Path
@@ -48,7 +50,10 @@ TEMPLATE_DIR = Path("notebooks/templates")
 def load_config() -> dict:
     """Load notebooks configuration from pipeline.yaml."""
     pipeline_config = load_pipeline_config()
-    return {"notebooks": pipeline_config["notebooks"]}
+    return {
+        "notebooks": pipeline_config["notebooks"],
+        "queries": pipeline_config.get("queries", {}),
+    }
 
 
 def load_manifest() -> dict:
@@ -74,6 +79,33 @@ def hash_file(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()[:12]
 
 
+def hash_data_files(notebook_config: dict, queries_config: dict, date: str) -> str:
+    """Compute combined hash of all parquet files a notebook depends on.
+
+    Returns a hash representing the state of all data files for this notebook/date.
+    """
+    query_ids = notebook_config.get("queries", [])
+    if not query_ids:
+        return ""
+
+    # Collect hashes of all data files
+    file_hashes = []
+    for query_id in sorted(query_ids):  # Sort for deterministic ordering
+        query_config = queries_config.get(query_id, {})
+        output_file = query_config.get("output_file", f"{query_id}.parquet")
+        data_path = DATA_ROOT / date / output_file
+        file_hash = hash_file(data_path)
+        if file_hash:
+            file_hashes.append(f"{query_id}:{file_hash}")
+
+    if not file_hashes:
+        return ""
+
+    # Combine into single hash
+    combined = "|".join(file_hashes)
+    return hashlib.sha256(combined.encode()).hexdigest()[:12]
+
+
 def get_available_dates() -> list[str]:
     """Get list of available dates from data directory."""
     data_manifest = DATA_ROOT / "manifest.json"
@@ -91,24 +123,34 @@ def get_available_dates() -> list[str]:
 def should_render(
     notebook_id: str,
     notebook_source: Path,
+    notebook_config: dict,
+    queries_config: dict,
     date: str,
     manifest: dict,
     force: bool = False,
-) -> bool:
-    """Check if a notebook needs to be re-rendered."""
+) -> tuple[bool, str]:
+    """Check if a notebook needs to be re-rendered.
+
+    Returns (should_render, reason) tuple.
+    """
     if force:
-        return True
+        return True, "forced"
 
     existing = manifest.get("dates", {}).get(date, {}).get(notebook_id)
     if not existing:
-        return True  # Never rendered
+        return True, "new"
 
     # Check if notebook source changed
     current_hash = hash_file(notebook_source)
     if current_hash != existing.get("notebook_hash"):
-        return True
+        return True, "notebook changed"
 
-    return False
+    # Check if data files changed
+    current_data_hash = hash_data_files(notebook_config, queries_config, date)
+    if current_data_hash and current_data_hash != existing.get("data_hash"):
+        return True, "data changed"
+
+    return False, "unchanged"
 
 
 def inject_plotly_renderer(nb: nbformat.NotebookNode) -> nbformat.NotebookNode:
@@ -166,14 +208,35 @@ def render_notebook(
             with open(prepared_nb, "w") as f:
                 nbformat.write(nb, f)
 
-            # Execute notebook with papermill
-            pm.execute_notebook(
-                str(prepared_nb),
-                str(executed_nb),
-                parameters={"target_date": target_date},
-                cwd=str(abs_source.parent),  # Run from notebooks/ directory
-                kernel_name="python3",
-            )
+            # Execute notebook with papermill (with retry for kernel failures)
+            max_retries = 10
+            last_error = None
+            for attempt in range(max_retries):
+                try:
+                    pm.execute_notebook(
+                        str(prepared_nb),
+                        str(executed_nb),
+                        parameters={"target_date": target_date},
+                        cwd=str(abs_source.parent),  # Run from notebooks/ directory
+                        kernel_name="python3",
+                    )
+                    break  # Success
+                except Exception as e:
+                    last_error = e
+                    error_str = str(e)
+                    # Retry on kernel/ZMQ errors
+                    if attempt < max_retries - 1 and (
+                        "ZMQError" in error_str
+                        or "Address already in use" in error_str
+                        or "Kernel didn't respond" in error_str
+                    ):
+                        # Random backoff to desynchronize parallel retries
+                        time.sleep(random.uniform(1, 3))
+                        continue
+                    raise
+            else:
+                # All retries exhausted
+                raise last_error
 
             # Convert to HTML with custom template
             c = Config()
@@ -214,6 +277,8 @@ def render_notebook_task(
     notebook_source_str: str,
     target_date: str,
     output_dir_str: str,
+    notebook_config: dict,
+    queries_config: dict,
 ) -> dict:
     """
     Worker function for parallel rendering.
@@ -231,6 +296,7 @@ def render_notebook_task(
         "success": ok,
         "result": result,
         "notebook_hash": hash_file(notebook_source) if ok else "",
+        "data_hash": hash_data_files(notebook_config, queries_config, target_date) if ok else "",
     }
 
 
@@ -270,6 +336,7 @@ def main() -> None:
     config = load_config()
     manifest = load_manifest()
     notebooks = config["notebooks"]
+    queries_config = config["queries"]
 
     # Check for stale data before rendering
     pipeline_config = load_pipeline_config()
@@ -349,14 +416,15 @@ def main() -> None:
             notebook_id = nb["id"]
             notebook_source = Path(nb["source"])
 
-            if not should_render(
-                notebook_id, notebook_source, date, manifest, args.force
-            ):
-                print(f"  SKIP: {notebook_id} @ {date} (unchanged)")
+            needs_render, reason = should_render(
+                notebook_id, notebook_source, nb, queries_config, date, manifest, args.force
+            )
+            if not needs_render:
+                print(f"  SKIP: {notebook_id} @ {date} ({reason})")
                 skip_count += 1
                 continue
 
-            to_render.append((notebook_id, str(notebook_source)))
+            to_render.append((notebook_id, str(notebook_source), nb, reason))
 
         if not to_render:
             continue
@@ -372,16 +440,18 @@ def main() -> None:
                     notebook_source_str,
                     date,
                     str(date_output_dir),
-                ): notebook_id
-                for notebook_id, notebook_source_str in to_render
+                    notebook_config,
+                    queries_config,
+                ): (notebook_id, reason)
+                for notebook_id, notebook_source_str, notebook_config, reason in to_render
             }
 
             for future in as_completed(futures):
                 result = future.result()
-                notebook_id = result["notebook_id"]
+                notebook_id, reason = futures[future]
 
                 if result["success"]:
-                    print(f"    {notebook_id}: OK")
+                    print(f"    {notebook_id}: OK ({reason})")
                     success_count += 1
 
                     # Update manifest
@@ -393,6 +463,7 @@ def main() -> None:
                     manifest["dates"][date][notebook_id] = {
                         "rendered_at": datetime.now(timezone.utc).isoformat(),
                         "notebook_hash": result["notebook_hash"],
+                        "data_hash": result["data_hash"],
                         "html_path": html_path,
                     }
                 else:
