@@ -1,0 +1,118 @@
+---
+// Sticky date navigation with prev/next arrows
+import Icon from './Icon.astro';
+import fs from 'node:fs';
+import path from 'node:path';
+
+interface Props {
+  currentDate: string; // ISO format YYYY-MM-DD
+  notebookId: string;
+  isLatest?: boolean;
+}
+
+const { currentDate, notebookId, isLatest = false } = Astro.props;
+
+// Helper to convert YYYY-MM-DD to YYYYMMDD
+const toCompactDate = (iso: string) => iso.replace(/-/g, '');
+
+// Load manifest to get available dates
+const manifestPath = path.join(process.cwd(), 'rendered', 'manifest.json');
+let dates: string[] = [];
+let latestDate = '';
+
+if (fs.existsSync(manifestPath)) {
+  const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'));
+  dates = Object.keys(manifest.dates || {})
+    .sort()
+    .reverse();
+  latestDate = manifest.latest_date || dates[0] || '';
+}
+
+// Find prev/next dates
+const currentIndex = dates.indexOf(currentDate);
+const prevDate = currentIndex < dates.length - 1 ? dates[currentIndex + 1] : null;
+const nextDate = currentIndex > 0 ? dates[currentIndex - 1] : null;
+
+// Build URLs - use /notebooks/ for latest, /YYYYMMDD/ for historical
+const base = import.meta.env.BASE_URL;
+const buildUrl = (date: string | null) => {
+  if (!date) return null;
+  if (date === latestDate) {
+    return `${base}notebooks/${notebookId}`;
+  }
+  return `${base}${toCompactDate(date)}/${notebookId}`;
+};
+
+const prevUrl = buildUrl(prevDate);
+const nextUrl = buildUrl(nextDate);
+
+// Format date for display
+const formatDate = (dateStr: string) => {
+  const date = new Date(dateStr + 'T00:00:00Z');
+  return date.toLocaleDateString('en-US', {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    timeZone: 'UTC',
+  });
+};
+
+const formatShortDate = (dateStr: string) => {
+  const date = new Date(dateStr + 'T00:00:00Z');
+  return date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    timeZone: 'UTC',
+  });
+};
+---
+
+<div
+  class="bg-card border-border sticky top-4 z-40 mb-8 flex items-center justify-between gap-4 border px-5 py-3.5 backdrop-blur-xl transition-all dark:bg-[oklch(0.14_0.018_260/90%)] dark:shadow-[0_1px_2px_oklch(0_0_0/20%),0_0_30px_oklch(0.55_0.12_280/8%)]"
+>
+  <a
+    href={prevUrl || '#'}
+    class:list={[
+      'group text-muted-foreground flex min-w-[90px] items-center justify-start gap-2 px-3.5 py-2.5 text-xs no-underline transition-colors',
+      'hover:bg-muted hover:text-foreground',
+      { 'pointer-events-none cursor-not-allowed opacity-25': !prevUrl },
+    ]}
+    aria-label="Previous date"
+    aria-disabled={!prevUrl}
+  >
+    <Icon name="ChevronLeft" size={18} />
+    {prevDate && <span class="hidden font-mono text-[0.6875rem] tracking-wide sm:inline">{formatShortDate(prevDate)}</span>}
+  </a>
+
+  <div class="flex flex-1 flex-col items-center gap-1 text-center">
+    <span class="text-muted-foreground flex items-center gap-1.5 font-mono text-[0.625rem] tracking-widest uppercase">
+      <Icon name="Calendar" size={14} />
+      Data snapshot
+    </span>
+    <span class="text-foreground flex items-center gap-2.5 font-serif text-base text-sm font-normal -tracking-tight sm:text-base">
+      {formatDate(currentDate)}
+      {
+        isLatest && (
+          <span class="from-primary to-accent text-primary-foreground animate-pulse-glow bg-gradient-to-br px-2 py-0.5 font-mono text-[0.5625rem] font-semibold tracking-widest uppercase">
+            Latest
+          </span>
+        )
+      }
+    </span>
+  </div>
+
+  <a
+    href={nextUrl || '#'}
+    class:list={[
+      'group text-muted-foreground flex min-w-[90px] items-center justify-end gap-2 px-3.5 py-2.5 text-xs no-underline transition-colors',
+      'hover:bg-muted hover:text-foreground',
+      { 'pointer-events-none cursor-not-allowed opacity-25': !nextUrl },
+    ]}
+    aria-label="Next date"
+    aria-disabled={!nextUrl}
+  >
+    {nextDate && <span class="hidden font-mono text-[0.6875rem] tracking-wide sm:inline">{formatShortDate(nextDate)}</span>}
+    <Icon name="ChevronRight" size={18} />
+  </a>
+</div>

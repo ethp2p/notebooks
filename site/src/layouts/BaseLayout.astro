@@ -1,0 +1,133 @@
+---
+import '../styles/global.css';
+import Sidebar from '../components/Sidebar.astro';
+import TableOfContents from '../components/TableOfContents.astro';
+import MobileNav from '../components/MobileNav.astro';
+
+interface Heading {
+  id: string;
+  text: string;
+  level: number;
+}
+
+interface Props {
+  title: string;
+  description?: string;
+  headings?: Heading[];
+}
+
+const { title, description = 'Ethereum P2P Observatory', headings = [] } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content={description} />
+    <meta name="theme-color" content="#f8f7fc" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>{title} | Eth P2P Observatory</title>
+  </head>
+  <body class="min-h-screen">
+    <!-- Mobile navigation -->
+    <MobileNav headings={headings} />
+
+    <div class="layout-container flex min-h-screen">
+      <!-- Left Sidebar (desktop only) -->
+      <aside
+        class="left-sidebar bg-sidebar border-sidebar-border fixed top-0 left-0 z-50 flex h-screen w-64 flex-col overflow-y-auto border-r max-lg:hidden"
+        style="isolation: isolate;"
+      >
+        <div class="relative z-[1] flex-1 p-5">
+          <a href="/" class="site-title group hover:bg-muted -m-3 mb-7 flex items-center gap-3 p-3 no-underline transition-all duration-200">
+            <span class="site-logo bg-primary text-primary-foreground flex h-9 w-9 items-center justify-center transition-all duration-300">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" class="logo-icon transition-transform duration-300">
+                <!-- Ethereum-inspired diamond -->
+                <path d="M12 1L3 12l9 5 9-5L12 1z" stroke="currentColor" stroke-width="1.5" fill="none" class="diamond-top transition-opacity duration-300"></path>
+                <path d="M12 17l-9-5 9 11 9-11-9 5z" stroke="currentColor" stroke-width="1.5" fill="none" class="diamond-bottom"></path>
+                <path d="M12 1v16" stroke="currentColor" stroke-width="1.5" opacity="0.3"></path>
+              </svg>
+            </span>
+            <span class="flex flex-col leading-tight">
+              <span class="text-foreground font-mono text-[0.8125rem] font-bold tracking-wide">ETH P2P</span>
+              <span class="text-muted-foreground font-serif text-sm -tracking-tight">Observatory</span>
+            </span>
+          </a>
+          <Sidebar />
+        </div>
+      </aside>
+
+      <!-- Main Content -->
+      <main class="main-content ml-64 min-w-0 flex-1 transition-[margin] duration-300 max-lg:ml-0">
+        <div class="mx-auto max-w-4xl animate-[fadeUp_0.5s_ease-out] px-12 py-10 max-lg:p-6">
+          <slot />
+        </div>
+      </main>
+
+      <!-- Right TOC -->
+      {
+        headings.length > 0 && (
+          <aside class="right-sidebar fixed top-0 right-0 z-40 h-screen w-72 overflow-y-auto px-5 py-10 max-xl:hidden">
+            <TableOfContents headings={headings} />
+          </aside>
+        )
+      }
+    </div>
+
+    <!-- Scroll reveal script -->
+    <script>
+      function initScrollReveal() {
+        const reveals = document.querySelectorAll('.reveal, .reveal-stagger');
+
+        const observer = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((entry) => {
+              if (entry.isIntersecting) {
+                entry.target.classList.add('visible');
+              }
+            });
+          },
+          { threshold: 0.1, rootMargin: '0px 0px -50px 0px' },
+        );
+
+        reveals.forEach((el) => observer.observe(el));
+      }
+
+      initScrollReveal();
+      document.addEventListener('astro:page-load', initScrollReveal);
+    </script>
+  </body>
+</html>
+
+<style is:global>
+  @reference "../styles/global.css";
+
+  /* Sidebar gradient overlay - needs pseudo-element */
+  .left-sidebar::before {
+    @apply pointer-events-none absolute inset-0 opacity-50;
+    content: '';
+    background: linear-gradient(180deg, transparent 0%, var(--sidebar) 100%);
+  }
+
+  /* Logo hover effects */
+  .site-title:hover .site-logo {
+    @apply scale-105;
+    box-shadow: var(--glow);
+  }
+
+  .site-title:hover .logo-icon {
+    @apply rotate-[10deg];
+  }
+
+  .site-title:hover .diamond-top {
+    @apply opacity-70;
+  }
+
+  /* When TOC is shown, add right margin to prevent overlap */
+  @media (min-width: 1280px) {
+    .layout-container:has(.right-sidebar) .main-content {
+      @apply mr-72;
+    }
+  }
+</style>

@@ -1,0 +1,50 @@
+---
+// Floating mobile navigation buttons - bottom left (menu) and bottom right (TOC)
+import { MobileNav as MobileNavReact } from './MobileNav';
+import fs from 'node:fs';
+import path from 'node:path';
+import yaml from 'js-yaml';
+
+// Reuse the data fetching logic from Sidebar.astro (since we can't import the component's data)
+// Ideally this should be passed from layout, but for now we fetch it here
+const configPath = path.join(process.cwd(), '..', 'pipeline.yaml');
+const configContent = fs.readFileSync(configPath, 'utf-8');
+const config = yaml.load(configContent) as {
+  notebooks: Array<{
+    id: string;
+    title: string;
+    description: string;
+    icon?: string;
+    order: number;
+  }>;
+};
+
+// Load manifest for available dates
+let manifest: { latest_date: string; dates: Record<string, unknown> } = { latest_date: '', dates: {} };
+const manifestPath = path.join(process.cwd(), 'rendered', 'manifest.json');
+if (fs.existsSync(manifestPath)) {
+  manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'));
+}
+
+const notebooks = config.notebooks.sort((a, b) => a.order - b.order);
+const latestDate = manifest.latest_date || 'No data';
+const historicalDates = Object.keys(manifest.dates || {})
+  .filter((d) => d !== manifest.latest_date)
+  .sort((a, b) => b.localeCompare(a)); // Newest first
+
+interface Heading {
+  id: string;
+  text: string;
+  level: number;
+}
+
+interface Props {
+  headings?: Heading[];
+}
+
+const { headings = [] } = Astro.props;
+const currentPath = Astro.url.pathname;
+const base = import.meta.env.BASE_URL;
+---
+
+<MobileNavReact client:idle headings={headings} notebooks={notebooks} latestDate={latestDate} historicalDates={historicalDates} currentPath={currentPath} base={base} />

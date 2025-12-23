@@ -1,0 +1,31 @@
+---
+import { Activity, AlertCircle, Calendar, ChevronLeft, ChevronRight, FileText, Grid3x3, Layers, List, PanelLeft } from 'lucide-react';
+
+interface Props {
+  name: string;
+  size?: number;
+  class?: string;
+  strokeWidth?: number;
+}
+
+const { name, size = 24, class: className = '', strokeWidth = 2 } = Astro.props;
+
+// Map simple string names to the corresponding Lucide React component.
+// These will be rendered statically on the server (Icon.astro is an Astro component).
+const icons: Record<string, any> = {
+  Activity,
+  AlertCircle,
+  Calendar,
+  ChevronLeft,
+  ChevronRight,
+  FileText,
+  Grid3x3,
+  Layers,
+  List,
+  PanelLeft,
+};
+
+const IconComponent = icons[name] || FileText;
+---
+
+<IconComponent size={size} className={className} strokeWidth={strokeWidth} />

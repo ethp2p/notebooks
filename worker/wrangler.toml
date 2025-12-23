@@ -1,0 +1,25 @@
+# Cloudflare Worker for serving site from R2
+name = "ethp2p-observatory"
+main = "src/index.ts"
+compatibility_date = "2024-01-01"
+workers_dev = true
+
+# R2 bucket binding
+[[r2_buckets]]
+binding = "R2_BUCKET"
+bucket_name = "ethp2p-observatory"
+
+# Environment variables
+[vars]
+PROD_DOMAIN = "observatory.ethp2p.dev"
+STAGING_DOMAIN = "observatory-staging.ethp2p.dev"
+
+# Production route - serves main manifest
+[[routes]]
+pattern = "observatory.ethp2p.dev/*"
+zone_name = "ethp2p.dev"
+
+# Staging route - PR previews at /pr-{number}/
+[[routes]]
+pattern = "observatory-staging.ethp2p.dev/*"
+zone_name = "ethp2p.dev"

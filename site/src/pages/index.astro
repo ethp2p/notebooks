@@ -1,0 +1,91 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Icon from '../components/Icon.astro';
+import yaml from 'js-yaml';
+import fs from 'node:fs';
+import path from 'node:path';
+
+// Load notebooks config from pipeline.yaml
+const configPath = path.join(process.cwd(), '..', 'pipeline.yaml');
+const configContent = fs.readFileSync(configPath, 'utf-8');
+const config = yaml.load(configContent) as {
+  notebooks: Array<{
+    id: string;
+    title: string;
+    description: string;
+    icon?: string;
+    order: number;
+  }>;
+};
+
+// Load manifest
+let latestDate = 'No data yet';
+const manifestPath = path.join(process.cwd(), 'rendered', 'manifest.json');
+if (fs.existsSync(manifestPath)) {
+  const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'));
+  latestDate = manifest.latest_date || latestDate;
+}
+
+const notebooks = config.notebooks.sort((a, b) => a.order - b.order);
+
+const formatDate = (dateStr: string) => {
+  if (dateStr === 'No data yet') return dateStr;
+  const date = new Date(dateStr + 'T00:00:00Z');
+  return date.toLocaleDateString('en-US', {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+    timeZone: 'UTC',
+  });
+};
+---
+
+<BaseLayout title="Home">
+  <div class="max-w-3xl">
+    <!-- Hero Section -->
+    <header class="mb-16 animate-[fadeUp_0.6s_ease-out]">
+      <div class="text-muted-foreground bg-muted mb-6 inline-flex items-center gap-2 px-3 py-1.5 font-mono text-[0.6875rem] tracking-widest uppercase">
+        <span class="bg-accent h-1.5 w-1.5 animate-pulse"></span>
+        <span>Updated {formatDate(latestDate)}</span>
+      </div>
+      <h1 class="m-0 mb-6 font-serif text-5xl leading-tight font-normal -tracking-wide max-md:text-4xl">
+        <span class="text-foreground block">Ethereum P2P</span>
+        <span class="from-primary to-accent block bg-gradient-to-br bg-clip-text text-transparent">Observatory</span>
+      </h1>
+      <p class="text-muted-foreground max-w-xl text-lg leading-relaxed">
+        Real-time insights into Ethereum's peer-to-peer layer. Tracking blob propagation, node connectivity, and network health across the mainnet.
+      </p>
+    </header>
+
+    <!-- Notebooks Grid -->
+    <section class="mb-16">
+      <div class="mb-6 flex items-center justify-between">
+        <h2 class="m-0 font-serif text-2xl font-normal -tracking-tight">Latest Analyses</h2>
+        <span class="text-muted-foreground bg-muted px-2.5 py-1 font-mono text-[0.625rem] tracking-wide uppercase">{notebooks.length} notebooks</span>
+      </div>
+      <div class="reveal-stagger flex flex-col gap-3">
+        {
+          notebooks.map((nb, index) => (
+            <a
+              href={`/notebooks/${nb.id}`}
+              class="group bg-card border-border hover:border-primary flex items-center gap-4 border p-5 no-underline transition-all duration-200 hover:translate-x-1 hover:shadow-[-4px_0_0_var(--primary)] dark:hover:bg-[oklch(0.16_0.02_260)] dark:hover:shadow-[-4px_0_0_var(--primary),var(--glow)]"
+              style={`--index: ${index}`}
+            >
+              <div class="bg-muted text-muted-foreground group-hover:bg-primary group-hover:text-primary-foreground flex h-10 w-10 shrink-0 items-center justify-center transition-all duration-200">
+                <Icon name={nb.icon || 'FileText'} size={20} />
+              </div>
+              <div class="min-w-0 flex-1">
+                <h3 class="text-foreground m-0 mb-1 font-sans text-[0.9375rem] leading-tight font-semibold">{nb.title}</h3>
+                <p class="text-muted-foreground m-0 text-[0.8125rem] leading-normal">{nb.description}</p>
+              </div>
+              <div class="text-muted-foreground group-hover:text-primary -translate-x-2 opacity-0 transition-all duration-200 group-hover:translate-x-0 group-hover:opacity-100">
+                <Icon name="ChevronRight" size={16} />
+              </div>
+            </a>
+          ))
+        }
+      </div>
+    </section>
+  </div>
+</BaseLayout>

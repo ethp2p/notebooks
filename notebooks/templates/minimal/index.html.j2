@@ -1,0 +1,81 @@
+{%- extends 'classic/base.html.j2' -%}
+{% from 'celltags.j2' import celltags %}
+{% from 'cell_id_anchor.j2' import cell_id_anchor %}
+
+{# Minimal template for embedding in Astro - code cells wrapped in details #}
+
+{% block header %}
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<style>
+/* Minimal styles - Astro provides the rest */
+.cell { margin-bottom: 1rem; }
+.code-fold summary { cursor: pointer; }
+.code-fold summary::-webkit-details-marker { display: none; }
+.output_wrapper { margin-top: 0.5rem; }
+</style>
+</head>
+{% endblock header %}
+
+{% block body_header %}
+<body>
+{% endblock body_header %}
+
+{% block body_footer %}
+</body>
+{% endblock body_footer %}
+
+{% block footer %}
+</html>
+{% endblock footer %}
+
+{# Override code cell to wrap input in details for code folding #}
+{% block codecell %}
+{%- set cell_tags = cell.metadata.get('tags', []) -%}
+{%- set is_hidden = 'parameters' in cell_tags or 'injected-parameters' in cell_tags or 'setup' in cell_tags -%}
+{%- if not is_hidden %}
+<div {{ cell_id_anchor(cell) }} class="cell code_cell{{ celltags(cell) }}">
+<details class="code-fold">
+<summary>Show code</summary>
+{{ self.input_group() }}
+</details>
+{{ self.output_group() }}
+</div>
+{%- endif %}
+{%- endblock codecell %}
+
+{# Simplified input - no prompts #}
+{% block input_group -%}
+<div class="input">
+{{ self.input() }}
+</div>
+{% endblock input_group %}
+
+{% block in_prompt -%}
+{%- endblock in_prompt %}
+
+{% block empty_in_prompt -%}
+{%- endblock empty_in_prompt %}
+
+{# Simplified output - no prompts #}
+{% block output_group %}
+<div class="output_wrapper">
+<div class="output">
+{{ super() }}
+</div>
+</div>
+{% endblock output_group %}
+
+{% block output_prompt %}
+{% endblock output_prompt %}
+
+{% block output_area_prompt %}
+{% endblock output_area_prompt %}
+
+{% block output %}
+<div class="output_area">
+{{ super() }}
+</div>
+{% endblock output %}

@@ -1,0 +1,132 @@
+---
+// Static Table of Contents component
+// Receives headings extracted at build time
+import Icon from './Icon.astro';
+
+interface Heading {
+  id: string;
+  text: string;
+  level: number;
+}
+
+interface Props {
+  headings?: Heading[];
+}
+
+const { headings = [] } = Astro.props;
+---
+
+{
+  headings.length > 0 && (
+    <nav
+      class="bg-card border-border sticky top-8 max-h-[calc(100vh-4rem)] overflow-y-auto border p-4 text-[0.75rem] max-xl:hidden dark:bg-[oklch(0.14_0.018_260/80%)] dark:backdrop-blur-lg"
+      id="toc"
+    >
+      <div class="border-border text-muted-foreground mb-3 flex items-center gap-1.5 border-b pb-2">
+        <Icon name="List" size={12} />
+        <span class="text-[0.625rem] font-semibold tracking-wide uppercase">On this page</span>
+      </div>
+      <ul class="m-0 flex list-none flex-col p-0" id="toc-list">
+        {headings.map((heading, index) => (
+          <li class:list={['m-0', heading.level === 3 ? 'pl-3' : '']}>
+            <a
+              href={`#${heading.id}`}
+              class="toc-link text-muted-foreground hover:text-foreground hover:bg-muted -ml-2 block border-l border-transparent px-2 py-1 text-[0.8125rem] leading-snug no-underline hover:border-l-[var(--mauve-6)]"
+            >
+              {heading.text}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </nav>
+  )
+}
+
+<script>
+  function initTOC() {
+    const tocList = document.getElementById('toc-list');
+    if (!tocList) return;
+
+    const tocLinks = tocList.querySelectorAll('.toc-link');
+    const headingIds = Array.from(tocLinks)
+      .map((link) => link.getAttribute('href')?.slice(1))
+      .filter(Boolean);
+
+    if (headingIds.length === 0) return;
+
+    const activeClasses = [
+      'active',
+      'text-foreground',
+      'border-l-primary',
+      'bg-[var(--mauve-3)]',
+      'font-medium',
+      'dark:bg-[oklch(0.25_0.03_280/50%)]',
+      'dark:shadow-[0_0_20px_oklch(0.55_0.12_280/10%)]',
+    ];
+
+    const setActive = (link: Element) => {
+      tocLinks.forEach((l) => {
+        l.classList.remove(...activeClasses);
+      });
+      link.classList.add(...activeClasses);
+    };
+
+    // Highlight active section on scroll
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const tocLink = tocList.querySelector(`a[href="#${entry.target.id}"]`);
+            if (tocLink) {
+              setActive(tocLink);
+            }
+          }
+        });
+      },
+      {
+        rootMargin: '-80px 0px -70% 0px',
+        threshold: 0,
+      },
+    );
+
+    headingIds.forEach((id) => {
+      const heading = document.getElementById(id!);
+      if (heading) {
+        observer.observe(heading);
+      }
+    });
+
+    // Select last item when scrolled to bottom
+    const checkBottomScroll = () => {
+      const scrollTop = window.scrollY;
+      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      if (docHeight > 0 && scrollTop >= docHeight - 5 && tocLinks.length > 0) {
+        setActive(tocLinks[tocLinks.length - 1]);
+      }
+    };
+
+    window.addEventListener('scroll', checkBottomScroll, { passive: true });
+
+    // Smooth scroll on click
+    tocList.addEventListener('click', (e) => {
+      const target = e.target as HTMLElement;
+      if (target.tagName === 'A') {
+        e.preventDefault();
+        const href = target.getAttribute('href');
+        if (href) {
+          const heading = document.querySelector(href);
+          if (heading) {
+            heading.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            history.pushState(null, '', href);
+          }
+        }
+      }
+    });
+  }
+
+  // Run on load
+  initTOC();
+
+  // Re-run on Astro page transitions
+  document.addEventListener('astro:page-load', initTOC);
+</script>
