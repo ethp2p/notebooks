@@ -13,7 +13,9 @@ CASE
     WHEN lower(remote_agent_implementation) IN (
         'lighthouse', 'teku', 'nimbus', 'erigon', 'grandine', 'lodestar', 'prysm'
     ) THEN remote_agent_implementation
-    WHEN remote_agent_implementation IS NULL OR remote_agent_implementation = ''
+    WHEN remote_agent_implementation IS NULL
+      OR remote_agent_implementation = ''
+      OR remote_agent_implementation = 'unknown'
     THEN 'unknown'
     ELSE 'Others'
 END
