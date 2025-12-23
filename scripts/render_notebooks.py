@@ -15,9 +15,11 @@ import argparse
 import hashlib
 import json
 import os
+import random
 import shutil
 import sys
 import tempfile
+import time
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from datetime import datetime, timezone
 from pathlib import Path
@@ -206,14 +208,35 @@ def render_notebook(
             with open(prepared_nb, "w") as f:
                 nbformat.write(nb, f)
 
-            # Execute notebook with papermill
-            pm.execute_notebook(
-                str(prepared_nb),
-                str(executed_nb),
-                parameters={"target_date": target_date},
-                cwd=str(abs_source.parent),  # Run from notebooks/ directory
-                kernel_name="python3",
-            )
+            # Execute notebook with papermill (with retry for kernel failures)
+            max_retries = 10
+            last_error = None
+            for attempt in range(max_retries):
+                try:
+                    pm.execute_notebook(
+                        str(prepared_nb),
+                        str(executed_nb),
+                        parameters={"target_date": target_date},
+                        cwd=str(abs_source.parent),  # Run from notebooks/ directory
+                        kernel_name="python3",
+                    )
+                    break  # Success
+                except Exception as e:
+                    last_error = e
+                    error_str = str(e)
+                    # Retry on kernel/ZMQ errors
+                    if attempt < max_retries - 1 and (
+                        "ZMQError" in error_str
+                        or "Address already in use" in error_str
+                        or "Kernel didn't respond" in error_str
+                    ):
+                        # Random backoff to desynchronize parallel retries
+                        time.sleep(random.uniform(1, 3))
+                        continue
+                    raise
+            else:
+                # All retries exhausted
+                raise last_error
 
             # Convert to HTML with custom template
             c = Config()
