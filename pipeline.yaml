@@ -1,0 +1,134 @@
+# Pipeline Configuration
+# Central configuration for data fetching, notebook rendering, and deployment
+
+version: "1.0"
+
+# ============================================
+# Date Range Configuration
+# ============================================
+dates:
+  # Mode: "rolling" | "range" | "list"
+  mode: rolling
+
+  # For mode: rolling - relative to today
+  rolling:
+    window: 14  # Number of days to keep (yesterday through N days ago)
+
+  # For mode: range - fixed date boundaries
+  range:
+    start: "2025-12-01"
+    end: "2025-12-31"
+
+  # For mode: list - explicit dates
+  list:
+    - "2025-12-15"
+    - "2025-12-16"
+    - "2025-12-17"
+
+# ============================================
+# Query Registry
+# ============================================
+queries:
+  # Blob Inclusion queries
+  blobs_per_slot:
+    module: queries.blob_inclusion
+    function: fetch_blobs_per_slot
+    description: Blobs per slot timeseries
+    output_file: blobs_per_slot.parquet
+
+  blocks_blob_epoch:
+    module: queries.blob_inclusion
+    function: fetch_blocks_blob_epoch
+    description: Block counts by blob count per epoch
+    output_file: blocks_blob_epoch.parquet
+
+  blob_popularity:
+    module: queries.blob_inclusion
+    function: fetch_blob_popularity
+    description: Blob count popularity per epoch
+    output_file: blob_popularity.parquet
+
+  slot_in_epoch:
+    module: queries.blob_inclusion
+    function: fetch_slot_in_epoch
+    description: Blob count per slot within epoch
+    output_file: slot_in_epoch.parquet
+
+  # Blob Flow queries
+  proposer_blobs:
+    module: queries.blob_flow
+    function: fetch_proposer_blobs
+    description: Proposer blobs with MEV relay data
+    output_file: proposer_blobs.parquet
+
+  # Column Propagation queries
+  col_first_seen:
+    module: queries.column_propagation
+    function: fetch_col_first_seen
+    description: Column first seen timing across 128 subnets
+    output_file: col_first_seen.parquet
+
+# ============================================
+# Notebook Registry
+# ============================================
+notebooks:
+  - id: blob-inclusion
+    title: Blob Inclusion
+    description: Analysis of blob inclusion patterns in Ethereum mainnet blocks
+    icon: Layers
+    source: notebooks/01-blob-inclusion.ipynb
+    schedule: daily
+    queries:
+      - blobs_per_slot
+      - blocks_blob_epoch
+      - blob_popularity
+      - slot_in_epoch
+    parameters:
+      - name: target_date
+        type: date
+        required: true
+    order: 1
+
+  - id: blob-flow
+    title: Blob Flow
+    description: Flow diagrams tracing blob packing per entities, builders, and relays
+    icon: Activity
+    source: notebooks/02-blob-flow.ipynb
+    schedule: daily
+    queries:
+      - proposer_blobs
+    parameters:
+      - name: target_date
+        type: date
+        required: true
+    order: 2
+
+  - id: column-propagation
+    title: Column Propagation
+    description: Column propagation timing across 128 data columns subnets
+    icon: Grid3x3
+    source: notebooks/03-column-propagation.ipynb
+    schedule: daily
+    queries:
+      - col_first_seen
+    parameters:
+      - name: target_date
+        type: date
+        required: true
+    order: 3
+
+# Schedule options: hourly, daily, weekly, manual
+# - hourly: Runs every hour, accumulating data throughout the day
+# - daily: Runs once per day at 1am UTC
+# - weekly: Runs once per week on Sundays at 2am UTC
+# - manual: Only runs on manual dispatch
+
+# ============================================
+# Settings
+# ============================================
+settings:
+  network: mainnet
+  timezone: UTC
+  data_dir: notebooks/data
+  rendered_dir: site/public/rendered
+  parallel_workers: 4

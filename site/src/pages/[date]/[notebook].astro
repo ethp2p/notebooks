@@ -14,8 +14,8 @@ const toIsoDate = (compact: string) =>
 // Helper to convert YYYY-MM-DD to YYYYMMDD
 const toCompactDate = (iso: string) => iso.replace(/-/g, '');
 
-// Load notebooks config
-const configPath = path.join(process.cwd(), 'config', 'notebooks.yaml');
+// Load notebooks config from pipeline.yaml
+const configPath = path.join(process.cwd(), '..', 'pipeline.yaml');
 const configContent = fs.readFileSync(configPath, 'utf-8');
 const config = yaml.load(configContent) as {
   notebooks: Array<{
@@ -35,7 +35,7 @@ if (fs.existsSync(manifestPath)) {
 }
 
 export function getStaticPaths() {
-  const configPath = path.join(process.cwd(), 'config', 'notebooks.yaml');
+  const configPath = path.join(process.cwd(), '..', 'pipeline.yaml');
   const configContent = fs.readFileSync(configPath, 'utf-8');
   const config = yaml.load(configContent) as { notebooks: Array<{ id: string }> };
 

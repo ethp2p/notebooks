@@ -81,19 +81,20 @@ jobs:
       - name: Install Python dependencies
         run: uv sync
 
+      - name: Install just
+        uses: extractions/setup-just@v2
+
       - name: Render notebooks
         run: |
-          ARGS=""
           if [ "${{ github.event.inputs.force_render }}" = "true" ]; then
-            ARGS="$ARGS --force"
+            just render-force
+          elif [ -n "${{ github.event.inputs.render_date }}" ]; then
+            just render-date "${{ github.event.inputs.render_date }}"
+          elif [ -n "${{ github.event.inputs.render_notebook }}" ]; then
+            just render-notebook "${{ github.event.inputs.render_notebook }}"
+          else
+            just render
           fi
-          if [ -n "${{ github.event.inputs.render_date }}" ]; then
-            ARGS="$ARGS --date ${{ github.event.inputs.render_date }}"
-          fi
-          if [ -n "${{ github.event.inputs.render_notebook }}" ]; then
-            ARGS="$ARGS --notebook ${{ github.event.inputs.render_notebook }}"
-          fi
-          uv run python scripts/render_notebooks.py --output-dir site/public/rendered $ARGS
 
       - name: Commit rendered artifacts
         run: |
@@ -136,6 +137,9 @@ jobs:
           cache: "pnpm"
           cache-dependency-path: site/pnpm-lock.yaml
 
+      - name: Install just
+        uses: extractions/setup-just@v2
+
       - name: Install dependencies
         run: cd site && pnpm install
 
@@ -143,7 +147,7 @@ jobs:
         env:
           ASTRO_SITE: https://ethp2p.github.io
           ASTRO_BASE: /notebooks
-        run: cd site && pnpm run build
+        run: just build
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

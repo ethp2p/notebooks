@@ -8,6 +8,10 @@ on:
       date:
         description: 'Date to fetch (YYYY-MM-DD), default: yesterday'
         required: false
+      auto_regenerate:
+        description: 'Re-fetch all stale data'
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -25,8 +29,8 @@ jobs:
         run: |
           git fetch origin data:data 2>/dev/null || git checkout -b data
           git checkout data
-          # Merge any structural changes from main (scripts, etc)
-          git checkout main -- scripts/ queries/ pyproject.toml uv.lock
+          # Merge any structural changes from main (scripts, queries, config)
+          git checkout main -- scripts/ queries/ pipeline.yaml pyproject.toml uv.lock
 
       - name: Install uv
         uses: astral-sh/setup-uv@v4
@@ -39,15 +43,8 @@ jobs:
       - name: Install dependencies
         run: uv sync
 
-      - name: Determine target date
-        id: date
-        run: |
-          if [ -n "${{ github.event.inputs.date }}" ]; then
-            echo "target=${{ github.event.inputs.date }}" >> $GITHUB_OUTPUT
-          else
-            echo "target=$(date -u -d 'yesterday' +%Y-%m-%d)" >> $GITHUB_OUTPUT
-          fi
-          echo "Target date: $(cat $GITHUB_OUTPUT | grep target | cut -d= -f2)"
+      - name: Install just
+        uses: extractions/setup-just@v2
 
       - name: Fetch data
         env:
@@ -56,15 +53,24 @@ jobs:
           CLICKHOUSE_USER: ${{ secrets.CLICKHOUSE_USER }}
           CLICKHOUSE_PASSWORD: ${{ secrets.CLICKHOUSE_PASSWORD }}
         run: |
-          mkdir -p data
-          uv run python scripts/fetch_data.py \
-            --date "${{ steps.date.outputs.target }}" \
-            --output-dir data
+          mkdir -p notebooks/data
+          if [ "${{ github.event.inputs.auto_regenerate }}" = "true" ]; then
+            just fetch-regen
+          elif [ -n "${{ github.event.inputs.date }}" ]; then
+            just fetch-date "${{ github.event.inputs.date }}"
+          else
+            just fetch
+          fi
+          # Move data to expected location for data branch
+          if [ -d "notebooks/data" ]; then
+            mkdir -p data
+            cp -r notebooks/data/* data/
+          fi
 
       - name: Commit data to data branch
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add data/
-          git commit -m "Data for ${{ steps.date.outputs.target }}" || echo "No changes to commit"
+          git commit -m "Data update $(date -u +%Y-%m-%dT%H:%M:%SZ)" || echo "No changes to commit"
           git push origin data

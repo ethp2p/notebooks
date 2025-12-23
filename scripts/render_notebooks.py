@@ -7,6 +7,8 @@ Supports incremental rendering - only re-renders when source or data changes.
 Generates a manifest for Astro to consume.
 
 Notebooks within each date are rendered in parallel for faster builds.
+
+Reads notebook configuration from pipeline.yaml.
 """
 
 import argparse
@@ -26,7 +28,16 @@ import yaml
 from nbconvert import HTMLExporter
 from traitlets.config import Config
 
-CONFIG_PATH = Path("site/config/notebooks.yaml")
+# Add parent directory to path for imports
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
+from scripts.pipeline import (
+    load_config as load_pipeline_config,
+    load_data_manifest,
+    check_staleness,
+    print_staleness_report,
+)
+
 DATA_ROOT = Path("notebooks/data")
 OUTPUT_DIR = Path("site/public/rendered")
 MANIFEST_PATH = OUTPUT_DIR / "manifest.json"
@@ -34,9 +45,9 @@ TEMPLATE_DIR = Path("notebooks/templates")
 
 
 def load_config() -> dict:
-    """Load notebooks configuration."""
-    with open(CONFIG_PATH) as f:
-        return yaml.safe_load(f)
+    """Load notebooks configuration from pipeline.yaml."""
+    pipeline_config = load_pipeline_config()
+    return {"notebooks": pipeline_config["notebooks"]}
 
 
 def load_manifest() -> dict:
@@ -248,11 +259,20 @@ def main() -> None:
         action="store_true",
         help="Only render the latest date",
     )
+    parser.add_argument(
+        "--allow-stale",
+        action="store_true",
+        help="Render even if data is stale (skip staleness check)",
+    )
     args = parser.parse_args()
 
     config = load_config()
     manifest = load_manifest()
     notebooks = config["notebooks"]
+
+    # Check for stale data before rendering
+    pipeline_config = load_pipeline_config()
+    data_manifest = load_data_manifest(pipeline_config)
 
     # Determine dates to process
     available_dates = get_available_dates()
@@ -269,6 +289,21 @@ def main() -> None:
         dates_to_render = [available_dates[0]]
     else:
         dates_to_render = available_dates
+
+    # Check for stale data
+    stale_reports = check_staleness(pipeline_config, data_manifest, dates_to_render)
+    if stale_reports and not args.allow_stale:
+        print("WARNING: Data is stale for some queries!")
+        print("Run 'just fetch-regen' first, or use --allow-stale to proceed anyway")
+        print()
+        for r in stale_reports[:5]:
+            print(f"  - {r.date}/{r.query_id}: {r.reason.value}")
+        if len(stale_reports) > 5:
+            print(f"  ... and {len(stale_reports) - 5} more")
+        sys.exit(1)
+    elif stale_reports:
+        print(f"Note: Proceeding with {len(stale_reports)} stale query/date combinations")
+        print()
 
     # Filter notebooks if specified
     if args.notebook:

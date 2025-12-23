@@ -65,8 +65,11 @@ jobs:
       - name: Install Python dependencies
         run: uv sync
 
-      - name: Render notebooks (latest only)
-        run: uv run python scripts/render_notebooks.py --output-dir site/public/rendered --latest-only
+      - name: Install just
+        uses: extractions/setup-just@v2
+
+      - name: Build preview
+        run: just ci-preview
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -82,9 +85,6 @@ jobs:
 
       - name: Install dependencies
         run: cd site && pnpm install
-
-      - name: Build Astro site
-        run: cd site && pnpm run build
 
       - name: Upload preview artifact
         uses: actions/upload-artifact@v4

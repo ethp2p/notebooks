@@ -1,4 +1,4 @@
-# Eth P2P Notebooks - Astro Site
+# Eth P2P Notebooks - Pipeline Commands
 
 # Default recipe
 default:
@@ -16,12 +16,13 @@ dev:
 preview:
     cd site && pnpm run preview
 
-# Install site dependencies
+# Install all dependencies
 install:
+    uv sync
     cd site && pnpm install
 
 # ============================================
-# Data Fetching
+# Data Pipeline
 # ============================================
 
 # Fetch yesterday's data from ClickHouse
@@ -31,6 +32,22 @@ fetch:
 # Fetch data for a specific date
 fetch-date date:
     uv run python scripts/fetch_data.py --date {{date}} --output-dir notebooks/data
+
+# Fetch and auto-regenerate any stale data
+fetch-regen:
+    uv run python scripts/fetch_data.py --output-dir notebooks/data --auto-regenerate
+
+# Check for stale data without fetching
+check-stale:
+    uv run python scripts/pipeline.py check-stale
+
+# Show resolved date range from config
+show-dates:
+    uv run python scripts/pipeline.py resolve-dates
+
+# Show current query hashes
+show-hashes:
+    uv run python scripts/pipeline.py query-hashes
 
 # ============================================
 # Notebook Rendering
@@ -56,8 +73,12 @@ render-notebook notebook:
 render-force:
     uv run python scripts/render_notebooks.py --output-dir site/public/rendered --force
 
+# Render even if data is stale (skip staleness check)
+render-stale:
+    uv run python scripts/render_notebooks.py --output-dir site/public/rendered --allow-stale --latest-only
+
 # ============================================
-# Build & Publish
+# Build & Deploy
 # ============================================
 
 # Build Astro site
@@ -71,20 +92,41 @@ publish: render build
 publish-all: render-all build
 
 # ============================================
-# CI Workflows
+# CI Workflows (called by GitHub Actions)
 # ============================================
+
+# CI: Daily pipeline (fetch + render + build)
+ci-daily: fetch render build
+
+# CI: Full rebuild (auto-regenerate stale + render all + build)
+ci-rebuild: fetch-regen render-all build
+
+# CI: Preview build (render latest only, allow stale)
+ci-preview: render-stale build
+
+# CI: Check data staleness (exit 1 if stale)
+ci-check-stale:
+    uv run python scripts/fetch_data.py --output-dir notebooks/data --check-only
 
 # Daily CI workflow: fetch yesterday's data + render + build
 daily: fetch publish
 
 # ============================================
-# Cleanup
+# Utilities
 # ============================================
+
+# Warn about stale data but don't fail
+check-stale-warn:
+    uv run python scripts/pipeline.py check-stale || echo "Warning: Some data may be stale"
+
+# Type check the Astro site
+typecheck:
+    cd site && npx tsc --noEmit
 
 # Clean build artifacts
 clean:
     rm -rf site/dist site/.astro site/public/rendered
 
-# Clean all (including node_modules)
+# Clean all (including node_modules and venv)
 clean-all: clean
-    rm -rf site/node_modules
+    rm -rf site/node_modules .venv
