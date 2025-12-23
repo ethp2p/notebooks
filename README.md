@@ -33,6 +33,7 @@ just dev
 | [Blob Inclusion](notebooks/01-blob-inclusion.ipynb)         | Blob inclusion patterns per block and epoch       |
 | [Blob Flow](notebooks/02-blob-flow.ipynb)                   | Blob flow across validators, builders, and relays |
 | [Column Propagation](notebooks/03-column-propagation.ipynb) | Column propagation timing across 128 data columns |
+| [Client Versions](notebooks/04-client-versions.ipynb)       | Consensus client version distribution             |
 
 ## Architecture
 
@@ -41,7 +42,8 @@ pipeline.yaml              # Central config: dates, queries, notebooks
 queries/                   # ClickHouse query modules -> Parquet
 ├── blob_inclusion.py      # fetch_blobs_per_slot(), fetch_blocks_blob_epoch(), ...
 ├── blob_flow.py           # fetch_proposer_blobs()
-└── column_propagation.py  # fetch_col_first_seen()
+├── column_propagation.py  # fetch_col_first_seen()
+└── client_versions.py     # fetch_client_versions()
 scripts/
 ├── pipeline.py            # Coordinator: config loading, hash computation, staleness
 ├── fetch_data.py          # CLI: ClickHouse -> notebooks/data/*.parquet

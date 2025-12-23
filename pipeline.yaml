@@ -70,6 +70,24 @@ queries:
     description: Column first seen timing across 128 subnets
     output_file: col_first_seen.parquet
 
+  client_hourly:
+    module: queries.client_versions
+    function: fetch_client_hourly
+    description: Hourly connection counts by client implementation
+    output_file: client_hourly.parquet
+
+  client_version_dist:
+    module: queries.client_versions
+    function: fetch_client_version_dist
+    description: Version distribution per client (top 15)
+    output_file: client_version_dist.parquet
+
+  client_summary:
+    module: queries.client_versions
+    function: fetch_client_summary
+    description: Summary statistics per client with unique peers
+    output_file: client_summary.parquet
+
 # ============================================
 # Notebook Registry
 # ============================================
@@ -118,6 +136,22 @@ notebooks:
         type: date
         required: true
     order: 3
+
+  - id: client-versions
+    title: Client Versions
+    description: Consensus client version distribution across Ethereum mainnet
+    icon: Users
+    source: notebooks/04-client-versions.ipynb
+    schedule: daily
+    queries:
+      - client_hourly
+      - client_version_dist
+      - client_summary
+    parameters:
+      - name: target_date
+        type: date
+        required: true
+    order: 4
 
 # Schedule options: hourly, daily, weekly, manual
 # - hourly: Runs every hour, accumulating data throughout the day
