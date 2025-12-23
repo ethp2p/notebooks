@@ -1,4 +1,4 @@
-# Ethereum P2P Network Analysis
+# Ethereum P2P Observatory
 
 Real-time insights into Ethereum's peer-to-peer layer. Tracking blob propagation, node connectivity, and network health across mainnet.
 

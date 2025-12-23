@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Ethereum P2P Network Analysis site that:
+Ethereum P2P Observatory site that:
 
 1. Fetches telemetry from ClickHouse (EthPandaOps Xatu)
 2. Stores as Parquet files with query hash tracking
