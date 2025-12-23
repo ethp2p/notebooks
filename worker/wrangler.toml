@@ -1,0 +1,22 @@
+# Cloudflare Worker for serving site from R2
+name = "ethp2p-observatory"
+main = "src/index.ts"
+compatibility_date = "2024-01-01"
+
+# R2 bucket binding
+[[r2_buckets]]
+binding = "R2_BUCKET"
+bucket_name = "ethp2p-observatory"
+
+# Environment variables
+[vars]
+SITE_DOMAIN = "ethp2p.dev"
+
+# Production routes (uncomment and configure after DNS setup)
+# [[routes]]
+# pattern = "ethp2p.dev/*"
+# zone_name = "ethp2p.dev"
+#
+# [[routes]]
+# pattern = "*.ethp2p.dev/*"
+# zone_name = "ethp2p.dev"

@@ -11,9 +11,7 @@ on:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
-  deployments: write
+  pull-requests: write  # For PR comments
 
 concurrency:
   group: "sync-${{ github.head_ref || github.ref_name }}"
@@ -133,8 +131,8 @@ jobs:
       # ============================================
       - name: Build site
         env:
-          ASTRO_SITE: ${{ github.event_name == 'pull_request' && 'https://preview.example.com' || 'https://ethp2p.github.io' }}
-          ASTRO_BASE: ${{ github.event_name == 'pull_request' && '/' || '/notebooks' }}
+          ASTRO_SITE: ${{ github.event_name == 'pull_request' && format('https://pr-{0}.{1}', github.event.pull_request.number, secrets.R2_SITE_DOMAIN) || format('https://{0}', secrets.R2_SITE_DOMAIN) }}
+          ASTRO_BASE: /
         run: just build
 
       # ============================================
@@ -174,39 +172,71 @@ jobs:
           retention-days: 90
 
       # ============================================
-      # Deploy
+      # Deploy to R2 (Content-Addressed Storage)
       # ============================================
-      - name: Upload Pages artifact
-        if: github.ref == 'refs/heads/main'
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: site/dist
+      - name: Determine manifest name
+        id: manifest
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "name=pr-${{ github.event.pull_request.number }}" >> $GITHUB_OUTPUT
+            echo "url=https://pr-${{ github.event.pull_request.number }}.${{ secrets.R2_SITE_DOMAIN }}" >> $GITHUB_OUTPUT
+          else
+            echo "name=main" >> $GITHUB_OUTPUT
+            echo "url=https://${{ secrets.R2_SITE_DOMAIN }}" >> $GITHUB_OUTPUT
+          fi
 
-      - name: Upload preview artifact
+      - name: Upload to R2 (CAS)
+        env:
+          R2_BUCKET_NAME: ${{ secrets.R2_BUCKET_NAME }}
+          R2_ENDPOINT: ${{ secrets.R2_ENDPOINT }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+        run: |
+          uv run python scripts/upload_r2.py \
+            --dist site/dist \
+            --manifest "${{ steps.manifest.outputs.name }}"
+
+      - name: Comment preview URL on PR
         if: github.event_name == 'pull_request'
-        uses: actions/upload-artifact@v4
+        uses: actions/github-script@v7
         with:
-          name: site-preview
-          path: site/dist
-          retention-days: 7
+          script: |
+            const prNumber = context.issue.number;
+            const previewUrl = '${{ steps.manifest.outputs.url }}';
 
-      - name: Deploy to Cloudflare Pages (PR preview)
-        if: github.event_name == 'pull_request'
-        uses: cloudflare/wrangler-action@v3
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy site/dist --project-name=${{ secrets.CLOUDFLARE_PROJECT_NAME }} --branch=${{ github.head_ref }}
-          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+            // Find existing preview comment
+            const comments = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber
+            });
 
-  deploy-pages:
-    if: github.ref == 'refs/heads/main'
-    needs: sync
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+            const marker = '<!-- r2-preview -->';
+            const botComment = comments.data.find(c =>
+              c.user.type === 'Bot' && c.body.includes(marker)
+            );
+
+            const body = `${marker}
+            ## Preview Deployment
+
+            :rocket: Preview is ready!
+
+            **URL:** ${previewUrl}
+
+            _Updated: ${new Date().toISOString()}_`;
+
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: prNumber,
+                body
+              });
+            }
