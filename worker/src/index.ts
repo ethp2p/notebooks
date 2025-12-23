@@ -4,12 +4,15 @@
  * Architecture:
  * - Blobs stored in R2 at blobs/{hash}.{ext}
  * - Manifests stored at manifests/{name}.json mapping paths to blob keys
- * - Manifest name determined by subdomain: pr-14.example.com → pr-14, example.com → main
+ * - Domains:
+ *   - PROD_DOMAIN (observatory.ethp2p.dev): serves main manifest at /
+ *   - STAGING_DOMAIN (observatory-staging.ethp2p.dev): serves PR previews at /pr-{number}/
  */
 
 interface Env {
   R2_BUCKET: R2Bucket;
-  SITE_DOMAIN: string;
+  PROD_DOMAIN: string; // e.g., "observatory.ethp2p.dev"
+  STAGING_DOMAIN: string; // e.g., "observatory-staging.ethp2p.dev"
 }
 
 interface ManifestEntry {
@@ -30,14 +33,22 @@ const CACHE_TTL_MS = 60 * 1000; // 1 minute
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
+    const host = url.hostname;
 
     // Handle CORS preflight
     if (request.method === "OPTIONS") {
       return handleCORS();
     }
 
-    // Determine manifest name from subdomain
-    const manifestName = getManifestName(url.hostname, env.SITE_DOMAIN);
+    // Determine manifest name and actual path based on domain
+    // - PROD_DOMAIN: always serves "main" manifest
+    // - STAGING_DOMAIN: /pr-{number}/... → manifest "pr-{number}", path "/..."
+    const { manifestName, actualPath } = parseRequest(
+      host,
+      url.pathname,
+      env.PROD_DOMAIN,
+      env.STAGING_DOMAIN
+    );
 
     // Get manifest (with caching)
     const manifest = await getManifest(env.R2_BUCKET, manifestName);
@@ -49,7 +60,7 @@ export default {
     }
 
     // Resolve path to manifest entry
-    const entry = resolvePath(url.pathname, manifest);
+    const entry = resolvePath(actualPath, manifest);
     if (!entry) {
       return new Response("Not found", {
         status: 404,
@@ -63,30 +74,48 @@ export default {
 };
 
 /**
- * Determine manifest name from hostname.
- * pr-14.example.com → pr-14
- * example.com → main
- * www.example.com → main
+ * Parse request to determine manifest name and actual path.
+ *
+ * - Production domain (PROD_DOMAIN): Always serves "main" manifest
+ * - Staging domain (STAGING_DOMAIN): PR previews with path-based routing
+ *   /pr-14/page → { manifestName: "pr-14", actualPath: "/page" }
+ *   / → { manifestName: "main", actualPath: "/" } (fallback for staging root)
  */
-function getManifestName(hostname: string, siteDomain: string): string {
-  // Remove port if present
-  const host = hostname.split(":")[0];
+function parseRequest(
+  host: string,
+  pathname: string,
+  prodDomain: string,
+  stagingDomain: string
+): {
+  manifestName: string;
+  actualPath: string;
+} {
+  // Production domain always serves main manifest
+  if (host === prodDomain) {
+    return {
+      manifestName: "main",
+      actualPath: pathname,
+    };
+  }
 
-  // Check for PR preview subdomain
-  if (host.startsWith("pr-")) {
-    const parts = host.split(".");
-    if (parts.length > 1) {
-      return parts[0]; // pr-14
+  // Staging domain: check for PR preview path /pr-{number}/...
+  if (host === stagingDomain) {
+    const prMatch = pathname.match(/^\/pr-(\d+)(\/.*)?$/);
+    if (prMatch) {
+      const prNumber = prMatch[1];
+      const restPath = prMatch[2] || "/";
+      return {
+        manifestName: `pr-${prNumber}`,
+        actualPath: restPath,
+      };
     }
   }
 
-  // Check for www subdomain
-  if (host.startsWith("www.")) {
-    return "main";
-  }
-
-  // Default to main
-  return "main";
+  // Default to main manifest (covers staging root and any other cases)
+  return {
+    manifestName: "main",
+    actualPath: pathname,
+  };
 }
 
 /**

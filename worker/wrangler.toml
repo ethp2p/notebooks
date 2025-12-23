@@ -11,12 +11,15 @@ bucket_name = "ethp2p-observatory"
 
 # Environment variables
 [vars]
-SITE_DOMAIN = "ethp2p.dev"
+PROD_DOMAIN = "observatory.ethp2p.dev"
+STAGING_DOMAIN = "observatory-staging.ethp2p.dev"
 
+# Production route - serves main manifest
 [[routes]]
 pattern = "observatory.ethp2p.dev/*"
 zone_name = "ethp2p.dev"
 
+# Staging route - PR previews at /pr-{number}/
 [[routes]]
-pattern = "*.observatory.ethp2p.dev/*"
+pattern = "observatory-staging.ethp2p.dev/*"
 zone_name = "ethp2p.dev"

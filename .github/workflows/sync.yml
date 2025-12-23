@@ -131,8 +131,9 @@ jobs:
       # ============================================
       - name: Build site
         env:
-          ASTRO_SITE: ${{ github.event_name == 'pull_request' && format('https://pr-{0}.{1}', github.event.pull_request.number, secrets.R2_SITE_DOMAIN) || format('https://{0}', secrets.R2_SITE_DOMAIN) }}
-          ASTRO_BASE: /
+          # Production: observatory.ethp2p.dev, PRs: observatory-staging.ethp2p.dev/pr-{number}/
+          ASTRO_SITE: ${{ github.event_name == 'pull_request' && secrets.R2_STAGING_DOMAIN || secrets.R2_PROD_DOMAIN }}
+          ASTRO_BASE: ${{ github.event_name == 'pull_request' && format('/pr-{0}/', github.event.pull_request.number) || '/' }}
         run: just build
 
       # ============================================
@@ -161,7 +162,7 @@ jobs:
         with:
           name: data-${{ steps.cache-keys.outputs.date }}
           path: notebooks/data
-          retention-days: 90
+          retention-days: 2
 
       - name: Upload rendered artifact
         if: github.ref == 'refs/heads/main' || github.event_name == 'schedule'
@@ -169,7 +170,7 @@ jobs:
         with:
           name: rendered-${{ steps.cache-keys.outputs.date }}
           path: site/public/rendered
-          retention-days: 90
+          retention-days: 2
 
       # ============================================
       # Deploy to R2 (Content-Addressed Storage)
@@ -179,10 +180,10 @@ jobs:
         run: |
           if [ "${{ github.event_name }}" = "pull_request" ]; then
             echo "name=pr-${{ github.event.pull_request.number }}" >> $GITHUB_OUTPUT
-            echo "url=https://pr-${{ github.event.pull_request.number }}.${{ secrets.R2_SITE_DOMAIN }}" >> $GITHUB_OUTPUT
+            echo "url=${{ secrets.R2_STAGING_DOMAIN }}/pr-${{ github.event.pull_request.number }}/" >> $GITHUB_OUTPUT
           else
             echo "name=main" >> $GITHUB_OUTPUT
-            echo "url=https://${{ secrets.R2_SITE_DOMAIN }}" >> $GITHUB_OUTPUT
+            echo "url=${{ secrets.R2_PROD_DOMAIN }}" >> $GITHUB_OUTPUT
           fi
 
       - name: Upload to R2 (CAS)
