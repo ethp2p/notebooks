@@ -16,7 +16,7 @@ const { currentDate, notebookId, isLatest = false } = Astro.props;
 const toCompactDate = (iso: string) => iso.replace(/-/g, '');
 
 // Load manifest to get available dates
-const manifestPath = path.join(process.cwd(), 'public', 'rendered', 'manifest.json');
+const manifestPath = path.join(process.cwd(), 'rendered', 'manifest.json');
 let dates: string[] = [];
 let latestDate = '';
 

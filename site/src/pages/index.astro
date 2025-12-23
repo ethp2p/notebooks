@@ -20,7 +20,7 @@ const config = yaml.load(configContent) as {
 
 // Load manifest
 let latestDate = 'No data yet';
-const manifestPath = path.join(process.cwd(), 'public', 'rendered', 'manifest.json');
+const manifestPath = path.join(process.cwd(), 'rendered', 'manifest.json');
 if (fs.existsSync(manifestPath)) {
   const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'));
   latestDate = manifest.latest_date || latestDate;

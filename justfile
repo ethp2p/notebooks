@@ -54,11 +54,11 @@ show-hashes:
 render target="all":
     #!/usr/bin/env bash
     if [ "{{target}}" = "all" ]; then
-        uv run python scripts/render_notebooks.py --output-dir site/public/rendered
+        uv run python scripts/render_notebooks.py --output-dir site/rendered
     elif [ "{{target}}" = "latest" ]; then
-        uv run python scripts/render_notebooks.py --output-dir site/public/rendered --latest-only
+        uv run python scripts/render_notebooks.py --output-dir site/rendered --latest-only
     else
-        uv run python scripts/render_notebooks.py --output-dir site/public/rendered --date {{target}}
+        uv run python scripts/render_notebooks.py --output-dir site/rendered --date {{target}}
     fi
 
 # ============================================
@@ -97,7 +97,7 @@ typecheck:
 
 # Clean build artifacts
 clean:
-    rm -rf site/dist site/.astro site/public/rendered
+    rm -rf site/dist site/.astro site/rendered
 
 # Clean all (including node_modules and venv)
 clean-all: clean

@@ -92,7 +92,7 @@ jobs:
         uses: actions/cache/restore@v4
         id: rendered-cache
         with:
-          path: site/public/rendered
+          path: site/rendered
           key: ${{ env.CACHE_VERSION }}-rendered-${{ steps.cache-keys.outputs.notebook_hash }}-${{ steps.cache-keys.outputs.date }}
           restore-keys: |
             ${{ env.CACHE_VERSION }}-rendered-${{ steps.cache-keys.outputs.notebook_hash }}-
@@ -100,13 +100,13 @@ jobs:
 
       - name: Initialize directories
         run: |
-          mkdir -p notebooks/data site/public/rendered
+          mkdir -p notebooks/data site/rendered
           # Create empty manifest if none exists
           if [ ! -f "notebooks/data/manifest.json" ]; then
             echo '{"schema_version": "2.0", "dates": [], "latest": null, "query_hashes": {}, "date_queries": {}}' > notebooks/data/manifest.json
           fi
-          if [ ! -f "site/public/rendered/manifest.json" ]; then
-            echo '{"latest_date": null, "dates": {}}' > site/public/rendered/manifest.json
+          if [ ! -f "site/rendered/manifest.json" ]; then
+            echo '{"latest_date": null, "dates": {}}' > site/rendered/manifest.json
           fi
 
       # ============================================
@@ -150,7 +150,7 @@ jobs:
         if: github.ref == 'refs/heads/main' || github.event_name == 'schedule'
         uses: actions/cache/save@v4
         with:
-          path: site/public/rendered
+          path: site/rendered
           key: ${{ env.CACHE_VERSION }}-rendered-${{ steps.cache-keys.outputs.notebook_hash }}-${{ steps.cache-keys.outputs.date }}
 
       # ============================================
@@ -169,7 +169,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: rendered-${{ steps.cache-keys.outputs.date }}
-          path: site/public/rendered
+          path: site/rendered
           retention-days: 2
 
       # ============================================
