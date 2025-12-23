@@ -15,7 +15,8 @@
 
 :root {
   /* Light mode - Pure white content with tinted chrome */
-  --background: oklch(1 0 0); /* Pure white */
+  --background: oklch(1 0 0);
+  /* Pure white */
   --foreground: oklch(0.15 0.02 260);
   --card: oklch(0.99 0.003 260);
   --card-foreground: oklch(0.15 0.02 260);
@@ -47,11 +48,16 @@
   --ring: oklch(0.55 0.15 280);
 
   /* Chart colors - Vibrant data palette */
-  --chart-1: oklch(0.65 0.15 180); /* Teal */
-  --chart-2: oklch(0.6 0.18 280); /* Purple */
-  --chart-3: oklch(0.75 0.15 80); /* Gold */
-  --chart-4: oklch(0.65 0.2 330); /* Pink */
-  --chart-5: oklch(0.7 0.12 145); /* Green */
+  --chart-1: oklch(0.65 0.15 180);
+  /* Teal */
+  --chart-2: oklch(0.6 0.18 280);
+  /* Purple */
+  --chart-3: oklch(0.75 0.15 80);
+  /* Gold */
+  --chart-4: oklch(0.65 0.2 330);
+  /* Pink */
+  --chart-5: oklch(0.7 0.12 145);
+  /* Green */
 
   /* Effects */
   --glow: 0 0 40px oklch(0.55 0.15 280 / 15%);
@@ -208,6 +214,7 @@
     opacity: 0;
     transform: translateY(16px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -218,6 +225,7 @@
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }
@@ -228,6 +236,7 @@
     opacity: 0;
     transform: translateX(-12px);
   }
+
   to {
     opacity: 1;
     transform: translateX(0);
@@ -235,11 +244,13 @@
 }
 
 @keyframes pulse-glow {
+
   0%,
   100% {
     box-shadow: 0 0 0 0 var(--primary);
     opacity: 1;
   }
+
   50% {
     box-shadow: 0 0 12px 4px oklch(0.6 0.15 280 / 40%);
     opacity: 0.9;
@@ -250,16 +261,19 @@
   0% {
     background-position: -200% 0;
   }
+
   100% {
     background-position: 200% 0;
   }
 }
 
 @keyframes float {
+
   0%,
   100% {
     transform: translateY(0);
   }
+
   50% {
     transform: translateY(-4px);
   }
@@ -415,7 +429,7 @@ pre code {
   ol,
   blockquote,
   dl {
-    max-width: 80ch;
+    @apply max-w-prose;
   }
 
   /* Charts/figures use full width */
@@ -558,30 +572,35 @@ img[loading] {
 }
 
 /* Staggered children */
-.reveal-stagger > * {
+.reveal-stagger>* {
   @apply translate-y-4 opacity-0 transition-all duration-500;
 }
 
-.reveal-stagger.visible > *:nth-child(1) {
+.reveal-stagger.visible>*:nth-child(1) {
   transition-delay: 0.05s;
 }
-.reveal-stagger.visible > *:nth-child(2) {
+
+.reveal-stagger.visible>*:nth-child(2) {
   transition-delay: 0.1s;
 }
-.reveal-stagger.visible > *:nth-child(3) {
+
+.reveal-stagger.visible>*:nth-child(3) {
   transition-delay: 0.15s;
 }
-.reveal-stagger.visible > *:nth-child(4) {
+
+.reveal-stagger.visible>*:nth-child(4) {
   transition-delay: 0.2s;
 }
-.reveal-stagger.visible > *:nth-child(5) {
+
+.reveal-stagger.visible>*:nth-child(5) {
   transition-delay: 0.25s;
 }
-.reveal-stagger.visible > *:nth-child(6) {
+
+.reveal-stagger.visible>*:nth-child(6) {
   transition-delay: 0.3s;
 }
 
-.reveal-stagger.visible > * {
+.reveal-stagger.visible>* {
   @apply translate-y-0 opacity-100;
 }
 
@@ -590,6 +609,7 @@ img[loading] {
    ============================================ */
 
 @media print {
+
   .left-sidebar,
   .right-sidebar,
   .date-nav {
@@ -615,6 +635,7 @@ img[loading] {
    ============================================ */
 
 @media (prefers-reduced-motion: reduce) {
+
   *,
   *::before,
   *::after {
@@ -625,7 +646,7 @@ img[loading] {
   }
 
   .reveal,
-  .reveal-stagger > * {
+  .reveal-stagger>* {
     @apply transform-none opacity-100;
   }
 }
