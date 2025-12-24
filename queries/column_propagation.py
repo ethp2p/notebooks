@@ -26,7 +26,8 @@ def fetch_col_first_seen(
 
     Returns row count.
     """
-    date_filter = _get_date_filter(target_date)
+    event_date_filter = _get_date_filter(target_date, "event_date_time")
+    slot_date_filter = _get_date_filter(target_date, "slot_start_date_time")
 
     col_selects = ",\n    ".join(
         [f"minIf(propagation_slot_start_diff, column_index = {i}) AS c{i}" for i in range(num_columns)]
@@ -37,7 +38,8 @@ SELECT
     slot_start_date_time AS time,
     {col_selects}
 FROM libp2p_gossipsub_data_column_sidecar
-WHERE {date_filter}
+WHERE {event_date_filter}
+  AND {slot_date_filter}
   AND meta_network_name = '{network}'
 GROUP BY slot_start_date_time
 ORDER BY time
