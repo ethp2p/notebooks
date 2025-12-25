@@ -1,11 +1,9 @@
 ---
 import Icon from './Icon.astro';
+import { toPathDate, formatShortDate } from '../lib/utils';
 import yaml from 'js-yaml';
 import fs from 'node:fs';
 import path from 'node:path';
-
-// Helper to convert YYYY-MM-DD to YYYYMMDD
-const toCompactDate = (iso: string) => iso.replace(/-/g, '');
 
 // Load notebooks config from pipeline.yaml
 const configPath = path.join(process.cwd(), '..', 'pipeline.yaml');
@@ -35,16 +33,6 @@ const historicalDates = Object.keys(manifest.dates || {})
 
 const currentPath = Astro.url.pathname;
 const base = import.meta.env.BASE_URL;
-
-// Helper to format dates nicely
-const formatDate = (dateStr: string) => {
-  const date = new Date(dateStr + 'T00:00:00Z');
-  return date.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    timeZone: 'UTC',
-  });
-};
 ---
 
 <nav class="flex flex-col gap-5">
@@ -54,14 +42,14 @@ const formatDate = (dateStr: string) => {
       <span class="text-muted-foreground text-[0.625rem] font-semibold tracking-wide uppercase">Latest</span>
       <span class="bg-muted text-muted-foreground flex items-center gap-1 px-1.5 py-0.5 text-[0.5625rem] font-medium">
         <span class="bg-accent h-1 w-1 animate-pulse"></span>
-        {formatDate(latestDate)}
+        {formatShortDate(latestDate)}
       </span>
     </div>
     <ul class="m-0 flex list-none flex-col p-0">
       {
         notebooks.map((nb, index) => {
-          const href = `${base}notebooks/${nb.id}`;
-          const isActive = currentPath.includes(`/notebooks/${nb.id}`);
+          const href = `${base}latest/${nb.id}`;
+          const isActive = currentPath.includes(`/latest/${nb.id}`);
           return (
             <li>
               <a
@@ -96,9 +84,9 @@ const formatDate = (dateStr: string) => {
         </div>
         <ul class="m-0 flex list-none flex-col p-0">
           {historicalDates.map((date, index) => {
-            const compactDate = toCompactDate(date);
-            const href = `${base}${compactDate}`;
-            const isActive = currentPath.startsWith(`/${compactDate}`);
+            const pathDate = toPathDate(date);
+            const href = `${base}${pathDate}`;
+            const isActive = currentPath.startsWith(`/${pathDate}`);
             return (
               <li>
                 <a
@@ -113,7 +101,7 @@ const formatDate = (dateStr: string) => {
                   <span class="group-hover:text-primary flex shrink-0 items-center justify-center opacity-50 transition-all duration-200 group-hover:opacity-100">
                     <Icon name="Calendar" size={12} />
                   </span>
-                  <span class="min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap">{formatDate(date)}</span>
+                  <span class="min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap">{formatShortDate(date)}</span>
                   <span class="text-muted-foreground bg-muted px-1 py-0.5 text-[0.5625rem] font-normal opacity-60">{date.slice(0, 4)}</span>
                 </a>
               </li>

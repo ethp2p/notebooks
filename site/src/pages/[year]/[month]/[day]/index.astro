@@ -1,6 +1,6 @@
 ---
-import BaseLayout from '../../../layouts/BaseLayout.astro';
-import Icon from '../../../components/Icon.astro';
+import BaseLayout from '../../../../layouts/BaseLayout.astro';
+import Icon from '../../../../components/Icon.astro';
 import yaml from 'js-yaml';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -33,26 +33,34 @@ export function getStaticPaths() {
   const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'));
   const dates = Object.keys(manifest.dates || {});
 
-  return dates.map((date) => ({
-    params: { date },
-  }));
+  return dates.map((isoDate) => {
+    const [year, month, day] = isoDate.split('-');
+    return {
+      params: { year, month, day },
+      props: { isoDate },
+    };
+  });
 }
 
-const { date } = Astro.params;
-const dateData = manifest.dates[date!] || {};
+const { year, month, day } = Astro.params;
+const { isoDate } = Astro.props;
+
+// Use provided isoDate or construct from params
+const dateIso = isoDate || `${year}-${month}-${day}`;
+const dateData = manifest.dates[dateIso] || {};
 const notebooks = config.notebooks.sort((a, b) => a.order - b.order);
 
 // Filter to notebooks that have been rendered for this date
 const availableNotebooks = notebooks.filter((nb) => dateData[nb.id]);
 
-// Get all dates for navigation
-const allDates = Object.keys(manifest.dates).sort((a, b) => b.localeCompare(a));
-const currentIndex = allDates.indexOf(date!);
-const prevDate = currentIndex < allDates.length - 1 ? allDates[currentIndex + 1] : null;
-const nextDate = currentIndex > 0 ? allDates[currentIndex - 1] : null;
+// Get all dates for navigation (sorted newest first)
+const allDatesIso = Object.keys(manifest.dates).sort((a, b) => b.localeCompare(a));
+const currentIndex = allDatesIso.indexOf(dateIso);
+const prevDateIso = currentIndex < allDatesIso.length - 1 ? allDatesIso[currentIndex + 1] : null;
+const nextDateIso = currentIndex > 0 ? allDatesIso[currentIndex - 1] : null;
 
 // Format date for display
-const dateObj = new Date(date + 'T00:00:00Z');
+const dateObj = new Date(dateIso + 'T00:00:00Z');
 const formattedDate = dateObj.toLocaleDateString('en-US', {
   weekday: 'long',
   month: 'long',
@@ -63,11 +71,11 @@ const formattedDate = dateObj.toLocaleDateString('en-US', {
 const dayOfWeek = dateObj.toLocaleDateString('en-US', { weekday: 'short', timeZone: 'UTC' });
 const monthShort = dateObj.toLocaleDateString('en-US', { month: 'short', timeZone: 'UTC' });
 const dayNum = dateObj.getDate();
-const year = dateObj.getFullYear();
+const yearNum = dateObj.getFullYear();
 ---
 
-<BaseLayout title={`Archive: ${date}`}>
-  <div class="archive-date-page">
+<BaseLayout title={`${formattedDate}`}>
+  <div class="date-page">
     <!-- Breadcrumb -->
     <nav class="breadcrumb">
       <a href="/" class="breadcrumb-link">
@@ -75,75 +83,29 @@ const year = dateObj.getFullYear();
         <span>Home</span>
       </a>
       <span class="breadcrumb-sep">/</span>
-      <a href="/archive" class="breadcrumb-link">Archive</a>
-      <span class="breadcrumb-sep">/</span>
-      <span class="breadcrumb-current">{date}</span>
+      <span class="breadcrumb-current">{dateIso}</span>
     </nav>
 
     <!-- Header -->
     <header class="date-header">
       <div class="date-display">
-        <div class="date-calendar">
+        <div class="date-calendar-badge">
           <span class="date-month">{monthShort}</span>
           <span class="date-day">{dayNum}</span>
-          <span class="date-year">{year}</span>
+          <span class="date-year">{yearNum}</span>
         </div>
         <div class="date-info">
           <span class="date-weekday">{dayOfWeek}</span>
-          <h1 class="date-title">Snapshot Archive</h1>
+          <h1 class="date-title">Daily Snapshot</h1>
           <p class="date-subtitle">{formattedDate}</p>
         </div>
       </div>
     </header>
 
-    <!-- Stats bar -->
-    <div class="stats-bar">
-      <div class="stat">
-        <span class="stat-value">{availableNotebooks.length}</span>
-        <span class="stat-label">Notebooks</span>
-      </div>
-      <div class="stat-divider"></div>
-      <div class="stat">
-        <span class="stat-value">{date}</span>
-        <span class="stat-label">Snapshot Date</span>
-      </div>
-    </div>
-
-    <!-- Navigation arrows -->
-    <div class="date-nav">
-      {
-        prevDate ? (
-          <a href={`/archive/${prevDate}`} class="nav-arrow nav-prev">
-            <Icon name="ChevronLeft" size={16} />
-            <span class="nav-label">
-              <span class="nav-hint">Previous</span>
-              <span class="nav-date">{prevDate}</span>
-            </span>
-          </a>
-        ) : (
-          <div class="nav-placeholder" />
-        )
-      }
-
-      {
-        nextDate ? (
-          <a href={`/archive/${nextDate}`} class="nav-arrow nav-next">
-            <span class="nav-label">
-              <span class="nav-hint">Next</span>
-              <span class="nav-date">{nextDate}</span>
-            </span>
-            <Icon name="ChevronRight" size={16} />
-          </a>
-        ) : (
-          <div class="nav-placeholder" />
-        )
-      }
-    </div>
-
     <!-- Notebooks section -->
     <section class="notebooks-section">
       <h2 class="section-title">
-        <span class="section-title-text">Available Notebooks</span>
+        <span class="section-title-text">Analysis Notebooks</span>
         <span class="section-title-line"></span>
       </h2>
 
@@ -151,7 +113,7 @@ const year = dateObj.getFullYear();
         availableNotebooks.length > 0 ? (
           <div class="notebooks-grid">
             {availableNotebooks.map((nb, index) => (
-              <a href={`/archive/${date}/${nb.id}`} class="notebook-card" style={`--delay: ${index * 0.08}s`}>
+              <a href={`/${year}/${month}/${day}/${nb.id}`} class="notebook-card" style={`--delay: ${index * 0.08}s`}>
                 <div class="notebook-icon">
                   <Icon name={nb.icon || 'FileText'} size={24} />
                 </div>
@@ -173,9 +135,6 @@ const year = dateObj.getFullYear();
             </div>
             <h3 class="empty-title">No Notebooks Available</h3>
             <p class="empty-text">No analysis notebooks have been rendered for this date.</p>
-            <a href="/archive" class="empty-link">
-              Browse other dates
-            </a>
           </div>
         )
       }
@@ -183,18 +142,18 @@ const year = dateObj.getFullYear();
 
     <!-- Back link -->
     <div class="back-section">
-      <a href="/archive" class="back-link">
+      <a href="/" class="back-link">
         <Icon name="ArrowLeft" size={16} />
-        <span>Back to Archive</span>
+        <span>Back to Home</span>
       </a>
     </div>
   </div>
 </BaseLayout>
 
 <style>
-  @reference "../../../styles/global.css";
+  @reference "../../../../styles/global.css";
 
-  .archive-date-page {
+  .date-page {
     @apply max-w-3xl;
     animation: fadeUp 0.5s ease-out;
   }
@@ -222,32 +181,32 @@ const year = dateObj.getFullYear();
 
   /* Header */
   .date-header {
-    @apply mb-8 pb-8;
+    @apply mb-3 pb-8;
   }
 
   .date-display {
-    @apply flex items-center gap-6;
+    @apply flex items-center gap-5;
   }
 
-  .date-calendar {
-    @apply border-primary bg-primary/5 flex h-24 w-20 flex-col items-center justify-center border-2;
+  .date-calendar-badge {
+    @apply border-primary bg-primary/5 flex h-20 w-16 flex-col items-center justify-center border-2;
     animation: fadeUp 0.4s ease-out 0.1s backwards;
   }
 
-  :global(.dark) .date-calendar {
+  :global(.dark) .date-calendar-badge {
     @apply bg-primary/10;
   }
 
   .date-month {
-    @apply text-primary font-mono text-xs font-bold tracking-wider uppercase;
+    @apply text-primary font-mono text-[0.625rem] font-bold tracking-wider uppercase;
   }
 
   .date-day {
-    @apply text-foreground font-serif text-3xl leading-none font-normal -tracking-tight;
+    @apply text-foreground font-serif text-2xl leading-none font-normal -tracking-tight;
   }
 
   .date-year {
-    @apply text-muted-foreground font-mono text-xs;
+    @apply text-muted-foreground font-mono text-[0.625rem];
   }
 
   .date-info {
@@ -256,75 +215,15 @@ const year = dateObj.getFullYear();
   }
 
   .date-weekday {
-    @apply text-primary mb-1 font-mono text-xs font-semibold tracking-widest uppercase;
+    @apply text-primary mb-0.5 font-mono text-[0.625rem] font-semibold tracking-widest uppercase;
   }
 
   .date-title {
-    @apply text-foreground m-0 mb-1 font-serif text-3xl leading-tight font-normal -tracking-wide;
+    @apply text-foreground m-0 mb-0.5 font-serif text-2xl leading-tight font-normal -tracking-wide;
   }
 
   .date-subtitle {
     @apply text-muted-foreground m-0 font-sans text-sm;
-  }
-
-  /* Stats bar */
-  .stats-bar {
-    @apply bg-muted/50 border-border mb-6 flex items-center gap-6 border px-6 py-4;
-    animation: fadeUp 0.4s ease-out 0.25s backwards;
-  }
-
-  .stat {
-    @apply flex items-baseline gap-2;
-  }
-
-  .stat-value {
-    @apply text-foreground font-mono text-lg font-semibold;
-  }
-
-  .stat-label {
-    @apply text-muted-foreground font-mono text-xs tracking-wider uppercase;
-  }
-
-  .stat-divider {
-    @apply bg-border h-6 w-px;
-  }
-
-  /* Date navigation */
-  .date-nav {
-    @apply mb-10 flex items-center justify-between gap-4;
-    animation: fadeUp 0.4s ease-out 0.3s backwards;
-  }
-
-  .nav-arrow {
-    @apply text-muted-foreground flex items-center gap-2 px-3 py-2 no-underline transition-all duration-200;
-  }
-
-  .nav-arrow:hover {
-    @apply text-foreground bg-muted;
-  }
-
-  .nav-prev {
-    @apply pr-4;
-  }
-
-  .nav-next {
-    @apply pl-4 text-right;
-  }
-
-  .nav-label {
-    @apply flex flex-col;
-  }
-
-  .nav-hint {
-    @apply text-xs tracking-wider uppercase opacity-60;
-  }
-
-  .nav-date {
-    @apply font-mono text-sm;
-  }
-
-  .nav-placeholder {
-    @apply w-32;
   }
 
   /* Section */
@@ -416,15 +315,7 @@ const year = dateObj.getFullYear();
   }
 
   .empty-text {
-    @apply text-muted-foreground m-0 mb-6 text-sm;
-  }
-
-  .empty-link {
-    @apply text-primary inline-flex items-center gap-2 font-mono text-sm no-underline transition-colors duration-200;
-  }
-
-  .empty-link:hover {
-    @apply text-accent underline;
+    @apply text-muted-foreground m-0 text-sm;
   }
 
   /* Back section */
@@ -447,41 +338,16 @@ const year = dateObj.getFullYear();
       @apply gap-4;
     }
 
-    .date-calendar {
-      @apply h-20 w-16;
+    .date-calendar-badge {
+      @apply h-16 w-14;
     }
 
     .date-day {
-      @apply text-2xl;
+      @apply text-xl;
     }
 
     .date-title {
-      @apply text-2xl;
-    }
-
-    .stats-bar {
-      @apply flex-col items-start gap-3 px-4 py-3;
-    }
-
-    .stat-divider {
-      @apply h-px w-full;
-    }
-
-    .date-nav {
-      @apply flex-col gap-2;
-    }
-
-    .nav-arrow {
-      @apply w-full justify-between;
-    }
-
-    .nav-prev,
-    .nav-next {
-      @apply px-4;
-    }
-
-    .nav-placeholder {
-      @apply hidden;
+      @apply text-xl;
     }
 
     .notebook-card {

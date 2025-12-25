@@ -3,6 +3,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import NotebookEmbed from '../../components/NotebookEmbed.astro';
 import DateNav from '../../components/DateNav.astro';
 import { extractHeadings } from '../../lib/extract-headings';
+import { toPathDate } from '../../lib/utils';
 import yaml from 'js-yaml';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -45,7 +46,9 @@ if (fs.existsSync(manifestPath)) {
   latestDate = manifest.latest_date || '';
 }
 
-const htmlPath = `latest/${notebook.id}.html`;
+// Convert YYYY-MM-DD to YYYY/MM/DD path format
+const datePath = toPathDate(latestDate);
+const htmlPath = `${datePath}/${notebook.id}.html`;
 const headings = extractHeadings(htmlPath);
 ---
 

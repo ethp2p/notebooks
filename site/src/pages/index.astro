@@ -68,7 +68,7 @@ const formatDate = (dateStr: string) => {
         {
           notebooks.map((nb, index) => (
             <a
-              href={`/notebooks/${nb.id}`}
+              href={`/latest/${nb.id}`}
               class="group bg-card border-border hover:border-primary flex items-center gap-4 border p-5 no-underline transition-all duration-200 hover:translate-x-1 hover:shadow-[-4px_0_0_var(--primary)] dark:hover:bg-[oklch(0.16_0.02_260)] dark:hover:shadow-[-4px_0_0_var(--primary),var(--glow)]"
               style={`--index: ${index}`}
             >
