@@ -78,7 +78,7 @@ def fetch_date(
     output_dir: Path,
     network: str,
     query_hashes: dict[str, str],
-    queries_to_fetch: list[str] | None = None,
+    queries_to_fetch: dict[str, str] | None = None,
 ) -> dict:
     """
     Fetch all queries for a date.
@@ -90,9 +90,22 @@ def fetch_date(
 
     for query_id, query_config in queries.items():
         if queries_to_fetch and query_id not in queries_to_fetch:
+            # We explicitly skip if we have a fetch list and this query isn't in it
+            # But we only log SKIP if we're in sync/force mode (i.e. we're processing a range)
+            # This avoids clutter when fetching a single specific date/query.
+            continue
+        
+        if not queries_to_fetch:
+            # If no specific fetch list, we fetch everything (legacy/fallback behavior)
+            fetch_reason = "new"
+        else:
+            fetch_reason = queries_to_fetch[query_id]
+
+        if fetch_reason == "SKIP":
+            print(f"  SKIP: {query_id} (unchanged)")
             continue
 
-        print(f"  Fetching {query_id}...")
+        print(f"  Fetching {query_id} ({fetch_reason})...")
         try:
             metadata = fetch_query(
                 client,
@@ -219,37 +232,47 @@ def main() -> None:
         sys.exit(1 if stale_reports else 0)
 
     # Determine what to fetch
-    to_fetch: dict[str, list[str]] = {}  # date -> [query_ids]
+    # Map of date -> {query_id: reason or "SKIP"}
+    fetch_plan: dict[str, dict[str, str]] = {}
 
     if args.force:
         # Fetch all queries for all resolved dates
         for date in dates:
-            to_fetch[date] = list(config["queries"].keys())
+            fetch_plan[date] = {qid: "forced" for qid in config["queries"]}
         print(f"Forcing fetch for {len(dates)} dates...")
-    elif args.sync and stale_reports:
-        # Fetch stale query/date combinations
+    elif args.sync:
+        # Fetch stale query/date combinations, mark others as SKIP
+        # This ensures we see the SKIP lines for all dates in the window
+        stale_map = {}
         for r in stale_reports:
-            to_fetch.setdefault(r.date, []).append(r.query_id)
-        print(f"Syncing {len(stale_reports)} stale items...")
+            stale_map.setdefault(r.date, {})[r.query_id] = r.reason.value
+        
+        for date in dates:
+            date_plan = {}
+            for query_id in config["queries"]:
+                if date in stale_map and query_id in stale_map[date]:
+                    date_plan[query_id] = stale_map[date][query_id]
+                else:
+                    date_plan[query_id] = "SKIP"
+            fetch_plan[date] = date_plan
+        print(f"Syncing window: {len(dates)} dates ({len(stale_reports)} stale items)...")
     elif args.date:
-        # Fetch all queries for specified date
-        to_fetch = {args.date: list(config["queries"].keys())}
+        # Fetch specific date only - no skip logging needed
+        fetch_plan = {args.date: {qid: "manual" for qid in config["queries"]}}
     else:
-        # Default: fetch yesterday only (daily mode)
-        yesterday = (datetime.now(timezone.utc) - timedelta(days=1)).strftime(
-            "%Y-%m-%d"
-        )
-        to_fetch = {yesterday: list(config["queries"].keys())}
+        # Default: fetch yesterday only
+        yesterday = (datetime.now(timezone.utc) - timedelta(days=1)).strftime("%Y-%m-%d")
+        fetch_plan = {yesterday: {qid: "daily" for qid in config["queries"]}}
 
     if args.query:
-        # Filter to specific query
-        to_fetch = {
-            d: [q for q in qs if q == args.query]
-            for d, qs in to_fetch.items()
-            if args.query in qs
-        }
+        # Filter plan to specific query
+        new_plan = {}
+        for date, queries in fetch_plan.items():
+            if args.query in queries:
+                new_plan[date] = {args.query: queries[args.query]}
+        fetch_plan = new_plan
 
-    if not to_fetch:
+    if not fetch_plan:
         print("Nothing to fetch.")
         return
 
@@ -266,10 +289,10 @@ def main() -> None:
 
     # Fetch data
     all_results: dict[str, dict] = {}
-    for date, query_ids in sorted(to_fetch.items()):
-        print(f"\nFetching {date} ({len(query_ids)} queries)...")
+    for date, query_plan in sorted(fetch_plan.items()):
+        print(f"\nFetching {date} ({len([q for q, r in query_plan.items() if r != 'SKIP'])} queries)...")
         results = fetch_date(
-            client, config, date, output_dir, args.network, query_hashes, query_ids
+            client, config, date, output_dir, args.network, query_hashes, query_plan
         )
         all_results[date] = results
 
