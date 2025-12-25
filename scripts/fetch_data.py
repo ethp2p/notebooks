@@ -190,6 +190,11 @@ def main() -> None:
         help="Fetch missing data and re-fetch stale data",
     )
     parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Force re-fetch all data in range even if not stale",
+    )
+    parser.add_argument(
         "--check-only", action="store_true", help="Only check staleness, don't fetch"
     )
     parser.add_argument("--query", help="Fetch specific query only")
@@ -216,7 +221,12 @@ def main() -> None:
     # Determine what to fetch
     to_fetch: dict[str, list[str]] = {}  # date -> [query_ids]
 
-    if args.sync and stale_reports:
+    if args.force:
+        # Fetch all queries for all resolved dates
+        for date in dates:
+            to_fetch[date] = list(config["queries"].keys())
+        print(f"Forcing fetch for {len(dates)} dates...")
+    elif args.sync and stale_reports:
         # Fetch stale query/date combinations
         for r in stale_reports:
             to_fetch.setdefault(r.date, []).append(r.query_id)
