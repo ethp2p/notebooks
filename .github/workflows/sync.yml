@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
     inputs:
       force:
-        description: "Force re-render all notebooks"
+        description: "Force fetch and re-render all notebooks"
         required: false
         default: false
         type: boolean
@@ -125,7 +125,7 @@ jobs:
           CLICKHOUSE_PORT: ${{ secrets.CLICKHOUSE_PORT }}
           CLICKHOUSE_USER: ${{ secrets.CLICKHOUSE_USER }}
           CLICKHOUSE_PASSWORD: ${{ secrets.CLICKHOUSE_PASSWORD }}
-        run: just fetch
+        run: just fetch all ${{ env.FORCE_RENDER }}
 
       # ============================================
       # Render Notebooks
