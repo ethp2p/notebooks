@@ -8,6 +8,12 @@ on:
   pull_request:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      force:
+        description: "Force re-render all notebooks"
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: read
@@ -19,6 +25,7 @@ concurrency:
 
 env:
   CACHE_VERSION: v1 # Increment to invalidate all caches
+  FORCE_RENDER: ${{ github.event.inputs.force || 'false' }}
 
 jobs:
   sync:
@@ -124,7 +131,7 @@ jobs:
       # Render Notebooks
       # ============================================
       - name: Render notebooks
-        run: just render
+        run: just render all ${{ env.FORCE_RENDER }}
 
       # ============================================
       # Build Site

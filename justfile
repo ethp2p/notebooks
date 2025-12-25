@@ -50,15 +50,19 @@ show-hashes:
 # Notebook Rendering
 # ============================================
 
-# Render notebooks: all (default), "latest", or specific date (YYYY-MM-DD)
-render target="all":
+# Render notebooks: all (default), "latest", or specific date (YYYY-MM-DD). Support force="true" to force re-render.
+render target="all" force="false":
     #!/usr/bin/env bash
+    FORCE_ARG=""
+    if [ "{{force}}" = "true" ]; then
+        FORCE_ARG="--force"
+    fi
     if [ "{{target}}" = "all" ]; then
-        uv run python scripts/render_notebooks.py --output-dir site/rendered
+        uv run python scripts/render_notebooks.py --output-dir site/rendered $FORCE_ARG
     elif [ "{{target}}" = "latest" ]; then
-        uv run python scripts/render_notebooks.py --output-dir site/rendered --latest-only
+        uv run python scripts/render_notebooks.py --output-dir site/rendered --latest-only $FORCE_ARG
     else
-        uv run python scripts/render_notebooks.py --output-dir site/rendered --date {{target}}
+        uv run python scripts/render_notebooks.py --output-dir site/rendered --date {{target}} $FORCE_ARG
     fi
 
 # ============================================
