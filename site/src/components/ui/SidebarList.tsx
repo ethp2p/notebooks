@@ -1,18 +1,6 @@
 import React from 'react';
-import { cn } from '@/lib/utils';
+import { cn, toPathDate, formatShortDate } from '@/lib/utils';
 import { FileText, Calendar } from 'lucide-react';
-
-// Helper to convert YYYY-MM-DD to YYYYMMDD
-const toCompactDate = (iso: string) => iso.replace(/-/g, '');
-
-const formatDate = (dateStr: string) => {
-  const date = new Date(dateStr + 'T00:00:00Z');
-  return date.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    timeZone: 'UTC',
-  });
-};
 
 interface Notebook {
   id: string;
@@ -39,13 +27,13 @@ export function SidebarList({ notebooks, latestDate, historicalDates, currentPat
           <span className="text-muted-foreground text-[0.625rem] font-semibold tracking-wide uppercase">Latest</span>
           <span className="bg-muted text-muted-foreground flex items-center gap-1 px-1.5 py-0.5 text-[0.5625rem] font-medium">
             <span className="bg-accent h-1 w-1 animate-pulse"></span>
-            {formatDate(latestDate)}
+            {formatShortDate(latestDate)}
           </span>
         </div>
         <ul className="m-0 flex list-none flex-col p-0">
           {notebooks.map((nb) => {
-            const href = `${base}notebooks/${nb.id}`;
-            const isActive = currentPath.includes(`/notebooks/${nb.id}`);
+            const href = `${base}latest/${nb.id}`;
+            const isActive = currentPath.includes(`/latest/${nb.id}`);
             return (
               <li key={nb.id}>
                 <a
@@ -78,9 +66,9 @@ export function SidebarList({ notebooks, latestDate, historicalDates, currentPat
           </div>
           <ul className="m-0 flex list-none flex-col p-0">
             {historicalDates.map((date) => {
-              const compactDate = toCompactDate(date);
-              const href = `${base}${compactDate}`;
-              const isActive = currentPath.startsWith(`/${compactDate}`);
+              const pathDate = toPathDate(date);
+              const href = `${base}${pathDate}`;
+              const isActive = currentPath.startsWith(`/${pathDate}`);
               return (
                 <li key={date}>
                   <a
@@ -95,7 +83,7 @@ export function SidebarList({ notebooks, latestDate, historicalDates, currentPat
                     <span className="group-hover:text-primary flex shrink-0 items-center justify-center opacity-50 transition-all duration-200 group-hover:opacity-100">
                       <Calendar size={12} />
                     </span>
-                    <span className="min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap">{formatDate(date)}</span>
+                    <span className="min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap">{formatShortDate(date)}</span>
                     <span className="text-muted-foreground bg-muted px-1 py-0.5 text-[0.5625rem] font-normal opacity-60">{date.slice(0, 4)}</span>
                   </a>
                 </li>

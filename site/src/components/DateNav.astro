@@ -1,5 +1,6 @@
 ---
 // Sticky date navigation with prev/next arrows
+import { toPathDate, formatDisplayDate, formatShortDate } from '../lib/utils';
 import Icon from './Icon.astro';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -11,9 +12,6 @@ interface Props {
 }
 
 const { currentDate, notebookId, isLatest = false } = Astro.props;
-
-// Helper to convert YYYY-MM-DD to YYYYMMDD
-const toCompactDate = (iso: string) => iso.replace(/-/g, '');
 
 // Load manifest to get available dates
 const manifestPath = path.join(process.cwd(), 'rendered', 'manifest.json');
@@ -33,39 +31,18 @@ const currentIndex = dates.indexOf(currentDate);
 const prevDate = currentIndex < dates.length - 1 ? dates[currentIndex + 1] : null;
 const nextDate = currentIndex > 0 ? dates[currentIndex - 1] : null;
 
-// Build URLs - use /notebooks/ for latest, /YYYYMMDD/ for historical
+// Build URLs - use /latest/ for latest date, /YYYY/MM/DD/ for historical
 const base = import.meta.env.BASE_URL;
 const buildUrl = (date: string | null) => {
   if (!date) return null;
   if (date === latestDate) {
-    return `${base}notebooks/${notebookId}`;
+    return `${base}latest/${notebookId}`;
   }
-  return `${base}${toCompactDate(date)}/${notebookId}`;
+  return `${base}${toPathDate(date)}/${notebookId}`;
 };
 
 const prevUrl = buildUrl(prevDate);
 const nextUrl = buildUrl(nextDate);
-
-// Format date for display
-const formatDate = (dateStr: string) => {
-  const date = new Date(dateStr + 'T00:00:00Z');
-  return date.toLocaleDateString('en-US', {
-    weekday: 'short',
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-    timeZone: 'UTC',
-  });
-};
-
-const formatShortDate = (dateStr: string) => {
-  const date = new Date(dateStr + 'T00:00:00Z');
-  return date.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    timeZone: 'UTC',
-  });
-};
 ---
 
 <div
@@ -91,7 +68,7 @@ const formatShortDate = (dateStr: string) => {
       Data snapshot
     </span>
     <span class="text-foreground flex items-center gap-2.5 font-serif text-base text-sm font-normal -tracking-tight sm:text-base">
-      {formatDate(currentDate)}
+      {formatDisplayDate(currentDate)}
       {
         isLatest && (
           <span class="from-primary to-accent text-primary-foreground animate-pulse-glow bg-gradient-to-br px-2 py-0.5 font-mono text-[0.5625rem] font-semibold tracking-widest uppercase">

@@ -47,6 +47,11 @@ MANIFEST_PATH = OUTPUT_DIR / "manifest.json"
 TEMPLATE_DIR = Path("notebooks/templates")
 
 
+def date_to_path(date: str) -> str:
+    """Convert YYYY-MM-DD to YYYY/MM/DD path format."""
+    return date.replace("-", "/")
+
+
 def load_config() -> dict:
     """Load notebooks configuration from pipeline.yaml."""
     pipeline_config = load_pipeline_config()
@@ -401,11 +406,8 @@ def main() -> None:
     max_workers = min(len(notebooks), 4)  # Cap at 4 to avoid overwhelming system
 
     for date in dates_to_render:
-        # Determine output path
-        if date == latest_date:
-            date_output_dir = args.output_dir / "latest"
-        else:
-            date_output_dir = args.output_dir / "archive" / date
+        # All dates render to YYYY/MM/DD directory structure
+        date_output_dir = args.output_dir / date_to_path(date)
 
         if date not in manifest["dates"]:
             manifest["dates"][date] = {}
@@ -454,11 +456,8 @@ def main() -> None:
                     print(f"    {notebook_id}: OK ({reason})")
                     success_count += 1
 
-                    # Update manifest
-                    if date == latest_date:
-                        html_path = f"latest/{notebook_id}.html"
-                    else:
-                        html_path = f"archive/{date}/{notebook_id}.html"
+                    # Update manifest - YYYY/MM/DD path format
+                    html_path = f"{date_to_path(date)}/{notebook_id}.html"
 
                     manifest["dates"][date][notebook_id] = {
                         "rendered_at": datetime.now(timezone.utc).isoformat(),

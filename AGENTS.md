@@ -180,6 +180,7 @@ Two React components wrap Lucide icons:
 - Astro components (`.astro`) for static content
 - React components (`.tsx`) for interactive elements or Lucide icons
 - Prefer CSS variables over hardcoded colors
+- **DRY utilities**: Before adding helper functions (date formatting, path conversion, etc.), check `site/src/lib/utils.ts` first. Add new utilities there if they'll be used in multiple components. Never define the same helper inline in multiple files.
 
 ### Adding shadcn/ui Components
 
@@ -195,9 +196,9 @@ cd site && npx shadcn@latest add <component-name>
 ## URL Structure
 
 - `/` - Home
-- `/notebooks/{id}` - Latest notebook
-- `/{YYYYMMDD}` - Date landing (compact format)
-- `/{YYYYMMDD}/{id}` - Notebook for date
+- `/latest/{id}` - Latest notebook
+- `/{YYYY}/{MM}/{DD}` - Date landing
+- `/{YYYY}/{MM}/{DD}/{id}` - Notebook for date
 
 ## Manifests
 
@@ -233,7 +234,7 @@ cd site && npx shadcn@latest add <component-name>
       "blob-inclusion": {
         "rendered_at": "...",
         "notebook_hash": "abc123",
-        "html_path": "latest/blob-inclusion.html"
+        "html_path": "2025-12-17/blob-inclusion.html"
       }
     }
   }
