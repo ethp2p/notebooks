@@ -110,6 +110,12 @@ The pipeline tracks query source code hashes to detect when queries change:
 - **No date pickers** - Use prev/next navigation instead
 - **No emojis** unless explicitly requested
 - **Centralized config** - All pipeline config in `pipeline.yaml`
+- **Explicit skip logging** - Data pipeline should explicitly log `SKIP` vs `Fetching` for transparency.
+- **Rebasing preference** - Prefer rebasing work on `main` before PR creation for clean history.
+
+## Import Strategy
+
+- **Alias imports** - Use `@/` alias for all internal imports within the `site/` directory (e.g., `@/components/...`, `@/lib/...`). Avoid long relative paths.
 
 ## Theme
 
