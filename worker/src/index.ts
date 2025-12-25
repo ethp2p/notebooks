@@ -224,15 +224,22 @@ async function serveBlob(
   }
 
   const headers = new Headers();
+  const contentType = obj.httpMetadata?.contentType || "application/octet-stream";
 
   // Content type from R2 metadata
   headers.set(
     "Content-Type",
-    obj.httpMetadata?.contentType || "application/octet-stream"
+    contentType
   );
 
-  // Blobs are immutable, cache forever
-  headers.set("Cache-Control", "public, max-age=31536000, immutable");
+  // Cache control:
+  // - HTML files: Always revalidate to ensure manifest updates are seen immediately
+  // - Other files (assets): Immutable caching since their URLs are content-addressed
+  if (contentType.includes("text/html")) {
+    headers.set("Cache-Control", "public, max-age=0, must-revalidate");
+  } else {
+    headers.set("Cache-Control", "public, max-age=31536000, immutable");
+  }
 
   // Use blob key as ETag for conditional requests
   headers.set("ETag", blobKey);

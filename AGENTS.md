@@ -296,11 +296,13 @@ r2-bucket/
     └── pr-14.json            # PR preview manifest
 ```
 
-**Request flow:**
-1. Worker receives request to `observatory.ethp2p.dev/page`
-2. Loads `manifests/main.json` (cached 60s)
-3. Resolves `/page` → blob hash
-4. Serves `blobs/{hash}.html` with immutable caching
+**Serving logic:**
+1. Worker receives request for a path (e.g., `/`)
+2. Loads `manifests/main.json` (cached 60s in worker)
+3. Resolves path → blob key (e.g., `blobs/abc.html`)
+4. Serves blob with appropriate headers:
+   - **HTML**: `Cache-Control: public, max-age=0, must-revalidate` (Browser always checks for manifest updates)
+   - **Assets**: `Cache-Control: public, max-age=31536000, immutable` (Permanent cache for content-addressed files)
 
 **Domains:**
 - Production: `observatory.ethp2p.dev`
