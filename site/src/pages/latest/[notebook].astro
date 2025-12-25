@@ -1,58 +1,37 @@
 ---
-import BaseLayout from '../../layouts/BaseLayout.astro';
-import NotebookEmbed from '../../components/NotebookEmbed.astro';
-import DateNav from '../../components/DateNav.astro';
-import { extractHeadings } from '../../lib/extract-headings';
-import { toPathDate } from '../../lib/utils';
-import yaml from 'js-yaml';
-import fs from 'node:fs';
-import path from 'node:path';
-
-// Load notebooks config from pipeline.yaml
-const configPath = path.join(process.cwd(), '..', 'pipeline.yaml');
-const configContent = fs.readFileSync(configPath, 'utf-8');
-const config = yaml.load(configContent) as {
-  notebooks: Array<{
-    id: string;
-    title: string;
-    description: string;
-    source: string;
-    order: number;
-  }>;
-};
+import NotebookLayout from '@/layouts/NotebookLayout.astro';
+import { extractHeadings } from '@/lib/extract-headings';
+import { toPathDate } from '@/lib/utils';
+import { getNotebooks, getLatestDate } from '@/lib/data';
 
 export function getStaticPaths() {
-  const configPath = path.join(process.cwd(), '..', 'pipeline.yaml');
-  const configContent = fs.readFileSync(configPath, 'utf-8');
-  const config = yaml.load(configContent) as { notebooks: Array<{ id: string }> };
-
-  return config.notebooks.map((nb) => ({
+  const notebooks = getNotebooks();
+  return notebooks.map((nb) => ({
     params: { notebook: nb.id },
   }));
 }
 
 const { notebook: notebookId } = Astro.params;
-const notebook = config.notebooks.find((nb) => nb.id === notebookId);
+const notebooks = getNotebooks();
+const notebook = notebooks.find((nb) => nb.id === notebookId);
 
 if (!notebook) {
   return Astro.redirect('/404');
 }
 
-// Get latest date from manifest
-let latestDate = '';
-const manifestPath = path.join(process.cwd(), 'rendered', 'manifest.json');
-if (fs.existsSync(manifestPath)) {
-  const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'));
-  latestDate = manifest.latest_date || '';
-}
-
+const latestDate = getLatestDate();
 // Convert YYYY-MM-DD to YYYY/MM/DD path format
 const datePath = toPathDate(latestDate);
 const htmlPath = `${datePath}/${notebook.id}.html`;
 const headings = extractHeadings(htmlPath);
 ---
 
-<BaseLayout title={notebook.title} description={notebook.description} headings={headings}>
-  <DateNav currentDate={latestDate} notebookId={notebook.id} isLatest={true} />
-  <NotebookEmbed htmlPath={htmlPath} title={notebook.title} />
-</BaseLayout>
+<NotebookLayout
+  title={notebook.title}
+  description={notebook.description}
+  headings={headings}
+  currentDate={latestDate}
+  notebookId={notebook.id}
+  isLatest={true}
+  htmlPath={htmlPath}
+/>

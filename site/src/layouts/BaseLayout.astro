@@ -1,19 +1,15 @@
 ---
-import '../styles/global.css';
-import Sidebar from '../components/Sidebar.astro';
-import TableOfContents from '../components/TableOfContents.astro';
-import MobileNav from '../components/MobileNav.astro';
+import '@/styles/global.css';
+import Sidebar from '@/components/Sidebar.astro';
+import TableOfContents from '@/components/TableOfContents.astro';
+import MobileNav from '@/components/MobileNav.astro';
 
-interface Heading {
-  id: string;
-  text: string;
-  level: number;
-}
+import type { MarkdownHeading } from 'astro';
 
 interface Props {
   title: string;
   description?: string;
-  headings?: Heading[];
+  headings?: MarkdownHeading[];
 }
 
 const { title, description = 'Ethereum P2P Observatory', headings = [] } = Astro.props;

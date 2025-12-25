@@ -1,44 +1,12 @@
 ---
-import BaseLayout from '../layouts/BaseLayout.astro';
-import Icon from '../components/Icon.astro';
-import yaml from 'js-yaml';
-import fs from 'node:fs';
-import path from 'node:path';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Icon from '@/components/Icon.astro';
+import { getNotebooks, getLatestDate, type NotebookConfig } from '@/lib/data';
+import { formatDisplayDate } from '@/lib/utils';
 
-// Load notebooks config from pipeline.yaml
-const configPath = path.join(process.cwd(), '..', 'pipeline.yaml');
-const configContent = fs.readFileSync(configPath, 'utf-8');
-const config = yaml.load(configContent) as {
-  notebooks: Array<{
-    id: string;
-    title: string;
-    description: string;
-    icon?: string;
-    order: number;
-  }>;
-};
-
-// Load manifest
-let latestDate = 'No data yet';
-const manifestPath = path.join(process.cwd(), 'rendered', 'manifest.json');
-if (fs.existsSync(manifestPath)) {
-  const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'));
-  latestDate = manifest.latest_date || latestDate;
-}
-
-const notebooks = config.notebooks.sort((a, b) => a.order - b.order);
-
-const formatDate = (dateStr: string) => {
-  if (dateStr === 'No data yet') return dateStr;
-  const date = new Date(dateStr + 'T00:00:00Z');
-  return date.toLocaleDateString('en-US', {
-    weekday: 'long',
-    month: 'long',
-    day: 'numeric',
-    year: 'numeric',
-    timeZone: 'UTC',
-  });
-};
+// Load data
+const notebooks = getNotebooks().sort((a, b) => a.order - b.order);
+const latestDate = getLatestDate() || 'No data yet';
 ---
 
 <BaseLayout title="Home">
@@ -47,7 +15,7 @@ const formatDate = (dateStr: string) => {
     <header class="mb-16 animate-[fadeUp_0.6s_ease-out]">
       <div class="text-muted-foreground bg-muted mb-6 inline-flex items-center gap-2 px-3 py-1.5 font-mono text-[0.6875rem] tracking-widest uppercase">
         <span class="bg-accent h-1.5 w-1.5 animate-pulse"></span>
-        <span>Updated {formatDate(latestDate)}</span>
+        <span>Updated {latestDate === 'No data yet' ? latestDate : formatDisplayDate(latestDate)}</span>
       </div>
       <h1 class="m-0 mb-6 font-serif text-5xl leading-tight font-normal -tracking-wide max-md:text-4xl">
         <span class="text-foreground block">Ethereum P2P</span>

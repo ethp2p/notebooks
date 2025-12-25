@@ -3,9 +3,9 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 export interface Heading {
-  id: string;
+  slug: string;
   text: string;
-  level: number;
+  depth: number;
 }
 
 /**
@@ -28,8 +28,8 @@ export function extractHeadings(htmlPath: string): Heading[] {
     const headingElements = root.querySelectorAll('h2[id], h3[id]');
 
     for (const el of headingElements) {
-      const id = el.getAttribute('id');
-      if (!id) continue;
+      const slug = el.getAttribute('id');
+      if (!slug) continue;
 
       // Get text content, stripping anchor links and pilcrow
       let text = el.textContent || '';
@@ -38,8 +38,8 @@ export function extractHeadings(htmlPath: string): Heading[] {
       // Skip empty headings
       if (!text) continue;
 
-      const level = el.tagName.toLowerCase() === 'h2' ? 2 : 3;
-      headings.push({ id, text, level });
+      const depth = el.tagName.toLowerCase() === 'h2' ? 2 : 3;
+      headings.push({ slug, text, depth });
     }
 
     return headings;

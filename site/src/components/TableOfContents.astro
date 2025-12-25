@@ -3,14 +3,10 @@
 // Receives headings extracted at build time
 import Icon from './Icon.astro';
 
-interface Heading {
-  id: string;
-  text: string;
-  level: number;
-}
+import type { MarkdownHeading } from 'astro';
 
 interface Props {
-  headings?: Heading[];
+  headings?: MarkdownHeading[];
 }
 
 const { headings = [] } = Astro.props;
@@ -28,9 +24,9 @@ const { headings = [] } = Astro.props;
       </div>
       <ul class="m-0 flex list-none flex-col p-0" id="toc-list">
         {headings.map((heading, index) => (
-          <li class:list={['m-0', heading.level === 3 ? 'pl-3' : '']}>
+          <li class:list={['m-0', heading.depth === 3 ? 'pl-3' : '']}>
             <a
-              href={`#${heading.id}`}
+              href={`#${heading.slug}`}
               class="toc-link text-muted-foreground hover:text-foreground hover:bg-muted -ml-2 block border-l border-transparent px-2 py-1 text-[0.8125rem] leading-snug no-underline hover:border-l-[var(--mauve-6)]"
             >
               {heading.text}

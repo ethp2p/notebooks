@@ -1,6 +1,6 @@
 ---
 // Floating mobile navigation buttons - bottom left (menu) and bottom right (TOC)
-import { MobileNav as MobileNavReact } from './MobileNav';
+import { MobileNav as MobileNavReact } from '@/components/MobileNav';
 import fs from 'node:fs';
 import path from 'node:path';
 import yaml from 'js-yaml';
@@ -32,14 +32,10 @@ const historicalDates = Object.keys(manifest.dates || {})
   .filter((d) => d !== manifest.latest_date)
   .sort((a, b) => b.localeCompare(a)); // Newest first
 
-interface Heading {
-  id: string;
-  text: string;
-  level: number;
-}
+import type { MarkdownHeading } from 'astro';
 
 interface Props {
-  headings?: Heading[];
+  headings?: MarkdownHeading[];
 }
 
 const { headings = [] } = Astro.props;

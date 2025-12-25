@@ -1,0 +1,23 @@
+---
+import BaseLayout from './BaseLayout.astro';
+import NotebookEmbed from '@/components/NotebookEmbed.astro';
+import DateNav from '@/components/DateNav.astro';
+import type { MarkdownHeading } from 'astro';
+
+interface Props {
+  title: string;
+  description: string;
+  headings: MarkdownHeading[];
+  currentDate: string;
+  notebookId: string;
+  isLatest: boolean;
+  htmlPath: string;
+}
+
+const { title, description, headings, currentDate, notebookId, isLatest, htmlPath } = Astro.props;
+---
+
+<BaseLayout title={title} description={description} headings={headings}>
+  <DateNav currentDate={currentDate} notebookId={notebookId} isLatest={isLatest} />
+  <NotebookEmbed htmlPath={htmlPath} title={title} />
+</BaseLayout>

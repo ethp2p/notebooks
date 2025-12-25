@@ -6,9 +6,9 @@ import { SidebarList } from './ui/SidebarList';
 import { cn } from '@/lib/utils';
 
 interface Heading {
-  id: string;
+  slug: string;
   text: string;
-  level: number;
+  depth: number;
 }
 
 interface Notebook {
@@ -107,9 +107,9 @@ export function MobileNav({ headings, notebooks, latestDate, historicalDates, cu
                 <div className="flex-1 overflow-y-auto p-2">
                   <ul className="m-0 flex list-none flex-col p-0">
                     {headings.map((heading) => (
-                      <li key={heading.id} className={cn('m-0', heading.level === 3 ? 'pl-3' : '')}>
+                      <li key={heading.slug} className={cn('m-0', heading.depth === 3 ? 'pl-3' : '')}>
                         <a
-                          href={`#${heading.id}`}
+                          href={`#${heading.slug}`}
                           onClick={() => setOpenToc(false)}
                           className="toc-link text-muted-foreground hover:text-foreground hover:bg-muted block px-2 py-1.5 text-[0.8125rem] leading-snug no-underline transition-all duration-200"
                         >
