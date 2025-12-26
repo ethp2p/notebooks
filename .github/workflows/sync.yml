@@ -24,7 +24,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  CACHE_VERSION: v1 # Increment to invalidate all caches
+  CACHE_VERSION: v2 # Increment to invalidate all caches
   FORCE_RENDER: ${{ github.event.inputs.force || 'false' }}
 
 jobs:
