@@ -14,22 +14,23 @@ const { headings = [] } = Astro.props;
 
 {
   headings.length > 0 && (
-    <nav
-      class="bg-card border-border sticky top-8 max-h-[calc(100vh-4rem)] overflow-y-auto border p-4 text-[0.75rem] max-xl:hidden dark:bg-[oklch(0.14_0.018_260/80%)] dark:backdrop-blur-lg"
-      id="toc"
-    >
-      <div class="border-border text-muted-foreground mb-3 flex items-center gap-1.5 border-b pb-2">
-        <Icon name="List" size={12} />
+    <nav class="group/nav relative flex flex-col items-end" id="toc-nav">
+      {/* Header - instantly visible on hover */}
+      <div class="border-border text-muted-foreground mb-3 flex w-full items-center justify-end gap-1.5 pb-1 opacity-0 group-hover/toc:opacity-100">
         <span class="text-[0.625rem] font-semibold tracking-wide uppercase">On this page</span>
       </div>
-      <ul class="m-0 flex list-none flex-col p-0" id="toc-list">
-        {headings.map((heading, index) => (
-          <li class:list={['m-0', heading.depth === 3 ? 'pl-3' : '']}>
-            <a
-              href={`#${heading.slug}`}
-              class="toc-link text-muted-foreground hover:text-foreground hover:bg-muted -ml-2 block border-l border-transparent px-2 py-1 text-[0.8125rem] leading-snug no-underline hover:border-l-[var(--mauve-6)]"
-            >
-              {heading.text}
+
+      <ul class="relative m-0 flex list-none flex-col items-end p-0" id="toc-list">
+        {headings.map((heading) => (
+          <li class="group/item relative m-0 w-full">
+            <a href={`#${heading.slug}`} class="toc-link flex h-6 w-full flex-row items-center justify-end gap-2 no-underline">
+              {/* The Label */}
+              <span class="toc-label text-muted-foreground group-hover/item:text-foreground pointer-events-none inline-flex items-center text-[0.8125rem] leading-tight whitespace-nowrap opacity-0 group-hover/toc:opacity-100">
+                {heading.text}
+              </span>
+
+              {/* The Dot (circle) */}
+              <div class="toc-dot border-muted-foreground/30 group-hover/item:border-primary pointer-events-none h-1.5 w-1.5 shrink-0 translate-y-px rounded-full border bg-transparent group-hover/item:scale-150" />
             </a>
           </li>
         ))}
@@ -37,6 +38,20 @@ const { headings = [] } = Astro.props;
     </nav>
   )
 }
+
+<style>
+  /* Active states */
+  .toc-link.active .toc-dot {
+    background-color: var(--primary);
+    border-color: var(--primary);
+    transform: scale(1.1);
+  }
+
+  .toc-link.active .toc-label {
+    color: var(--foreground);
+    font-weight: 500;
+  }
+</style>
 
 <script>
   function initTOC() {
@@ -50,37 +65,25 @@ const { headings = [] } = Astro.props;
 
     if (headingIds.length === 0) return;
 
-    const activeClasses = [
-      'active',
-      'text-foreground',
-      'border-l-primary',
-      'bg-[var(--mauve-3)]',
-      'font-medium',
-      'dark:bg-[oklch(0.25_0.03_280/50%)]',
-      'dark:shadow-[0_0_20px_oklch(0.55_0.12_280/10%)]',
-    ];
-
-    const setActive = (link: Element) => {
-      tocLinks.forEach((l) => {
-        l.classList.remove(...activeClasses);
-      });
-      link.classList.add(...activeClasses);
+    const setActive = (link: HTMLElement) => {
+      tocLinks.forEach((l) => l.classList.remove('active'));
+      link.classList.add('active');
     };
 
     // Highlight active section on scroll
     const observer = new IntersectionObserver(
       (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            const tocLink = tocList.querySelector(`a[href="#${entry.target.id}"]`);
-            if (tocLink) {
-              setActive(tocLink);
-            }
+        const visibleEntry = entries.find((e) => e.isIntersecting);
+        if (visibleEntry) {
+          const tocLink = tocList.querySelector(`a[href="#${visibleEntry.target.id}"]`) as HTMLElement;
+          if (tocLink) {
+            setActive(tocLink);
           }
-        });
+        }
       },
       {
-        rootMargin: '-80px 0px -70% 0px',
+        // Tune margins to select the item correctly at the top of viewport
+        rootMargin: '-48px 0px -85% 0px',
         threshold: 0,
       },
     );
@@ -92,25 +95,17 @@ const { headings = [] } = Astro.props;
       }
     });
 
-    // Select last item when scrolled to bottom
-    const checkBottomScroll = () => {
-      const scrollTop = window.scrollY;
-      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
-      if (docHeight > 0 && scrollTop >= docHeight - 5 && tocLinks.length > 0) {
-        setActive(tocLinks[tocLinks.length - 1]);
-      }
-    };
-
-    window.addEventListener('scroll', checkBottomScroll, { passive: true });
-
     // Smooth scroll on click
-    tocList.addEventListener('click', (e) => {
+    tocList.addEventListener('click', (e: MouseEvent) => {
       const target = e.target as HTMLElement;
-      if (target.tagName === 'A') {
+      const link = target.closest('.toc-link') as HTMLAnchorElement;
+
+      if (link) {
         e.preventDefault();
-        const href = target.getAttribute('href');
-        if (href) {
-          const heading = document.querySelector(href);
+        const href = link.getAttribute('href');
+        if (href && href.startsWith('#')) {
+          const id = href.slice(1);
+          const heading = document.getElementById(id);
           if (heading) {
             heading.scrollIntoView({ behavior: 'smooth', block: 'start' });
             history.pushState(null, '', href);
@@ -120,9 +115,7 @@ const { headings = [] } = Astro.props;
     });
   }
 
-  // Run on load
+  // Run on load and on Astro page transitions
   initTOC();
-
-  // Re-run on Astro page transitions
   document.addEventListener('astro:page-load', initTOC);
 </script>
