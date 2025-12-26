@@ -32,7 +32,7 @@ const latestDate = getLatestDate() || 'No data yet';
         <h2 class="m-0 font-serif text-2xl font-normal -tracking-tight">Latest Analyses</h2>
         <span class="text-muted-foreground bg-muted px-2.5 py-1 font-mono text-[0.625rem] tracking-wide uppercase">{notebooks.length} notebooks</span>
       </div>
-      <div class="reveal-stagger flex flex-col gap-3">
+      <div class="flex flex-col gap-3">
         {
           notebooks.map((nb, index) => (
             <a

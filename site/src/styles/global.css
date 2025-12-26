@@ -559,50 +559,7 @@ img[loading] {
   box-shadow: var(--glow);
 }
 
-/* ============================================
-   Scroll Reveal Animation
-   ============================================ */
 
-.reveal {
-  @apply translate-y-5 opacity-0 transition-all duration-500;
-}
-
-.reveal.visible {
-  @apply translate-y-0 opacity-100;
-}
-
-/* Staggered children */
-.reveal-stagger>* {
-  @apply translate-y-4 opacity-0 transition-all duration-500;
-}
-
-.reveal-stagger.visible>*:nth-child(1) {
-  transition-delay: 0.05s;
-}
-
-.reveal-stagger.visible>*:nth-child(2) {
-  transition-delay: 0.1s;
-}
-
-.reveal-stagger.visible>*:nth-child(3) {
-  transition-delay: 0.15s;
-}
-
-.reveal-stagger.visible>*:nth-child(4) {
-  transition-delay: 0.2s;
-}
-
-.reveal-stagger.visible>*:nth-child(5) {
-  transition-delay: 0.25s;
-}
-
-.reveal-stagger.visible>*:nth-child(6) {
-  transition-delay: 0.3s;
-}
-
-.reveal-stagger.visible>* {
-  @apply translate-y-0 opacity-100;
-}
 
 /* ============================================
    Print Styles
@@ -643,11 +600,6 @@ img[loading] {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
-  }
-
-  .reveal,
-  .reveal-stagger>* {
-    @apply transform-none opacity-100;
   }
 }
 
