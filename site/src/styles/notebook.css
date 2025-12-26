@@ -28,7 +28,6 @@
 /* Notebook header */
 .notebook-header {
   @apply border-border mb-10 border-b pb-8;
-  animation: fadeUp 0.5s ease-out;
 }
 
 .notebook-title {
@@ -419,43 +418,6 @@
 /* Horizontal rules */
 .notebook-content hr {
   @apply border-border my-12 border-t border-none;
-}
-
-/* Animation for cells appearing */
-@keyframes cellReveal {
-  from {
-    opacity: 0;
-    transform: translateY(12px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.notebook-content .cell {
-  animation: cellReveal 0.5s ease-out backwards;
-}
-
-.notebook-content .cell:nth-child(1) {
-  animation-delay: 0.1s;
-}
-
-.notebook-content .cell:nth-child(2) {
-  animation-delay: 0.15s;
-}
-
-.notebook-content .cell:nth-child(3) {
-  animation-delay: 0.2s;
-}
-
-.notebook-content .cell:nth-child(4) {
-  animation-delay: 0.25s;
-}
-
-.notebook-content .cell:nth-child(5) {
-  animation-delay: 0.3s;
 }
 
 /* Hide parameter cells (they have celltag_parameters class) */

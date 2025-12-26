@@ -206,42 +206,8 @@
 }
 
 /* ============================================
-   Animations
+   Animations (interaction-triggered only)
    ============================================ */
-
-@keyframes fadeUp {
-  from {
-    opacity: 0;
-    transform: translateY(16px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-
-  to {
-    opacity: 1;
-  }
-}
-
-@keyframes slideInLeft {
-  from {
-    opacity: 0;
-    transform: translateX(-12px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
 
 @keyframes pulse-glow {
 
@@ -421,7 +387,6 @@ pre code {
    ============================================ */
 
 .notebook-content {
-  animation: fadeUp 0.5s ease-out;
 
   /* Prose stays readable width */
   p,

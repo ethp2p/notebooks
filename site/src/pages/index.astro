@@ -12,7 +12,7 @@ const latestDate = getLatestDate() || 'No data yet';
 <BaseLayout title="Home">
   <div class="max-w-3xl">
     <!-- Hero Section -->
-    <header class="mb-16 animate-[fadeUp_0.6s_ease-out]">
+    <header class="mb-16">
       <div class="text-muted-foreground bg-muted mb-6 inline-flex items-center gap-2 px-3 py-1.5 font-mono text-[0.6875rem] tracking-widest uppercase">
         <span class="bg-accent h-1.5 w-1.5 animate-pulse"></span>
         <span>Updated {latestDate === 'No data yet' ? latestDate : formatDisplayDate(latestDate)}</span>
