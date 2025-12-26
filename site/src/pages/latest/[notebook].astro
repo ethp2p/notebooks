@@ -26,12 +26,4 @@ const htmlPath = `${datePath}/${notebook.id}.html`;
 const headings = extractHeadings(htmlPath);
 ---
 
-<NotebookLayout
-  title={notebook.title}
-  description={notebook.description}
-  headings={headings}
-  currentDate={latestDate}
-  notebookId={notebook.id}
-  isLatest={true}
-  htmlPath={htmlPath}
-/>
+<NotebookLayout title={notebook.title} description={notebook.description} headings={headings} currentDate={latestDate} notebookId={notebook.id} htmlPath={htmlPath} />

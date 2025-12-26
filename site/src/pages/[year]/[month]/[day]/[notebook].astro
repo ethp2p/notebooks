@@ -47,7 +47,6 @@ if (!notebookData) {
 }
 
 const htmlPath = notebookData.html_path || `${year}/${month}/${day}/${notebook.id}.html`;
-const isLatest = dateIso === manifest.latest_date;
 const headings = extractHeadings(htmlPath);
 ---
 
@@ -57,6 +56,5 @@ const headings = extractHeadings(htmlPath);
   headings={headings}
   currentDate={dateIso}
   notebookId={notebook.id}
-  isLatest={isLatest}
   htmlPath={htmlPath}
 />
