@@ -3,6 +3,7 @@ import BaseLayout from './BaseLayout.astro';
 import NotebookEmbed from '@/components/NotebookEmbed.astro';
 import DateNav from '@/components/DateNav.astro';
 import type { MarkdownHeading } from 'astro';
+import { getAvailableDates, getLatestDate } from '@/lib/data';
 
 interface Props {
   title: string;
@@ -10,14 +11,15 @@ interface Props {
   headings: MarkdownHeading[];
   currentDate: string;
   notebookId: string;
-  isLatest: boolean;
   htmlPath: string;
 }
 
-const { title, description, headings, currentDate, notebookId, isLatest, htmlPath } = Astro.props;
+const { title, description, headings, currentDate, notebookId, htmlPath } = Astro.props;
+
+const availableDates = getAvailableDates();
 ---
 
 <BaseLayout title={title} description={description} headings={headings}>
-  <DateNav currentDate={currentDate} notebookId={notebookId} isLatest={isLatest} />
+  <DateNav slot="header" currentDate={currentDate} notebookId={notebookId} availableDates={availableDates} />
   <NotebookEmbed htmlPath={htmlPath} title={title} />
 </BaseLayout>

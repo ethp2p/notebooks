@@ -2,34 +2,23 @@
 // Sticky date navigation with prev/next arrows
 import { toPathDate, formatDisplayDate, formatShortDate } from '@/lib/utils';
 import Icon from './Icon.astro';
-import fs from 'node:fs';
-import path from 'node:path';
 
 interface Props {
   currentDate: string; // ISO format YYYY-MM-DD
   notebookId: string;
-  isLatest?: boolean;
+  availableDates: string[];
 }
 
-const { currentDate, notebookId, isLatest = false } = Astro.props;
+const { currentDate, notebookId, availableDates } = Astro.props;
 
-// Load manifest to get available dates
-const manifestPath = path.join(process.cwd(), 'rendered', 'manifest.json');
-let dates: string[] = [];
-let latestDate = '';
-
-if (fs.existsSync(manifestPath)) {
-  const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'));
-  dates = Object.keys(manifest.dates || {})
-    .sort()
-    .reverse();
-  latestDate = manifest.latest_date || dates[0] || '';
-}
+// Derived values - no slop
+const latestDate = availableDates[0];
+const isLatest = currentDate === latestDate;
 
 // Find prev/next dates
-const currentIndex = dates.indexOf(currentDate);
-const prevDate = currentIndex < dates.length - 1 ? dates[currentIndex + 1] : null;
-const nextDate = currentIndex > 0 ? dates[currentIndex - 1] : null;
+const currentIndex = availableDates.indexOf(currentDate);
+const prevDate = currentIndex < availableDates.length - 1 ? availableDates[currentIndex + 1] : null;
+const nextDate = currentIndex > 0 ? availableDates[currentIndex - 1] : null;
 
 // Build URLs - use /latest/ for latest date, /YYYY/MM/DD/ for historical
 const base = import.meta.env.BASE_URL;
@@ -45,51 +34,45 @@ const prevUrl = buildUrl(prevDate);
 const nextUrl = buildUrl(nextDate);
 ---
 
-<div
-  class="bg-card border-border sticky top-4 z-40 mb-8 flex items-center justify-between gap-4 border px-5 py-3.5 backdrop-blur-xl transition-all dark:bg-[oklch(0.14_0.018_260/90%)] dark:shadow-[0_1px_2px_oklch(0_0_0/20%),0_0_30px_oklch(0.55_0.12_280/8%)]"
->
+<div class="bg-primary sticky top-0 z-40 flex w-full items-center justify-between border-b border-white/10 px-12 py-2 backdrop-blur-xl transition-all max-lg:px-6">
   <a
     href={prevUrl || '#'}
     class:list={[
-      'group text-muted-foreground flex min-w-[90px] items-center justify-start gap-2 px-3.5 py-2.5 text-xs no-underline transition-colors',
-      'hover:bg-muted hover:text-foreground',
-      { 'pointer-events-none cursor-not-allowed opacity-25': !prevUrl },
+      'group flex min-w-[90px] items-center justify-start gap-2 px-3.5 py-1.5 text-xs text-white/50 no-underline transition-colors',
+      'hover:bg-white/5 hover:text-white',
+      { 'pointer-events-none cursor-not-allowed opacity-20': !prevUrl },
     ]}
     aria-label="Previous date"
     aria-disabled={!prevUrl}
   >
-    <Icon name="ChevronLeft" size={18} />
-    {prevDate && <span class="hidden font-mono text-[0.6875rem] tracking-wide sm:inline">{formatShortDate(prevDate)}</span>}
+    <Icon name="ChevronLeft" size={16} />
+    {prevDate && <span class="hidden font-mono text-[0.625rem] tracking-wide sm:inline">{formatShortDate(prevDate)}</span>}
   </a>
 
-  <div class="flex flex-1 flex-col items-center gap-1 text-center">
-    <span class="text-muted-foreground flex items-center gap-1.5 font-mono text-[0.625rem] tracking-widest uppercase">
-      <Icon name="Calendar" size={14} />
-      Data snapshot
-    </span>
-    <span class="text-foreground flex items-center gap-2.5 font-serif text-base text-sm font-normal -tracking-tight sm:text-base">
-      {formatDisplayDate(currentDate)}
-      {
-        isLatest && (
-          <span class="from-primary to-accent text-primary-foreground animate-pulse-glow bg-gradient-to-br px-2 py-0.5 font-mono text-[0.5625rem] font-semibold tracking-widest uppercase">
-            Latest
-          </span>
-        )
-      }
-    </span>
+  <div class="flex items-center gap-3">
+    <div class="flex items-center gap-1.5 border-r border-white/10 pr-3 font-mono text-[0.625rem] tracking-widest text-white/40 uppercase">
+      <Icon name="Calendar" size={12} />
+      <span class="hidden sm:inline">Snapshot</span>
+    </div>
+    <div class="flex items-center gap-2.5">
+      <span class="font-serif text-[0.9375rem] font-normal -tracking-tight text-white/90">
+        {formatDisplayDate(currentDate)}
+      </span>
+      {isLatest && <span class="border border-white/20 px-1.5 py-0.5 font-mono text-[0.5625rem] font-semibold tracking-widest text-white/60 uppercase">Latest</span>}
+    </div>
   </div>
 
   <a
     href={nextUrl || '#'}
     class:list={[
-      'group text-muted-foreground flex min-w-[90px] items-center justify-end gap-2 px-3.5 py-2.5 text-xs no-underline transition-colors',
-      'hover:bg-muted hover:text-foreground',
-      { 'pointer-events-none cursor-not-allowed opacity-25': !nextUrl },
+      'group flex min-w-[90px] items-center justify-end gap-2 px-3.5 py-1.5 text-xs text-white/50 no-underline transition-colors',
+      'hover:bg-white/5 hover:text-white',
+      { 'pointer-events-none cursor-not-allowed opacity-20': !nextUrl },
     ]}
     aria-label="Next date"
     aria-disabled={!nextUrl}
   >
-    {nextDate && <span class="hidden font-mono text-[0.6875rem] tracking-wide sm:inline">{formatShortDate(nextDate)}</span>}
-    <Icon name="ChevronRight" size={18} />
+    {nextDate && <span class="hidden font-mono text-[0.625rem] tracking-wide sm:inline">{formatShortDate(nextDate)}</span>}
+    <Icon name="ChevronRight" size={16} />
   </a>
 </div>
