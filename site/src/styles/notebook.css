@@ -31,8 +31,7 @@
 }
 
 .notebook-title {
-  @apply text-foreground m-0 mb-5 font-serif text-4xl leading-tight font-normal;
-  letter-spacing: -0.03em;
+  @apply text-foreground m-0 mb-5 font-serif text-4xl leading-tight font-normal -tracking-wide;
 }
 
 :is(.dark .notebook-title) {
@@ -48,13 +47,7 @@
 
 /* Section headings */
 .notebook-content h2 {
-  @apply text-foreground border-border relative border-b pb-2.5 font-serif font-normal;
-  font-size: 1.625rem;
-  margin: 3.5rem 0 1.5rem 0;
-  letter-spacing: -0.02em;
-  line-height: 1.25;
-  scroll-margin-top: 56px;
-  /* Account for sticky DateNav */
+  @apply text-foreground border-border relative border-b pb-2.5 font-serif font-normal text-[1.625rem] mt-14 mb-6 -tracking-tight leading-tight scroll-mt-14;
 }
 
 .notebook-content h2::before {
@@ -63,23 +56,16 @@
 }
 
 .notebook-content h3 {
-  @apply text-foreground font-serif text-xl font-normal;
-  margin: 2.5rem 0 1rem 0;
-  letter-spacing: -0.01em;
-  line-height: 1.35;
-  scroll-margin-top: 56px;
-  /* Account for sticky DateNav */
+  @apply text-foreground font-serif text-xl font-normal mt-10 mb-4 -tracking-tight leading-snug scroll-mt-14;
 }
 
 .notebook-content h4 {
-  @apply text-foreground font-sans text-base font-semibold;
-  margin: 2rem 0 0.75rem 0;
+  @apply text-foreground font-sans text-base font-semibold mt-8 mb-3;
 }
 
 /* Paragraphs and text */
 .notebook-content p {
-  @apply text-foreground mb-5 leading-relaxed;
-  margin-top: 0;
+  @apply text-foreground mb-5 mt-0 leading-relaxed;
 }
 
 .notebook-content a {
@@ -92,14 +78,12 @@
 
 /* Anchor links on headings - hide text, show pilcrow via ::after on hover */
 .notebook-content .anchor-link {
-  @apply text-muted-foreground ml-2 no-underline;
-  font-size: 0;
+  @apply text-muted-foreground ml-2 no-underline text-[0px];
 }
 
 .notebook-content .anchor-link::after {
   content: '¶';
-  font-size: 1rem;
-  @apply opacity-0 transition-opacity duration-200;
+  @apply text-base opacity-0 transition-opacity duration-200;
 }
 
 .notebook-content h2:hover .anchor-link::after,
@@ -115,13 +99,11 @@
 /* Lists */
 .notebook-content ul,
 .notebook-content ol {
-  @apply mb-5 pl-7;
-  margin-top: 0;
+  @apply mb-5 pl-7 mt-0;
 }
 
 .notebook-content li {
-  @apply mb-2;
-  line-height: 1.7;
+  @apply mb-2 leading-loose;
 }
 
 .notebook-content li::marker {
@@ -149,9 +131,7 @@
 /* Code blocks - nbconvert uses .highlight for syntax highlighting */
 .notebook-content .highlight,
 .notebook-content .input_area {
-  @apply bg-muted relative overflow-x-auto;
-  font-size: 0.8125rem;
-  line-height: 1.65;
+  @apply bg-muted relative overflow-x-auto text-[0.8125rem] leading-relaxed;
 }
 
 :is(.dark .notebook-content) .highlight,
@@ -172,8 +152,8 @@
 .notebook-content .highlight .k,
 .notebook-content .highlight .kn,
 .notebook-content .highlight .kd {
+  @apply font-medium;
   color: oklch(0.5 0.2 330);
-  font-weight: 500;
 }
 
 /* Keywords */
@@ -204,8 +184,7 @@
 /* Numbers */
 .notebook-content .highlight .c,
 .notebook-content .highlight .c1 {
-  color: var(--muted-foreground);
-  font-style: italic;
+  @apply text-muted-foreground italic;
 }
 
 /* Comments */
@@ -252,9 +231,7 @@
 }
 
 .notebook-content details.code-fold>summary {
-  @apply text-muted-foreground inline-flex cursor-pointer list-none items-center gap-1.5 border-none bg-transparent p-0 font-mono opacity-60 select-none;
-  font-size: 0.6875rem;
-  transition: color 0.15s ease;
+  @apply text-muted-foreground inline-flex cursor-pointer list-none items-center gap-1.5 border-none bg-transparent p-0 font-mono opacity-60 select-none text-[0.6875rem] transition-colors duration-150;
 }
 
 .notebook-content details.code-fold>summary:hover {
@@ -268,8 +245,7 @@
 
 .notebook-content details.code-fold>summary::before {
   content: '▸';
-  font-size: 0.75rem;
-  transition: transform 0.15s ease;
+  @apply text-xs transition-transform duration-150;
 }
 
 .notebook-content details.code-fold[open]>summary::before {
@@ -286,9 +262,7 @@
 }
 
 .notebook-content details.sql-fold>summary {
-  @apply text-primary inline-flex cursor-pointer list-none items-center gap-1.5 border-none bg-transparent p-0 font-mono font-semibold select-none;
-  font-size: 0.6875rem;
-  transition: opacity 0.15s ease;
+  @apply text-primary inline-flex cursor-pointer list-none items-center gap-1.5 border-none bg-transparent p-0 font-mono font-semibold select-none text-[0.6875rem] transition-opacity duration-150;
 }
 
 .notebook-content details.sql-fold>summary:hover {
@@ -302,8 +276,7 @@
 
 .notebook-content details.sql-fold>summary::before {
   content: '▸';
-  font-size: 0.75rem;
-  transition: transform 0.15s ease;
+  @apply text-xs transition-transform duration-150;
 }
 
 .notebook-content details.sql-fold[open]>summary::before {
@@ -366,8 +339,7 @@
 }
 
 .notebook-content th {
-  @apply bg-muted text-muted-foreground font-mono font-semibold tracking-wider uppercase;
-  font-size: 0.6875rem;
+  @apply bg-muted text-muted-foreground font-mono font-semibold tracking-wider uppercase text-[0.6875rem];
 }
 
 .notebook-content td {
@@ -402,8 +374,7 @@
 
 /* Inline code */
 .notebook-content :not(pre)>code {
-  @apply bg-muted text-primary px-2 py-0.5 font-mono;
-  font-size: 0.875em;
+  @apply bg-muted text-primary px-2 py-0.5 font-mono text-[0.875em];
 }
 
 :is(.dark .notebook-content) :not(pre)>code {

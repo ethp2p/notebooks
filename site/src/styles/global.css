@@ -255,28 +255,20 @@
   }
 
   html {
-    @apply font-sans;
-    scroll-behavior: smooth;
+    @apply font-sans scroll-smooth;
   }
 
   body {
-    @apply bg-background text-foreground font-sans antialiased;
-    line-height: 1.65;
-    font-size: 0.9375rem;
-    position: relative;
-    min-height: 100vh;
+    @apply bg-background text-foreground font-sans antialiased leading-relaxed text-[0.9375rem] relative min-h-screen;
   }
 
   /* Atmospheric background */
   body::before {
     content: '';
-    position: fixed;
-    inset: 0;
+    @apply fixed inset-0 pointer-events-none -z-10;
     background:
       radial-gradient(ellipse 80% 50% at 20% -10%, oklch(0.7 0.12 280 / 8%) 0%, transparent 50%),
       radial-gradient(ellipse 60% 40% at 80% 110%, oklch(0.65 0.1 180 / 6%) 0%, transparent 50%);
-    pointer-events: none;
-    z-index: -1;
   }
 
   .dark body::before {
@@ -288,13 +280,9 @@
   /* Subtle grid overlay for dark mode */
   .dark body::after {
     content: '';
-    position: fixed;
-    inset: 0;
+    @apply fixed inset-0 pointer-events-none -z-10 opacity-50;
     background-image: linear-gradient(oklch(1 0 0 / 2%) 1px, transparent 1px), linear-gradient(90deg, oklch(1 0 0 / 2%) 1px, transparent 1px);
     background-size: 60px 60px;
-    pointer-events: none;
-    z-index: -1;
-    opacity: 0.5;
   }
 }
 
@@ -308,18 +296,15 @@ h3,
 h4,
 h5,
 h6 {
-  @apply text-foreground font-serif font-normal;
-  letter-spacing: -0.02em;
-  line-height: 1.2;
+  @apply text-foreground font-serif font-normal -tracking-tight leading-tight;
 }
 
 h1 {
-  @apply text-4xl;
-  letter-spacing: -0.03em;
+  @apply text-4xl -tracking-wide;
 }
 
 h2 {
-  font-size: 1.75rem;
+  @apply text-[1.75rem];
 }
 
 h3 {
@@ -337,8 +322,7 @@ a:hover {
 
 /* Code */
 code {
-  @apply font-mono;
-  font-size: 0.875em;
+  @apply font-mono text-[0.875em];
 }
 
 pre {
@@ -417,8 +401,7 @@ table {
 }
 
 th {
-  @apply text-muted-foreground bg-muted border-border border-b-2 px-4 py-3 text-left font-mono font-semibold tracking-wider uppercase;
-  font-size: 0.7rem;
+  @apply text-muted-foreground bg-muted border-border border-b-2 px-4 py-3 text-left font-mono font-semibold tracking-wider uppercase text-[0.7rem];
 }
 
 td {
@@ -464,9 +447,7 @@ tr:hover td {
 }
 
 .sidebar-section-title {
-  @apply text-muted-foreground font-mono font-semibold tracking-widest uppercase;
-  font-size: 0.65rem;
-  padding: 1.25rem 0.75rem 0.5rem;
+  @apply text-muted-foreground font-mono font-semibold tracking-widest uppercase text-[0.65rem] pt-5 px-3 pb-2;
 }
 
 /* ============================================
