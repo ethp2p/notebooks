@@ -25,24 +25,25 @@ def fetch_blobs_per_slot(
 
     query = f"""
 SELECT
+    s.slot,
     s.slot_start_date_time AS time,
     COALESCE(b.blob_count, 0) AS blob_count
 FROM (
-    SELECT DISTINCT slot_start_date_time
+    SELECT DISTINCT slot, slot_start_date_time
     FROM default.canonical_beacon_block
     WHERE meta_network_name = '{network}'
       AND {date_filter}
 ) s
 LEFT JOIN (
     SELECT
-        slot_start_date_time,
+        slot,
         COUNT(*) AS blob_count
     FROM default.canonical_beacon_blob_sidecar
     WHERE meta_network_name = '{network}'
       AND {date_filter}
-    GROUP BY slot_start_date_time
-) b ON s.slot_start_date_time = b.slot_start_date_time
-ORDER BY s.slot_start_date_time ASC
+    GROUP BY slot
+) b ON s.slot = b.slot
+ORDER BY s.slot ASC
 """
 
     df = client.query_df(query)
@@ -116,8 +117,9 @@ blocks_with_blobs_per_epoch AS (
     GROUP BY epoch
 )
 SELECT
+    a.epoch,
     a.epoch_start_date_time AS time,
-    concat(lpad(toString(a.blob_count), 2, '0'), ' blobs') AS series,
+    a.blob_count,
     CASE
         WHEN a.blob_count = 0 THEN
             toInt64(COALESCE(blk.total_blocks, toUInt64(0))) - toInt64(COALESCE(wb.blocks_with_blobs, toUInt64(0)))
@@ -131,7 +133,7 @@ GLOBAL LEFT JOIN blocks_per_epoch blk
     ON a.epoch = blk.epoch
 GLOBAL LEFT JOIN blocks_with_blobs_per_epoch wb
     ON a.epoch = wb.epoch
-ORDER BY a.blob_count ASC, a.epoch_start_date_time ASC
+ORDER BY a.epoch ASC, a.blob_count ASC
 """
 
     df = client.query_df(query)
@@ -162,6 +164,7 @@ WITH blob_counts_per_slot AS (
 ),
 blocks AS (
     SELECT
+        epoch,
         slot_start_date_time,
         epoch_start_date_time
     FROM canonical_beacon_block
@@ -170,18 +173,20 @@ blocks AS (
 ),
 blocks_with_blob_count AS (
     SELECT
+        b.epoch,
         b.epoch_start_date_time as time,
         COALESCE(bc.blob_count, toUInt64(0)) as blob_count
     FROM blocks b
     GLOBAL LEFT JOIN blob_counts_per_slot bc ON b.slot_start_date_time = bc.slot_start_date_time
 )
 SELECT
+    epoch,
     time,
     blob_count,
     COUNT(*) as count
 FROM blocks_with_blob_count
-GROUP BY time, blob_count
-ORDER BY time ASC, blob_count ASC
+GROUP BY epoch, time, blob_count
+ORDER BY epoch ASC, blob_count ASC
 """
 
     df = client.query_df(query)
@@ -232,11 +237,13 @@ blocks_with_blob_count AS (
         ON b.slot = bc.slot AND b.epoch = bc.epoch
 )
 SELECT
+    slot,
+    epoch,
     epoch_start_date_time as time,
     slot_in_epoch,
     blob_count
 FROM blocks_with_blob_count
-ORDER BY time ASC, slot_in_epoch ASC
+ORDER BY epoch ASC, slot_in_epoch ASC
 """
 
     df = client.query_df(query)
