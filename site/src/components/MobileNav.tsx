@@ -94,9 +94,9 @@ export function MobileNav({ headings, notebooks, latestDate, historicalDates, cu
               <span className="sr-only">Table of contents</span>
             </SheetTrigger>
             {/* TOC Sheet - Using a custom approach to match the "floating bubble" look if possible, or just standard sheet */}
-            <SheetContent side="right" className="border-border w-80 max-w-[calc(100vw-2rem)] border p-0 sm:max-w-xs">
+            <SheetContent side="right" className="shadow-2xl w-80 max-w-[calc(100vw-2rem)] border-none p-0 sm:max-w-xs">
               <div className="flex h-full flex-col">
-                <div className="border-border bg-background/50 flex shrink-0 items-center justify-between border-b p-3 backdrop-blur-sm">
+                <div className="flex shrink-0 items-center justify-between p-3">
                   <div className="text-muted-foreground flex items-center gap-1.5">
                     <List size={12} />
                     <span className="text-[0.625rem] font-semibold tracking-wide uppercase">On this page</span>
