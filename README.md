@@ -53,7 +53,12 @@ notebooks/
 └── data/                  # Parquet cache + manifest.json (gitignored)
 site/                      # Astro static site
 ├── rendered/              # Pre-rendered HTML + manifest.json (gitignored)
-└── src/                   # Pages, components, styles
+└── src/
+    ├── layouts/           # BaseLayout, NotebookLayout
+    ├── pages/             # index, [date]/[notebook] routes
+    ├── components/        # Sidebar, DateNav, NotebookEmbed, etc.
+    ├── lib/               # SiteData (data access), utils
+    └── styles/            # global.css, notebook.css
 ```
 
 ### Data Flow
