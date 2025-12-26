@@ -58,11 +58,11 @@ queries:
     description: Blob count per slot within epoch
     output_file: slot_in_epoch.parquet
 
-  proposer_blobs:
+  blob_flow:
     module: queries.blob_flow
-    function: fetch_proposer_blobs
+    function: fetch_blob_flow
     description: Proposer blobs with MEV relay data
-    output_file: proposer_blobs.parquet
+    output_file: blob_flow.parquet
 
   col_first_seen:
     module: queries.column_propagation
@@ -98,7 +98,7 @@ notebooks:
     source: notebooks/02-blob-flow.ipynb
     schedule: daily
     queries:
-      - proposer_blobs
+      - blob_flow
     parameters:
       - name: target_date
         type: date

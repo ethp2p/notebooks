@@ -10,7 +10,7 @@ from queries.blob_inclusion import (
     fetch_blob_popularity,
     fetch_slot_in_epoch,
 )
-from queries.blob_flow import fetch_proposer_blobs
+from queries.blob_flow import fetch_blob_flow
 from queries.column_propagation import fetch_col_first_seen, NUM_COLUMNS
 
 __all__ = [
@@ -20,7 +20,7 @@ __all__ = [
     "fetch_blob_popularity",
     "fetch_slot_in_epoch",
     # Blob flow
-    "fetch_proposer_blobs",
+    "fetch_blob_flow",
     # Column propagation
     "fetch_col_first_seen",
     "NUM_COLUMNS",

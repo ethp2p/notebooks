@@ -1,7 +1,7 @@
 """
 Fetch functions for blob inclusion analysis.
 
-Each function executes SQL and writes directly to Parquet.
+Each function executes SQL and returns the DataFrame and query string.
 """
 
 from pathlib import Path
@@ -15,12 +15,11 @@ def _get_date_filter(target_date: str, column: str = "slot_start_date_time") -> 
 def fetch_blobs_per_slot(
     client,
     target_date: str,
-    output_path: Path,
     network: str = "mainnet",
-) -> int:
-    """Fetch blobs per slot data and write to Parquet.
+) -> tuple:
+    """Fetch blobs per slot data.
 
-    Returns row count.
+    Returns (df, query).
     """
     date_filter = _get_date_filter(target_date)
 
@@ -47,20 +46,17 @@ ORDER BY s.slot_start_date_time ASC
 """
 
     df = client.query_df(query)
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    df.to_parquet(output_path, index=False)
-    return len(df)
+    return df, query
 
 
 def fetch_blocks_blob_epoch(
     client,
     target_date: str,
-    output_path: Path,
     network: str = "mainnet",
-) -> int:
-    """Fetch block counts by blob count per epoch and write to Parquet.
+) -> tuple:
+    """Fetch block counts by blob count per epoch.
 
-    Returns row count.
+    Returns (df, query).
     """
     date_filter = _get_date_filter(target_date)
 
@@ -139,20 +135,17 @@ ORDER BY a.blob_count ASC, a.epoch_start_date_time ASC
 """
 
     df = client.query_df(query)
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    df.to_parquet(output_path, index=False)
-    return len(df)
+    return df, query
 
 
 def fetch_blob_popularity(
     client,
     target_date: str,
-    output_path: Path,
     network: str = "mainnet",
-) -> int:
-    """Fetch blob count popularity per epoch and write to Parquet.
+) -> tuple:
+    """Fetch blob count popularity per epoch.
 
-    Returns row count.
+    Returns (df, query).
     """
     date_filter = _get_date_filter(target_date)
 
@@ -192,20 +185,17 @@ ORDER BY time ASC, blob_count ASC
 """
 
     df = client.query_df(query)
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    df.to_parquet(output_path, index=False)
-    return len(df)
+    return df, query
 
 
 def fetch_slot_in_epoch(
     client,
     target_date: str,
-    output_path: Path,
     network: str = "mainnet",
-) -> int:
-    """Fetch blob count per slot within epoch and write to Parquet.
+) -> tuple:
+    """Fetch blob count per slot within epoch.
 
-    Returns row count.
+    Returns (df, query).
     """
     date_filter = _get_date_filter(target_date)
 
@@ -250,6 +240,4 @@ ORDER BY time ASC, slot_in_epoch ASC
 """
 
     df = client.query_df(query)
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    df.to_parquet(output_path, index=False)
-    return len(df)
+    return df, query

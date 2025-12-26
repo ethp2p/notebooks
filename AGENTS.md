@@ -66,6 +66,21 @@ site/                  # Astro static site
 
 **Data flow:** ClickHouse -> Parquet (with hash) -> papermill/nbconvert -> HTML -> Astro build
 
+## Rendering Pipeline: Papermill + nbconvert
+
+The project uses both Papermill and nbconvert to handle distinct steps:
+
+1.  **Papermill (Execution)**: Handles parameterized execution of notebooks.
+    *   **Isolation**: Treats source notebooks as read-only templates, preventing race conditions during parallel renders.
+    *   **Parameter Injection**: Automatically injects `target_date` into the `parameters` cell.
+    *   **Metadata**: Adds `injected-parameters` tags for traceability and debugging.
+2.  **nbconvert (Formatting)**: Converts executed notebooks to clean, production-ready HTML.
+    *   **Custom Templates**: Uses `notebooks/templates/minimal` to remove UI clutter (like input/output prompts).
+    *   **Plotly Support**: Works with `pio.renderers.default = "notebook"` (auto-injected during rendering) to ensure charts are embedded correctly in the static output.
+
+Using Papermill ensures that developers can keep `target_date = None` in their source notebooks for local experimentation while the production pipeline overrides it safely for any historical date.
+
+
 ## Pipeline Configuration
 
 `pipeline.yaml` is the central configuration file:

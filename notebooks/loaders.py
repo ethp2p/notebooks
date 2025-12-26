@@ -68,3 +68,37 @@ def load_parquet(name: str, target_date: str | None = None) -> pd.DataFrame:
         raise FileNotFoundError(f"Data not found: {parquet_path}")
 
     return pd.read_parquet(parquet_path)
+
+
+def get_parquet_sql(name: str, target_date: str | None = None) -> str | None:
+    """Extract SQL metadata from a parquet file."""
+    import pyarrow.parquet as pq
+
+    data_root = _get_data_root()
+    if target_date is None:
+        target_date = get_target_date()
+
+    parquet_path = data_root / target_date / f"{name}.parquet"
+    if not parquet_path.exists():
+        return None
+
+    meta = pq.read_metadata(parquet_path)
+    if meta.metadata and b"sql" in meta.metadata:
+        return meta.metadata[b"sql"].decode("utf-8")
+    return None
+
+
+def display_sql(name: str, target_date: str | None = None):
+    """Display SQL for a dataset.
+    
+    The rendering (e.g. folding) is handled by the nbconvert template
+    based on the 'sql-fold' cell tag.
+    """
+    from IPython.display import display, Code
+
+    sql = get_parquet_sql(name, target_date)
+    if not sql:
+        return
+
+    display(Code(sql, language="sql"))
+

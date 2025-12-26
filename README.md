@@ -40,7 +40,7 @@ just dev
 pipeline.yaml              # Central config: dates, queries, notebooks
 queries/                   # ClickHouse query modules -> Parquet
 ├── blob_inclusion.py      # fetch_blobs_per_slot(), fetch_blocks_blob_epoch(), ...
-├── blob_flow.py           # fetch_proposer_blobs()
+├── blob_flow.py           # fetch_blob_flow()
 └── column_propagation.py  # fetch_col_first_seen()
 scripts/
 ├── pipeline.py            # Coordinator: config loading, hash computation, staleness

@@ -28,16 +28,9 @@ install:
 # Fetch data: all (default) or specific date (YYYY-MM-DD)
 # Fetch data: all (default) or specific date (YYYY-MM-DD). Support force="true" to force re-fetch.
 fetch target="all" force="false":
-    #!/usr/bin/env bash
-    FORCE_ARG=""
-    if [ "{{force}}" = "true" ]; then
-        FORCE_ARG="--force"
-    fi
-    if [ "{{target}}" = "all" ]; then
-        uv run python scripts/fetch_data.py --output-dir notebooks/data --sync $FORCE_ARG
-    else
-        uv run python scripts/fetch_data.py --output-dir notebooks/data --date {{target}} $FORCE_ARG
-    fi
+    uv run python scripts/fetch_data.py --output-dir notebooks/data \
+        {{ if target == "all" { "--sync" } else { "--date " + target } }} \
+        {{ if force == "true" { "--force" } else { "" } }}
 
 # Check for stale data without fetching
 check-stale:
@@ -57,18 +50,11 @@ show-hashes:
 
 # Render notebooks: all (default), "latest", or specific date (YYYY-MM-DD). Support force="true" to force re-render.
 render target="all" force="false":
-    #!/usr/bin/env bash
-    FORCE_ARG=""
-    if [ "{{force}}" = "true" ]; then
-        FORCE_ARG="--force"
-    fi
-    if [ "{{target}}" = "all" ]; then
-        uv run python scripts/render_notebooks.py --output-dir site/rendered $FORCE_ARG
-    elif [ "{{target}}" = "latest" ]; then
-        uv run python scripts/render_notebooks.py --output-dir site/rendered --latest-only $FORCE_ARG
-    else
-        uv run python scripts/render_notebooks.py --output-dir site/rendered --date {{target}} $FORCE_ARG
-    fi
+    uv run python scripts/render_notebooks.py --output-dir site/rendered \
+        {{ if target == "all" { "" } \
+           else if target == "latest" { "--latest-only" } \
+           else { "--date " + target } }} \
+        {{ if force == "true" { "--force" } else { "" } }}
 
 # ============================================
 # Build & Deploy

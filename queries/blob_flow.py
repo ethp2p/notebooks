@@ -1,7 +1,7 @@
 """
 Fetch functions for blob flow analysis.
 
-Each function executes SQL and writes directly to Parquet.
+Each function executes SQL and returns the DataFrame and query string.
 """
 
 from pathlib import Path
@@ -12,15 +12,14 @@ def _get_date_filter(target_date: str, column: str = "slot_start_date_time") -> 
     return f"{column} >= '{target_date}' AND {column} < '{target_date}'::date + INTERVAL 1 DAY"
 
 
-def fetch_proposer_blobs(
+def fetch_blob_flow(
     client,
     target_date: str,
-    output_path: Path,
     network: str = "mainnet",
-) -> int:
-    """Fetch proposer blobs with MEV relay data and write to Parquet.
+) -> tuple:
+    """Fetch proposer blobs with MEV relay data.
 
-    Returns row count.
+    Returns (df, query).
     """
     date_filter = _get_date_filter(target_date)
 
@@ -80,6 +79,4 @@ ORDER BY b.slot DESC
 """
 
     df = client.query_df(query)
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    df.to_parquet(output_path, index=False)
-    return len(df)
+    return df, query

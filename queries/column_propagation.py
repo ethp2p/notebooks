@@ -1,7 +1,7 @@
 """
 Fetch functions for column propagation analysis.
 
-Each function executes SQL and writes directly to Parquet.
+Each function executes SQL and returns the DataFrame and query string.
 """
 
 from pathlib import Path
@@ -18,13 +18,12 @@ def _get_date_filter(target_date: str, column: str = "event_date_time") -> str:
 def fetch_col_first_seen(
     client,
     target_date: str,
-    output_path: Path,
     network: str = "mainnet",
     num_columns: int = NUM_COLUMNS,
-) -> int:
-    """Fetch column first seen timing data and write to Parquet.
+) -> tuple:
+    """Fetch column first seen timing data.
 
-    Returns row count.
+    Returns (df, query).
     """
     event_date_filter = _get_date_filter(target_date, "event_date_time")
     slot_date_filter = _get_date_filter(target_date, "slot_start_date_time")
@@ -46,6 +45,4 @@ ORDER BY time
 """
 
     df = client.query_df(query)
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    df.to_parquet(output_path, index=False)
-    return len(df)
+    return df, query

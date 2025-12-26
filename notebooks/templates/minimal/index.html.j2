@@ -37,14 +37,25 @@
 {%- set is_hidden = 'parameters' in cell_tags or 'injected-parameters' in cell_tags or 'setup' in cell_tags -%}
 {%- if not is_hidden %}
 <div {{ cell_id_anchor(cell) }} class="cell code_cell{{ celltags(cell) }}">
+{%- if 'hide-input' not in cell_tags %}
 <details class="code-fold">
 <summary>Show code</summary>
 {{ self.input_group() }}
 </details>
+{%- endif %}
+
+{%- if 'sql-fold' in cell_tags %}
+<details class="sql-fold">
+<summary>View query</summary>
 {{ self.output_group() }}
+</details>
+{%- else %}
+{{ self.output_group() }}
+{%- endif %}
 </div>
 {%- endif %}
 {%- endblock codecell %}
+
 
 {# Simplified input - no prompts #}
 {% block input_group -%}

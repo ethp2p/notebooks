@@ -20,6 +20,9 @@ import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
+import pyarrow as pa
+import pyarrow.parquet as pq
+
 import clickhouse_connect
 from dotenv import load_dotenv
 
@@ -61,12 +64,21 @@ def fetch_query(
     output_path = date_dir / query_config["output_file"]
 
     fetcher = get_fetcher(query_config)
-    row_count = fetcher(client, target_date, output_path, network)
+    df, query_string = fetcher(client, target_date, network=network)
+
+    # Convert to table and add SQL metadata
+    # preserve_index=False matches the previous df.to_parquet(index=False) behavior
+    table = pa.Table.from_pandas(df, preserve_index=False)
+    existing_metadata = table.schema.metadata or {}
+    new_metadata = {**existing_metadata, b"sql": query_string.encode("utf-8")}
+    table = table.replace_schema_metadata(new_metadata)
+
+    pq.write_table(table, output_path)
 
     return {
         "fetched_at": datetime.now(timezone.utc).isoformat(),
         "query_hash": query_hash,
-        "row_count": row_count,
+        "row_count": len(df),
         "file_size_bytes": output_path.stat().st_size if output_path.exists() else 0,
     }
 
