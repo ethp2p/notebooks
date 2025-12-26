@@ -1,7 +1,7 @@
 ---
 import fs from 'node:fs';
 import path from 'node:path';
-import CodeToggle from './CodeToggle.astro';
+import { CodeToggle } from './CodeToggle';
 import Icon from './Icon.astro';
 import '../styles/notebook.css';
 
@@ -56,10 +56,10 @@ if (fs.existsSync(fullPath)) {
   ) : (
     <>
       <article class="notebook-content">
-        <header class="notebook-header">
+        <header class="notebook-header mx-auto max-w-4xl">
           <h1 class="notebook-title">{title}</h1>
           <div class="notebook-controls">
-            <CodeToggle />
+            <CodeToggle client:idle />
           </div>
         </header>
         <Fragment set:html={headContent} />
