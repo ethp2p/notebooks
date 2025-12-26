@@ -3,6 +3,7 @@ import '@/styles/global.css';
 import Sidebar from '@/components/Sidebar.astro';
 import TableOfContents from '@/components/TableOfContents.astro';
 import MobileNav from '@/components/MobileNav.astro';
+import { SiteData } from '@/lib/SiteData';
 
 import type { MarkdownHeading } from 'astro';
 
@@ -13,6 +14,8 @@ interface Props {
 }
 
 const { title, description = 'Ethereum P2P Observatory', headings = [] } = Astro.props;
+
+const siteData = SiteData.load();
 ---
 
 <!doctype html>
@@ -27,7 +30,7 @@ const { title, description = 'Ethereum P2P Observatory', headings = [] } = Astro
   </head>
   <body class="min-h-screen">
     <!-- Mobile navigation -->
-    <MobileNav headings={headings} />
+    <MobileNav headings={headings} siteData={siteData} />
 
     <div class="layout-container flex min-h-screen">
       <!-- Left Sidebar (desktop only) -->
@@ -50,7 +53,7 @@ const { title, description = 'Ethereum P2P Observatory', headings = [] } = Astro
               <span class="text-muted-foreground font-serif text-sm -tracking-tight">Observatory</span>
             </span>
           </a>
-          <Sidebar />
+          <Sidebar siteData={siteData} />
         </div>
       </aside>
 
