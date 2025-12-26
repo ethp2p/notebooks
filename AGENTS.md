@@ -127,6 +127,8 @@ The pipeline tracks query source code hashes to detect when queries change:
 - **Centralized config** - All pipeline config in `pipeline.yaml`
 - **Explicit skip logging** - Data pipeline should explicitly log `SKIP` vs `Fetching` for transparency.
 - **Rebasing preference** - Prefer rebasing work on `main` before PR creation for clean history.
+- **Git style** - Use [conventional commits](https://www.conventionalcommits.org/) for all changes.
+
 
 ## Import Strategy
 
