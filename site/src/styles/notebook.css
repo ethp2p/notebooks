@@ -54,6 +54,8 @@
   margin: 3.5rem 0 1.5rem 0;
   letter-spacing: -0.02em;
   line-height: 1.25;
+  scroll-margin-top: 56px;
+  /* Account for sticky DateNav */
 }
 
 .notebook-content h2::before {
@@ -61,15 +63,13 @@
   content: '';
 }
 
-.notebook-content h2:first-of-type {
-  @apply mt-0;
-}
-
 .notebook-content h3 {
   @apply text-foreground font-serif text-xl font-normal;
   margin: 2.5rem 0 1rem 0;
   letter-spacing: -0.01em;
   line-height: 1.35;
+  scroll-margin-top: 56px;
+  /* Account for sticky DateNav */
 }
 
 .notebook-content h4 {
@@ -127,6 +127,24 @@
 
 .notebook-content li::marker {
   @apply text-primary;
+}
+
+/* Cell layouts - default to legible width for text/code, but allow expansion for diagrams */
+.notebook-content .cell {
+  @apply mx-auto max-w-4xl;
+}
+
+/* Exempt cells containing data visualizations */
+.notebook-content .cell:has(.js-plotly-plot),
+.notebook-content .cell:has(.plotly-graph-div),
+.notebook-content .cell:has(.vega-embed),
+.notebook-content .cell:has(.sankey) {
+  @apply max-w-full;
+}
+
+/* Within diagram cells, keep prose/folds narrow while letting only the diagrams expand */
+.notebook-content .cell:is(:has(.js-plotly-plot), :has(.plotly-graph-div), :has(.vega-embed), :has(.sankey))>*:not(.output_wrapper, .cell-output-display) {
+  @apply mx-auto max-w-4xl;
 }
 
 /* Code blocks - nbconvert uses .highlight for syntax highlighting */
@@ -313,7 +331,7 @@
 }
 
 .notebook-content .vega-embed {
-  @apply my-6 w-full;
+  @apply my-6 mx-auto w-fit block;
 }
 
 /* nbconvert cell structure */
