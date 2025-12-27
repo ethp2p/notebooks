@@ -27,6 +27,7 @@ def fetch_blob_flow(
 WITH blocks AS (
     SELECT
         slot,
+        epoch,
         slot_start_date_time,
         proposer_index,
         block_root,
@@ -35,7 +36,6 @@ WITH blocks AS (
     WHERE
         meta_network_name = '{network}'
       AND {date_filter}
-    GROUP BY slot, slot_start_date_time, proposer_index, block_root, meta_network_name
 ),
 blobs AS (
     SELECT
@@ -51,8 +51,9 @@ blobs AS (
 mev AS (
     SELECT
         slot,
-        any(builder_pubkey) AS builder_pubkey,
-        any(relay_name) AS relay_name
+        -- Use max() for deterministic selection when multiple relays deliver same slot
+        max(builder_pubkey) AS builder_pubkey,
+        max(relay_name) AS relay_name
     FROM mev_relay_proposer_payload_delivered
     WHERE
         meta_network_name = '{network}'
@@ -61,6 +62,7 @@ mev AS (
 )
 SELECT
     b.slot,
+    b.epoch,
     b.slot_start_date_time,
     b.proposer_index,
     e.entity AS proposer_entity,

@@ -23,4 +23,5 @@ dev = [
     "ipykernel>=7.1.0",
     "jupytext>=1.18.1",
     "jupyterlab>=4.5.0",
+    "nbstripout>=0.8.0",
 ]
