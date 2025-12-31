@@ -42,3 +42,6 @@ notebooks/data/
 .DS_Store
 
 node_modules/
+
+# Continuous Claude cache (local only)
+.claude/cache/
