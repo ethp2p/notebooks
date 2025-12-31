@@ -34,14 +34,15 @@ def fetch_col_first_seen(
 
     query = f"""
 SELECT
+    slot,
     slot_start_date_time AS time,
     {col_selects}
 FROM libp2p_gossipsub_data_column_sidecar
 WHERE {event_date_filter}
   AND {slot_date_filter}
   AND meta_network_name = '{network}'
-GROUP BY slot_start_date_time
-ORDER BY time
+GROUP BY slot, slot_start_date_time
+ORDER BY slot
 """
 
     df = client.query_df(query)

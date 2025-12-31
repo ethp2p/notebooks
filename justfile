@@ -20,6 +20,7 @@ preview:
 install:
     uv sync
     cd site && pnpm install
+    uv run nbstripout --install --attributes .gitattributes
 
 # ============================================
 # Data Pipeline
