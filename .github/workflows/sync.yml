@@ -204,6 +204,24 @@ jobs:
             --dist site/dist \
             --manifest "${{ steps.manifest.outputs.name }}"
 
+      # ============================================
+      # Deploy Worker (if changed)
+      # ============================================
+      - name: Check if worker changed
+        id: worker-check
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            worker:
+              - 'worker/**'
+
+      - name: Deploy worker
+        if: (steps.worker-check.outputs.worker == 'true' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.WORKERS_API_TOKEN }}
+          workingDirectory: worker
+
       - name: Comment preview URL on PR
         if: github.event_name == 'pull_request'
         uses: actions/github-script@v7
