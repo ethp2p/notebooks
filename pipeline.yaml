@@ -70,6 +70,24 @@ queries:
     description: Column first seen timing across 128 subnets
     output_file: col_first_seen.parquet
 
+  tx_per_slot:
+    module: queries.mempool_visibility
+    function: fetch_tx_per_slot
+    description: Transaction counts per slot per type
+    output_file: tx_per_slot.parquet
+
+  mempool_coverage:
+    module: queries.mempool_visibility
+    function: fetch_mempool_coverage
+    description: Hourly mempool coverage and wait time stats
+    output_file: mempool_coverage.parquet
+
+  sentry_coverage:
+    module: queries.mempool_visibility
+    function: fetch_sentry_coverage
+    description: Per-sentry mempool coverage rates
+    output_file: sentry_coverage.parquet
+
 # ============================================
 # Notebook Registry
 # ============================================
@@ -118,6 +136,22 @@ notebooks:
         type: date
         required: true
     order: 3
+
+  - id: mempool-visibility
+    title: Mempool Visibility
+    description: Transaction visibility in the public mempool before block inclusion
+    icon: Eye
+    source: notebooks/04-mempool-visibility.ipynb
+    schedule: daily
+    queries:
+      - tx_per_slot
+      - mempool_coverage
+      - sentry_coverage
+    parameters:
+      - name: target_date
+        type: date
+        required: true
+    order: 4
 
 # Schedule options: hourly, daily, weekly, manual
 # - hourly: Runs every hour, accumulating data throughout the day

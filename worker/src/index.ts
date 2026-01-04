@@ -233,10 +233,11 @@ async function serveBlob(
   );
 
   // Cache control:
-  // - HTML files: Always revalidate to ensure manifest updates are seen immediately
+  // - HTML files: Browser revalidates with CDN, CDN caches 60s then revalidates with Worker
   // - Other files (assets): Immutable caching since their URLs are content-addressed
   if (contentType.includes("text/html")) {
-    headers.set("Cache-Control", "public, max-age=0, must-revalidate");
+    headers.set("Cache-Control", "max-age=0, must-revalidate");
+    headers.set("CDN-Cache-Control", "max-age=60");
   } else {
     headers.set("Cache-Control", "public, max-age=31536000, immutable");
   }
