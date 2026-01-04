@@ -72,13 +72,14 @@ const dayOfWeek = dateObj.toLocaleDateString('en-US', { weekday: 'short', timeZo
 const monthShort = dateObj.toLocaleDateString('en-US', { month: 'short', timeZone: 'UTC' });
 const dayNum = dateObj.getDate();
 const yearNum = dateObj.getFullYear();
+const base = import.meta.env.BASE_URL;
 ---
 
 <BaseLayout title={`${formattedDate}`}>
   <div class="date-page">
     <!-- Breadcrumb -->
     <nav class="breadcrumb">
-      <a href="/" class="breadcrumb-link">
+      <a href={base} class="breadcrumb-link">
         <Icon name="Home" size={14} />
         <span>Home</span>
       </a>
@@ -142,7 +143,7 @@ const yearNum = dateObj.getFullYear();
 
     <!-- Back link -->
     <div class="back-section">
-      <a href="/" class="back-link">
+      <a href={base} class="back-link">
         <Icon name="ArrowLeft" size={16} />
         <span>Back to Home</span>
       </a>

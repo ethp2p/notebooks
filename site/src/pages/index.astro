@@ -7,6 +7,7 @@ import { formatDisplayDate } from '@/lib/utils';
 // Load data
 const notebooks = getNotebooks().sort((a, b) => a.order - b.order);
 const latestDate = getLatestDate() || 'No data yet';
+const base = import.meta.env.BASE_URL;
 ---
 
 <BaseLayout title="Home">
@@ -36,7 +37,7 @@ const latestDate = getLatestDate() || 'No data yet';
         {
           notebooks.map((nb, index) => (
             <a
-              href={`/latest/${nb.id}`}
+              href={`${base}latest/${nb.id}`}
               class="group bg-card border-border hover:border-primary flex items-center gap-4 border p-5 no-underline transition-all duration-200 hover:translate-x-1 hover:shadow-[-4px_0_0_var(--primary)] dark:hover:bg-[oklch(0.16_0.02_260)] dark:hover:shadow-[-4px_0_0_var(--primary),var(--glow)]"
               style={`--index: ${index}`}
             >

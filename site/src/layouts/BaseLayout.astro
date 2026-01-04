@@ -16,6 +16,7 @@ interface Props {
 const { title, description = 'Ethereum P2P Observatory', headings = [] } = Astro.props;
 
 const siteData = SiteData.load();
+const base = import.meta.env.BASE_URL;
 ---
 
 <!doctype html>
@@ -25,7 +26,7 @@ const siteData = SiteData.load();
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content={description} />
     <meta name="theme-color" content="#f8f7fc" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/svg+xml" href={`${base}favicon.svg`} />
     <title>{title} | Eth P2P Observatory</title>
   </head>
   <body class="min-h-screen">
@@ -39,7 +40,7 @@ const siteData = SiteData.load();
         style="isolation: isolate;"
       >
         <div class="relative z-[1] flex-1 p-5">
-          <a href="/" class="site-title group hover:bg-muted -m-3 mb-7 flex items-center gap-3 p-3 no-underline transition-all duration-200">
+          <a href={base} class="site-title group hover:bg-muted -m-3 mb-7 flex items-center gap-3 p-3 no-underline transition-all duration-200">
             <span class="site-logo bg-primary text-primary-foreground flex h-9 w-9 items-center justify-center transition-all duration-300">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" class="logo-icon transition-transform duration-300">
                 <!-- Ethereum-inspired diamond -->

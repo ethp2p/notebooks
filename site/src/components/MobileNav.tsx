@@ -52,7 +52,7 @@ export function MobileNav({ headings, notebooks, latestDate, historicalDates, cu
           <SheetContent side="left" className="border-sidebar-border bg-sidebar w-72 max-w-[85vw] gap-0 border-r p-0">
             {/* Header */}
             <div className="border-sidebar-border flex items-center justify-between border-b p-4">
-              <a href="/" className="flex items-center gap-2.5 no-underline">
+              <a href={base} className="flex items-center gap-2.5 no-underline">
                 <span className="bg-primary text-primary-foreground flex h-8 w-8 items-center justify-center">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
                     <path d="M12 1L3 12l9 5 9-5L12 1z" stroke="currentColor" strokeWidth="1.5" fill="none" />
