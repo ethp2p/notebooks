@@ -25,7 +25,7 @@ def fetch_blobs_per_slot(
 
     query = f"""
 SELECT
-    s.slot,
+    s.slot AS slot,
     s.slot_start_date_time AS time,
     COALESCE(b.blob_count, 0) AS blob_count
 FROM (
@@ -117,9 +117,9 @@ blocks_with_blobs_per_epoch AS (
     GROUP BY epoch
 )
 SELECT
-    a.epoch,
+    a.epoch AS epoch,
     a.epoch_start_date_time AS time,
-    a.blob_count,
+    a.blob_count AS blob_count,
     CASE
         WHEN a.blob_count = 0 THEN
             toInt64(COALESCE(blk.total_blocks, toUInt64(0))) - toInt64(COALESCE(wb.blocks_with_blobs, toUInt64(0)))
