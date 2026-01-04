@@ -289,12 +289,15 @@ def main() -> None:
         return
 
     # Create ClickHouse client
+    # Disable session ID to avoid "session is locked" errors when CI runs are cancelled
+    # and restarted - sessions can remain locked server-side for a short period
     client = clickhouse_connect.get_client(
         host=os.environ["CLICKHOUSE_HOST"],
         port=int(os.environ.get("CLICKHOUSE_PORT", 8443)),
         username=os.environ["CLICKHOUSE_USER"],
         password=os.environ["CLICKHOUSE_PASSWORD"],
         secure=True,
+        autogenerate_session_id=False,
     )
 
     output_dir.mkdir(parents=True, exist_ok=True)
