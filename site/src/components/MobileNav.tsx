@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
-import { PanelLeft, List, X } from 'lucide-react';
+import { PanelLeft, List } from 'lucide-react';
 import { SidebarList } from './ui/SidebarList';
 import { cn } from '@/lib/utils';
 

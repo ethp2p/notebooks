@@ -18,6 +18,13 @@ export function toPathDate(isoDate: string): string {
 }
 
 /**
+ * Checks if a string is a valid YYYY-MM-DD date format.
+ */
+function isValidDateString(dateStr: string): boolean {
+  return /^\d{4}-\d{2}-\d{2}$/.test(dateStr);
+}
+
+/**
  * Parses a YYYY-MM-DD string into a Date object.
  * We use the current date as a reference for missing components, though for perfect YYYY-MM-DD parsing it's less critical.
  */
@@ -30,7 +37,7 @@ function parseDate(dateStr: string): Date {
  * Example: "Wed, Nov 15, 2023"
  */
 export function formatDisplayDate(dateStr: string): string {
-  if (!dateStr) return '';
+  if (!dateStr || !isValidDateString(dateStr)) return dateStr || '';
   const date = parseDate(dateStr);
   return format(date, 'EEE, MMM d, yyyy');
 }
@@ -40,7 +47,7 @@ export function formatDisplayDate(dateStr: string): string {
  * Example: "Nov 15"
  */
 export function formatShortDate(dateStr: string): string {
-  if (!dateStr) return '';
+  if (!dateStr || !isValidDateString(dateStr)) return dateStr || '';
   const date = parseDate(dateStr);
   return format(date, 'MMM d');
 }
