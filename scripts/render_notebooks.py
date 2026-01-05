@@ -229,11 +229,12 @@ def render_notebook(
                 except Exception as e:
                     last_error = e
                     error_str = str(e)
-                    # Retry on kernel/ZMQ errors
+                    # Retry on kernel/ZMQ errors (common in parallel execution)
                     if attempt < max_retries - 1 and (
                         "ZMQError" in error_str
                         or "Address already in use" in error_str
                         or "Kernel didn't respond" in error_str
+                        or "Kernel died" in error_str
                     ):
                         # Random backoff to desynchronize parallel retries
                         time.sleep(random.uniform(1, 3))
