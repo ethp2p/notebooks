@@ -88,12 +88,18 @@ queries:
     description: Per-sentry mempool coverage rates
     output_file: sentry_coverage.parquet
 
+  block_production_timeline:
+    module: queries.block_production_timeline
+    function: fetch_block_production_timeline
+    description: End-to-end block production timing from MEV bidding to column arrival
+    output_file: block_production_timeline.parquet
+
 # ============================================
 # Notebook Registry
 # ============================================
 notebooks:
   - id: blob-inclusion
-    title: Blob Inclusion
+    title: Blob inclusion
     description: Analysis of blob inclusion patterns in Ethereum mainnet blocks
     icon: Layers
     source: notebooks/01-blob-inclusion.ipynb
@@ -110,7 +116,7 @@ notebooks:
     order: 1
 
   - id: blob-flow
-    title: Blob Flow
+    title: Blob flow
     description: Flow diagrams tracing blob packing per entities, builders, and relays
     icon: Activity
     source: notebooks/02-blob-flow.ipynb
@@ -124,7 +130,7 @@ notebooks:
     order: 2
 
   - id: column-propagation
-    title: Column Propagation
+    title: Column propagation
     description: Column propagation timing across 128 data columns subnets
     icon: Grid3x3
     source: notebooks/03-column-propagation.ipynb
@@ -138,7 +144,7 @@ notebooks:
     order: 3
 
   - id: mempool-visibility
-    title: Mempool Visibility
+    title: Mempool visibility
     description: Transaction visibility in the public mempool before block inclusion
     icon: Eye
     source: notebooks/04-mempool-visibility.ipynb
@@ -152,6 +158,48 @@ notebooks:
         type: date
         required: true
     order: 4
+
+  - id: mev-pipeline
+    title: MEV pipeline
+    description: MEV bidding timing, bid values, and relay performance
+    icon: Gavel
+    source: notebooks/05-mev-pipeline.ipynb
+    schedule: daily
+    queries:
+      - block_production_timeline
+    parameters:
+      - name: target_date
+        type: date
+        required: true
+    order: 5
+
+  - id: block-column-timing
+    title: Block/column timing
+    description: Timing from block arrival to column propagation by blob count
+    icon: Timer
+    source: notebooks/06-block-column-timing.ipynb
+    schedule: daily
+    queries:
+      - block_production_timeline
+    parameters:
+      - name: target_date
+        type: date
+        required: true
+    order: 6
+
+  - id: propagation-anomalies
+    title: Propagation anomalies
+    description: Blocks that propagated slower than expected given their blob count
+    icon: AlertTriangle
+    source: notebooks/07-propagation-anomalies.ipynb
+    schedule: daily
+    queries:
+      - block_production_timeline
+    parameters:
+      - name: target_date
+        type: date
+        required: true
+    order: 7
 
 # Schedule options: hourly, daily, weekly, manual
 # - hourly: Runs every hour, accumulating data throughout the day
