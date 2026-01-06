@@ -155,6 +155,8 @@ Two React components wrap Lucide icons:
 
 **Important**: Always use `client:load` directive for these React components in Astro files.
 
+**Adding new icons**: When using a new Lucide icon name in `pipeline.yaml`, you must also import and register it in `site/src/components/Icon.astro`.
+
 ## Adding a New Notebook
 
 1. Create query function in `queries/new_query.py`:
@@ -188,6 +190,39 @@ Two React components wrap Lucide icons:
    ```
 
 4. Run `just sync`
+
+## Notebook Visualization
+
+### Plotly color handling
+
+- **Integer columns as continuous color**: Plotly treats `uint64`/`int64` as categorical, creating separate traces. Cast to `float` for continuous colorscales:
+  ```python
+  df["value_f"] = df["value"].astype(float)
+  px.scatter(..., color="value_f", color_continuous_scale="Plasma")
+  ```
+
+- **Colorscale contrast**: Truncate colorscales to avoid light colors (poor contrast on white). Sample 0-85% of Plasma:
+  ```python
+  sample_points = [i / (n - 1) * 0.85 for i in range(n)]
+  colors = px.colors.sample_colorscale("Plasma", sample_points)
+  ```
+
+### Dynamic data ranges
+
+- Never hardcode data ranges (blob counts, etc.) - always derive from actual data:
+  ```python
+  max_value = df["column"].max()
+  bins = [-1, 0] + list(range(bin_size, max_value + bin_size, bin_size))
+  ```
+
+### Chart annotations
+
+- Box plots: Always include legend explanation:
+  > Box: 25th-75th percentile. Line: median. Whiskers: min/max excluding outliers.
+
+### Cell tags
+
+- **SQL cells**: Tag cells containing `display_sql()` with `sql-fold` for collapsible SQL display in rendered output
 
 ## Code Conventions
 

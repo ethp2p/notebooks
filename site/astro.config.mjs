@@ -25,5 +25,8 @@ export default defineConfig({
         '@': path.resolve('./src'),
       },
     },
+    server: {
+      allowedHosts: ['raptor.ocicat-ratio.ts.net'],
+    },
   },
 });

@@ -10,11 +10,11 @@ default:
 
 # Start Astro development server
 dev:
-    cd site && pnpm run dev
+    cd site && pnpm dev
 
 # Preview production build
 preview:
-    cd site && pnpm run preview
+    cd site && pnpm preview
 
 # Install all dependencies
 install:
@@ -63,7 +63,7 @@ render target="all" force="false":
 
 # Build Astro site
 build:
-    cd site && pnpm run build
+    cd site && pnpm build
 
 # Render all + build Astro
 publish: render build
@@ -89,7 +89,7 @@ check-stale-warn:
 
 # Type check the Astro site
 typecheck:
-    cd site && npx tsc --noEmit
+    cd site && pnpm typecheck
 
 # Clean build artifacts
 clean:
