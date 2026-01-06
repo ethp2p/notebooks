@@ -29,7 +29,7 @@ def fetch_col_first_seen(
     slot_date_filter = _get_date_filter(target_date, "slot_start_date_time")
 
     col_selects = ",\n    ".join(
-        [f"minIf(propagation_slot_start_diff, column_index = {i}) AS c{i}" for i in range(num_columns)]
+        [f"minIfOrNull(propagation_slot_start_diff, column_index = {i}) AS c{i}" for i in range(num_columns)]
     )
 
     query = f"""
