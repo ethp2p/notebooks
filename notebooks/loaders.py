@@ -90,7 +90,7 @@ def get_parquet_sql(name: str, target_date: str | None = None) -> str | None:
 
 def display_sql(name: str, target_date: str | None = None):
     """Display SQL for a dataset.
-    
+
     The rendering (e.g. folding) is handled by the nbconvert template
     based on the 'sql-fold' cell tag.
     """

@@ -24,6 +24,22 @@
 {% endblock body_header %}
 
 {% block body_footer %}
+<script>
+// Autoscale all Plotly plots after page loads
+window.addEventListener('load', function() {
+  setTimeout(function() {
+    var plots = document.querySelectorAll('.plotly-graph-div');
+    plots.forEach(function(plot) {
+      if (plot && typeof Plotly !== 'undefined') {
+        Plotly.relayout(plot, {
+          'xaxis.autorange': true,
+          'yaxis.autorange': true
+        });
+      }
+    });
+  }, 100);
+});
+</script>
 </body>
 {% endblock body_footer %}
 

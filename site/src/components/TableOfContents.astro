@@ -14,7 +14,7 @@ const { headings = [] } = Astro.props;
 
 {
   headings.length > 0 && (
-    <nav class="group/nav relative flex flex-col items-end" id="toc-nav">
+    <nav class="group/nav pointer-events-none relative flex flex-col items-end group-hover/toc:pointer-events-auto" id="toc-nav">
       {/* Header - instantly visible on hover */}
       <div class="border-border text-muted-foreground mb-3 flex w-full items-center justify-end gap-1.5 pb-1 opacity-0 group-hover/toc:opacity-100">
         <span class="text-[0.625rem] font-semibold tracking-wide uppercase">On this page</span>

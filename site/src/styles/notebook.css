@@ -97,13 +97,16 @@
 }
 
 /* Lists */
-.notebook-content ul,
+.notebook-content ul {
+  @apply mb-5 pl-7 mt-0 list-disc;
+}
+
 .notebook-content ol {
-  @apply mb-5 pl-7 mt-0;
+  @apply mb-5 pl-7 mt-0 list-decimal;
 }
 
 .notebook-content li {
-  @apply mb-2 leading-loose;
+  @apply mb-2 leading-relaxed;
 }
 
 .notebook-content li::marker {
