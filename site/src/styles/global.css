@@ -296,11 +296,11 @@ h3,
 h4,
 h5,
 h6 {
-  @apply text-foreground font-serif font-normal -tracking-tight leading-tight;
+  @apply text-foreground font-serif font-normal;
 }
 
 h1 {
-  @apply text-4xl -tracking-wide;
+  @apply text-4xl leading-tight;
 }
 
 h2 {
