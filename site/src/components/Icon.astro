@@ -1,5 +1,5 @@
 ---
-import { Activity, AlertCircle, Calendar, ChevronLeft, ChevronRight, FileText, Grid3x3, Layers, Link, List, PanelLeft } from 'lucide-react';
+import { Activity, AlertCircle, AlertTriangle, Calendar, ChevronLeft, ChevronRight, Eye, FileText, Gavel, Grid3x3, Layers, Link, List, PanelLeft, Timer } from 'lucide-react';
 
 interface Props {
   name: string;
@@ -15,15 +15,19 @@ const { name, size = 24, class: className = '', strokeWidth = 2 } = Astro.props;
 const icons: Record<string, any> = {
   Activity,
   AlertCircle,
+  AlertTriangle,
   Calendar,
   ChevronLeft,
   ChevronRight,
+  Eye,
   FileText,
+  Gavel,
   Grid3x3,
   Layers,
   Link,
   List,
   PanelLeft,
+  Timer,
 };
 
 const IconComponent = icons[name] || FileText;
