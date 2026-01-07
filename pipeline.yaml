@@ -119,6 +119,12 @@ queries:
     description: Block propagation by geographic region from Contributoor nodes
     output_file: block_propagation_by_region_contributoor.parquet
 
+  attestation_buildup:
+    module: queries.attestation_buildup
+    function: fetch_attestation_buildup
+    description: Attestation inclusion CDF per slot with blob correlation
+    output_file: attestation_buildup.parquet
+
 # ============================================
 # Notebook Registry
 # ============================================
@@ -257,6 +263,20 @@ notebooks:
         type: date
         required: true
     order: 9
+
+  - id: attestation-buildup
+    title: Attestation buildup
+    description: Attestation inclusion timing CDF showing propagation dynamics
+    icon: TrendingUp
+    source: notebooks/10-attestation-buildup.ipynb
+    schedule: daily
+    queries:
+      - attestation_buildup
+    parameters:
+      - name: target_date
+        type: date
+        required: true
+    order: 10
 
 # Schedule options: hourly, daily, weekly, manual
 # - hourly: Runs every hour, accumulating data throughout the day
