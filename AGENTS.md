@@ -128,6 +128,7 @@ The pipeline tracks query source code hashes to detect when queries change:
 - **Explicit skip logging** - Data pipeline should explicitly log `SKIP` vs `Fetching` for transparency.
 - **Rebasing preference** - Prefer rebasing work on `main` before PR creation for clean history.
 - **Git style** - Use [conventional commits](https://www.conventionalcommits.org/) for all changes.
+- **Selectable tables** - Use HTML tables (not Plotly go.Table) when text needs to be selectable/copyable.
 
 
 ## Import Strategy
@@ -201,9 +202,9 @@ Two React components wrap Lucide icons:
   px.scatter(..., color="value_f", color_continuous_scale="Plasma")
   ```
 
-- **Colorscale contrast**: Truncate colorscales to avoid light colors (poor contrast on white). Sample 0-85% of Plasma:
+- **Colorscale contrast**: Truncate colorscales to avoid light colors (poor contrast on white). Sample 0-70% of Plasma (more aggressive truncation):
   ```python
-  sample_points = [i / (n - 1) * 0.85 for i in range(n)]
+  sample_points = [i / (n - 1) * 0.70 for i in range(n)]
   colors = px.colors.sample_colorscale("Plasma", sample_points)
   ```
 
@@ -219,6 +220,32 @@ Two React components wrap Lucide icons:
 
 - Box plots: Always include legend explanation:
   > Box: 25th-75th percentile. Line: median. Whiskers: min/max excluding outliers.
+
+### HTML tables for selectable text
+
+When tables need selectable/copyable text (e.g., slot numbers for drill-down), use `IPython.display.HTML` instead of `go.Table`:
+
+```python
+from IPython.display import HTML, display
+
+html = '''
+<style>
+.data-table { border-collapse: collapse; font-family: monospace; }
+.data-table th { background: #2c3e50; color: white; padding: 8px; }
+.data-table td { padding: 6px; border-bottom: 1px solid #eee; }
+.data-table a { color: #1976d2; }
+</style>
+<table class="data-table">...</table>
+'''
+display(HTML(html))
+```
+
+### External links
+
+Link to EthPandaOps Lab for slot drill-down:
+```python
+f'<a href="https://lab.ethpandaops.io/ethereum/slots/{slot}" target="_blank">View</a>'
+```
 
 ### Cell tags
 

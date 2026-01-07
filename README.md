@@ -28,20 +28,26 @@ just dev
 
 ## Notebooks
 
-| Notebook                                                    | Description                                       |
-| ----------------------------------------------------------- | ------------------------------------------------- |
-| [Blob Inclusion](notebooks/01-blob-inclusion.ipynb)         | Blob inclusion patterns per block and epoch       |
-| [Blob Flow](notebooks/02-blob-flow.ipynb)                   | Blob flow across validators, builders, and relays |
-| [Column Propagation](notebooks/03-column-propagation.ipynb) | Column propagation timing across 128 data columns |
+| Notebook                                                              | Description                                            |
+| --------------------------------------------------------------------- | ------------------------------------------------------ |
+| [Blob Inclusion](notebooks/01-blob-inclusion.ipynb)                   | Blob inclusion patterns per block and epoch            |
+| [Blob Flow](notebooks/02-blob-flow.ipynb)                             | Blob flow across validators, builders, and relays      |
+| [Column Propagation](notebooks/03-column-propagation.ipynb)           | Column propagation timing across 128 data columns      |
+| [Mempool Visibility](notebooks/04-mempool-visibility.ipynb)           | Transaction visibility in the public mempool           |
+| [MEV Pipeline](notebooks/05-mev-pipeline.ipynb)                       | MEV bidding timing, relay/builder performance          |
+| [Block/Column Timing](notebooks/06-block-column-timing.ipynb)         | Block arrival to column propagation delay              |
+| [Propagation Anomalies](notebooks/07-propagation-anomalies.ipynb)     | Blocks that propagated slower than expected            |
 
 ## Architecture
 
 ```
 pipeline.yaml              # Central config: dates, queries, notebooks
-queries/                   # ClickHouse query modules -> Parquet
-├── blob_inclusion.py      # fetch_blobs_per_slot(), fetch_blocks_blob_epoch(), ...
-├── blob_flow.py           # fetch_blob_flow()
-└── column_propagation.py  # fetch_col_first_seen()
+queries/                        # ClickHouse query modules -> Parquet
+├── blob_inclusion.py           # fetch_blobs_per_slot(), fetch_blocks_blob_epoch(), ...
+├── blob_flow.py                # fetch_blob_flow()
+├── column_propagation.py       # fetch_col_first_seen()
+├── mempool_visibility.py       # fetch_tx_per_slot(), fetch_mempool_coverage(), ...
+└── block_production_timeline.py # fetch_block_production_timeline()
 scripts/
 ├── pipeline.py            # Coordinator: config loading, hash computation, staleness
 ├── fetch_data.py          # CLI: ClickHouse -> notebooks/data/*.parquet
