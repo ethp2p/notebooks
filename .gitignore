@@ -51,3 +51,7 @@ site/test-results/
 
 # Local notes
 thoughts/
+
+# Auto-generated claude-mem context (subdirectory only)
+**/CLAUDE.md
+!/CLAUDE.md
