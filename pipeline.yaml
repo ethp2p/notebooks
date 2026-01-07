@@ -201,6 +201,20 @@ notebooks:
         required: true
     order: 7
 
+  - id: missed-slots
+    title: Missed slots
+    description: Slots where the assigned proposer failed to produce a block
+    icon: XCircle
+    source: notebooks/08-missed-slots.ipynb
+    schedule: daily
+    queries:
+      - block_production_timeline
+    parameters:
+      - name: target_date
+        type: date
+        required: true
+    order: 8
+
 # Schedule options: hourly, daily, weekly, manual
 # - hourly: Runs every hour, accumulating data throughout the day
 # - daily: Runs once per day at 1am UTC

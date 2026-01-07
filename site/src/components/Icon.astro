@@ -1,5 +1,5 @@
 ---
-import { Activity, AlertCircle, AlertTriangle, Calendar, ChevronLeft, ChevronRight, Eye, FileText, Gavel, Grid3x3, Layers, Link, List, PanelLeft, Timer } from 'lucide-react';
+import { Activity, AlertCircle, AlertTriangle, Calendar, ChevronLeft, ChevronRight, Eye, FileText, Gavel, Grid3x3, Layers, Link, List, PanelLeft, Timer, XCircle } from 'lucide-react';
 
 interface Props {
   name: string;
@@ -28,6 +28,7 @@ const icons: Record<string, any> = {
   List,
   PanelLeft,
   Timer,
+  XCircle,
 };
 
 const IconComponent = icons[name] || FileText;
