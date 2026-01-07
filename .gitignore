@@ -45,3 +45,9 @@ node_modules/
 
 # Continuous Claude cache (local only)
 .claude/cache/
+
+# Playwright test results
+site/test-results/
+
+# Local notes
+thoughts/
