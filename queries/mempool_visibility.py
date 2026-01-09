@@ -113,3 +113,75 @@ ORDER BY txs_seen DESC
 
     df = client.query_df(query)
     return df, query
+
+
+def fetch_mempool_availability(
+    client,
+    target_date: str,
+    network: str = "mainnet",
+) -> tuple:
+    """Fetch per-slot mempool availability with age percentiles.
+
+    Categorizes transactions into:
+    - seen_before_slot: Available in mempool before inclusion (public)
+    - seen_after_slot: First appeared in mempool after block propagation
+    - neither: Truly private (never seen in mempool)
+
+    Returns age/delay percentiles (p50, p75, p80, p85, p90, p95, p99) per slot per tx type.
+
+    Returns (df, query).
+    """
+    date_filter = _get_date_filter(target_date)
+
+    query = f"""
+WITH first_seen AS (
+    SELECT
+        hash,
+        min(event_date_time) AS first_event_time
+    FROM mempool_transaction
+    WHERE meta_network_name = '{network}'
+      AND event_date_time >= '{target_date}'::date - INTERVAL 1 DAY
+      AND event_date_time < '{target_date}'::date + INTERVAL 2 DAY
+    GROUP BY hash
+)
+SELECT
+    c.slot,
+    c.slot_start_date_time,
+    c.type AS tx_type,
+    count() AS total_txs,
+    -- Seen BEFORE slot start (public, available for inclusion)
+    countIf(
+        m.first_event_time IS NOT NULL
+        AND m.first_event_time > '2020-01-01'
+        AND m.first_event_time < c.slot_start_date_time
+    ) AS seen_before_slot,
+    -- Seen AFTER slot start (appeared after block propagation)
+    countIf(
+        m.first_event_time IS NOT NULL
+        AND m.first_event_time > '2020-01-01'
+        AND m.first_event_time >= c.slot_start_date_time
+    ) AS seen_after_slot,
+    -- Age percentiles for transactions seen BEFORE (how long in mempool)
+    quantilesIf(0.50, 0.75, 0.80, 0.85, 0.90, 0.95, 0.99)(
+        dateDiff('millisecond', m.first_event_time, c.slot_start_date_time),
+        m.first_event_time IS NOT NULL
+        AND m.first_event_time > '2020-01-01'
+        AND m.first_event_time < c.slot_start_date_time
+    ) AS age_percentiles_ms,
+    -- Delay percentiles for transactions seen AFTER (propagation delay)
+    quantilesIf(0.50, 0.75, 0.80, 0.85, 0.90, 0.95, 0.99)(
+        dateDiff('millisecond', c.slot_start_date_time, m.first_event_time),
+        m.first_event_time IS NOT NULL
+        AND m.first_event_time > '2020-01-01'
+        AND m.first_event_time >= c.slot_start_date_time
+    ) AS delay_percentiles_ms
+FROM canonical_beacon_block_execution_transaction c
+GLOBAL LEFT JOIN first_seen m ON c.hash = m.hash
+WHERE c.meta_network_name = '{network}'
+  AND {date_filter}
+GROUP BY c.slot, c.slot_start_date_time, c.type
+ORDER BY c.slot, c.type
+"""
+
+    df = client.query_df(query)
+    return df, query

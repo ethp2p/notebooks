@@ -88,6 +88,12 @@ queries:
     description: Per-sentry mempool coverage rates
     output_file: sentry_coverage.parquet
 
+  mempool_availability:
+    module: queries.mempool_visibility
+    function: fetch_mempool_availability
+    description: Per-slot mempool availability with age percentiles
+    output_file: mempool_availability.parquet
+
   block_production_timeline:
     module: queries.block_production_timeline
     function: fetch_block_production_timeline
@@ -153,6 +159,7 @@ notebooks:
       - tx_per_slot
       - mempool_coverage
       - sentry_coverage
+      - mempool_availability
     parameters:
       - name: target_date
         type: date
