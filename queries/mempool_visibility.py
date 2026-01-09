@@ -120,18 +120,62 @@ def fetch_mempool_availability(
     target_date: str,
     network: str = "mainnet",
 ) -> tuple:
-    """Fetch per-slot mempool availability with age percentiles.
+    """Fetch per-slot mempool availability with age percentiles and histograms.
 
     Categorizes transactions into:
     - seen_before_slot: Available in mempool before inclusion (public)
     - seen_after_slot: First appeared in mempool after block propagation
     - neither: Truly private (never seen in mempool)
 
-    Returns age/delay percentiles (p50, p75, p80, p85, p90, p95, p99) per slot per tx type.
+    Returns per slot per tx type:
+    - age/delay percentiles (p50, p75, p80, p85, p90, p95, p99)
+    - age/delay histograms (log2 buckets in seconds)
+
+    Histogram buckets (log2 seconds):
+      0: <0.5s, 1: 0.5-1s, 2: 1-2s, 3: 2-4s, 4: 4-8s, 5: 8-16s,
+      6: 16-32s, 7: 32-64s, 8: 64-128s, 9: 128-256s, 10: 256-512s, 11: >=512s
 
     Returns (df, query).
     """
     date_filter = _get_date_filter(target_date)
+
+    # Define reusable condition fragments
+    seen_before = """
+        m.first_event_time IS NOT NULL
+        AND m.first_event_time > '2020-01-01'
+        AND m.first_event_time < c.slot_start_date_time"""
+    seen_after = """
+        m.first_event_time IS NOT NULL
+        AND m.first_event_time > '2020-01-01'
+        AND m.first_event_time >= c.slot_start_date_time"""
+
+    # Age = time from first seen to slot start (for seen_before)
+    age_ms = "dateDiff('millisecond', m.first_event_time, c.slot_start_date_time)"
+    # Delay = time from slot start to first seen (for seen_after)
+    delay_ms = "dateDiff('millisecond', c.slot_start_date_time, m.first_event_time)"
+
+    # Log2 bucket boundaries in milliseconds (up to 1 hour)
+    # Buckets: <0.5s, 0.5-1s, 1-2s, 2-4s, 4-8s, 8-16s, 16-32s, 32-64s (32s-1m),
+    #          64-128s (1-2m), 128-256s (2-4m), 256-512s (4-8m), 512-1024s (8-17m),
+    #          1024-2048s (17-34m), 2048-3600s (34-60m), >=3600s (>=1h)
+    bounds_ms = [500, 1000, 2000, 4000, 8000, 16000, 32000, 64000, 128000, 256000, 512000, 1024000, 2048000, 3600000]
+
+    # Generate histogram countIf expressions
+    def hist_columns(value_expr: str, condition: str, prefix: str) -> str:
+        cols = []
+        # Bucket 0: < 0.5s
+        cols.append(f"countIf({value_expr} < {bounds_ms[0]} AND {condition}) AS {prefix}_0")
+        # Buckets 1-10: range buckets
+        for i in range(len(bounds_ms) - 1):
+            cols.append(
+                f"countIf({value_expr} >= {bounds_ms[i]} AND {value_expr} < {bounds_ms[i+1]} AND {condition}) AS {prefix}_{i+1}"
+            )
+        # Bucket 11: >= 512s
+        cols.append(f"countIf({value_expr} >= {bounds_ms[-1]} AND {condition}) AS {prefix}_{len(bounds_ms)}")
+        return ",\n    ".join(cols)
+
+    age_hist = hist_columns(age_ms, seen_before, "age_hist")
+    delay_hist = hist_columns(delay_ms, seen_after, "delay_hist")
 
     query = f"""
 WITH first_seen AS (
@@ -150,31 +194,21 @@ SELECT
     c.type AS tx_type,
     count() AS total_txs,
     -- Seen BEFORE slot start (public, available for inclusion)
-    countIf(
-        m.first_event_time IS NOT NULL
-        AND m.first_event_time > '2020-01-01'
-        AND m.first_event_time < c.slot_start_date_time
-    ) AS seen_before_slot,
+    countIf({seen_before}) AS seen_before_slot,
     -- Seen AFTER slot start (appeared after block propagation)
-    countIf(
-        m.first_event_time IS NOT NULL
-        AND m.first_event_time > '2020-01-01'
-        AND m.first_event_time >= c.slot_start_date_time
-    ) AS seen_after_slot,
+    countIf({seen_after}) AS seen_after_slot,
     -- Age percentiles for transactions seen BEFORE (how long in mempool)
     quantilesIf(0.50, 0.75, 0.80, 0.85, 0.90, 0.95, 0.99)(
-        dateDiff('millisecond', m.first_event_time, c.slot_start_date_time),
-        m.first_event_time IS NOT NULL
-        AND m.first_event_time > '2020-01-01'
-        AND m.first_event_time < c.slot_start_date_time
+        {age_ms}, {seen_before}
     ) AS age_percentiles_ms,
     -- Delay percentiles for transactions seen AFTER (propagation delay)
     quantilesIf(0.50, 0.75, 0.80, 0.85, 0.90, 0.95, 0.99)(
-        dateDiff('millisecond', c.slot_start_date_time, m.first_event_time),
-        m.first_event_time IS NOT NULL
-        AND m.first_event_time > '2020-01-01'
-        AND m.first_event_time >= c.slot_start_date_time
-    ) AS delay_percentiles_ms
+        {delay_ms}, {seen_after}
+    ) AS delay_percentiles_ms,
+    -- Age histogram (log2 buckets in seconds)
+    {age_hist},
+    -- Delay histogram (log2 buckets in seconds)
+    {delay_hist}
 FROM canonical_beacon_block_execution_transaction c
 GLOBAL LEFT JOIN first_seen m ON c.hash = m.hash
 WHERE c.meta_network_name = '{network}'
@@ -185,3 +219,11 @@ ORDER BY c.slot, c.type
 
     df = client.query_df(query)
     return df, query
+
+
+# Histogram bucket labels for visualization
+AGE_HIST_LABELS = [
+    "<0.5s", "0.5-1s", "1-2s", "2-4s", "4-8s", "8-16s",
+    "16-32s", "32s-1m", "1-2m", "2-4m", "4-8m", "8-17m",
+    "17-34m", "34-60m", ">=1h"
+]
