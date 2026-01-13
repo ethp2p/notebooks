@@ -1,0 +1,25 @@
+#!/bin/bash
+# Strip outputs from staged Jupyter notebooks before commit
+
+# Get list of staged .ipynb files
+staged_notebooks=$(git diff --cached --name-only --diff-filter=ACM | grep '\.ipynb$')
+
+if [ -z "$staged_notebooks" ]; then
+    exit 0
+fi
+
+# Check if nbstripout is available
+if ! uv run python -m nbstripout --version >/dev/null 2>&1; then
+    echo "Error: nbstripout not found. Install with: uv add nbstripout"
+    exit 1
+fi
+
+# Strip each notebook and re-stage
+for notebook in $staged_notebooks; do
+    if [ -f "$notebook" ]; then
+        # Strip outputs in place
+        uv run python -m nbstripout "$notebook"
+        # Re-stage the stripped version
+        git add "$notebook"
+    fi
+done

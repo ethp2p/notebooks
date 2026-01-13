@@ -20,7 +20,7 @@ preview:
 install:
     uv sync
     cd site && pnpm install
-    uv run nbstripout --install --attributes .gitattributes
+    git config core.hooksPath .githooks
 
 # ============================================
 # Data Pipeline
