@@ -100,6 +100,24 @@ queries:
     description: End-to-end block production timing from MEV bidding to column arrival
     output_file: block_production_timeline.parquet
 
+  block_propagation:
+    module: queries.block_propagation
+    function: fetch_block_propagation
+    description: Block propagation latency percentiles by epoch
+    output_file: block_propagation.parquet
+
+  attestation_propagation:
+    module: queries.attestation_propagation
+    function: fetch_attestation_propagation
+    description: Attestation arrival latency percentiles by epoch
+    output_file: attestation_propagation.parquet
+
+  attestation_by_committee:
+    module: queries.attestation_propagation
+    function: fetch_attestation_by_committee
+    description: Attestation latency summary by committee (subnet)
+    output_file: attestation_by_committee.parquet
+
 # ============================================
 # Notebook Registry
 # ============================================
@@ -221,6 +239,35 @@ notebooks:
         type: date
         required: true
     order: 8
+
+  - id: block-propagation
+    title: Block propagation
+    description: Block arrival latency from slot start measured across sentry nodes
+    icon: Radio
+    source: notebooks/10-block-propagation.ipynb
+    schedule: daily
+    queries:
+      - block_propagation
+    parameters:
+      - name: target_date
+        type: date
+        required: true
+    order: 10
+
+  - id: attestation-arrival
+    title: Attestation arrival
+    description: Attestation propagation latency across 64 committee subnets
+    icon: Users
+    source: notebooks/11-attestation-arrival.ipynb
+    schedule: daily
+    queries:
+      - attestation_propagation
+      - attestation_by_committee
+    parameters:
+      - name: target_date
+        type: date
+        required: true
+    order: 11
 
 # Schedule options: hourly, daily, weekly, manual
 # - hourly: Runs every hour, accumulating data throughout the day
