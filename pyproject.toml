@@ -6,6 +6,7 @@ requires-python = ">=3.13"
 dependencies = [
     "clickhouse-connect>=0.8.0",
     "pandas>=2.0",
+    "polars>=1.0",
     "plotly>=5.0",
     "altair>=5.0",
     "numpy>=1.26",
