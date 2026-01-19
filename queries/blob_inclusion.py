@@ -78,7 +78,7 @@ blocks_per_epoch AS (
     SELECT
         epoch,
         epoch_start_date_time,
-        toUInt64(COUNT(*)) as total_blocks
+        toUInt64(COUNT(DISTINCT slot)) as total_blocks
     FROM canonical_beacon_block
     WHERE meta_network_name = '{network}'
       AND {date_filter}
@@ -163,7 +163,7 @@ WITH blob_counts_per_slot AS (
     GROUP BY slot, slot_start_date_time, epoch_start_date_time
 ),
 blocks AS (
-    SELECT
+    SELECT DISTINCT
         epoch,
         slot_start_date_time,
         epoch_start_date_time
@@ -217,7 +217,7 @@ WITH blob_counts_per_slot AS (
     GROUP BY slot, epoch, epoch_start_date_time
 ),
 blocks AS (
-    SELECT
+    SELECT DISTINCT
         slot,
         epoch,
         epoch_start_date_time
