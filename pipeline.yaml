@@ -100,6 +100,12 @@ queries:
     description: End-to-end block production timing from MEV bidding to column arrival
     output_file: block_production_timeline.parquet
 
+  xatu_client_connectivity:
+    module: queries.network_overview
+    function: fetch_xatu_client_connectivity
+    description: Peer connectivity data from Xatu sentry nodes
+    output_file: xatu_client_connectivity.parquet
+
 # ============================================
 # Notebook Registry
 # ============================================
@@ -221,6 +227,20 @@ notebooks:
         type: date
         required: true
     order: 8
+
+  - id: network-overview
+    title: Network overview
+    description: Network connectivity and client distribution from Xatu sentry nodes
+    icon: Network
+    source: notebooks/09-network-overview.ipynb
+    schedule: daily
+    queries:
+      - xatu_client_connectivity
+    parameters:
+      - name: target_date
+        type: date
+        required: true
+    order: 9
 
 # Schedule options: hourly, daily, weekly, manual
 # - hourly: Runs every hour, accumulating data throughout the day
