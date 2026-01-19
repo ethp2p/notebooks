@@ -29,6 +29,7 @@ Meanwhile, the development workflow (Jupyter) remains valuable for internal anal
 - User accounts or server-side persistence (client-side storage only)
 - Automated Python-to-JS translation (manual conversion at publish time)
 - Collaborative features (single-user dashboards)
+- Declarative plot specs or codegen (manual translation is sufficient)
 
 ---
 
@@ -101,132 +102,322 @@ Meanwhile, the development workflow (Jupyter) remains valuable for internal anal
 
 ## Technical Design
 
-### Client-Side Data Layer
+### Self-Contained Plot Files
 
-**DuckDB WASM** handles all data operations in the browser:
+Each plot is a single `.astro` file containing everything: markup, query, rendering logic, and styles. No separate registry or TypeScript modules needed.
+
+```
+site/src/pages/plot/
+├── blob-count-scatter.astro      # Self-contained plot
+├── builder-relay-sankey.astro    # Self-contained plot
+├── column-propagation.astro      # Self-contained plot
+├── column-spread.astro           # Self-contained plot
+└── ...
+```
+
+**Example plot file:**
+
+```astro
+---
+// site/src/pages/plot/blob-count-scatter.astro
+import BaseLayout from '@/layouts/BaseLayout.astro';
+
+const date = Astro.params.date ?? '2025-01-17';
+const parquetUrl = `${import.meta.env.PUBLIC_DATA_URL}/${date}/blobs_per_slot.parquet`;
+---
+
+<BaseLayout title="Blob Count Over Time">
+  <article>
+    <h1>Blob Count Over Time</h1>
+    <p>Scatter plot showing blob counts per slot throughout the day.</p>
+
+    <figure id="plot" data-url={parquetUrl} data-date={date}></figure>
+
+    <footer>
+      <span class="category">Blob Analysis</span>
+      <span class="tags">blobs, time-series, scatter</span>
+    </footer>
+  </article>
+</BaseLayout>
+
+<script>
+  import * as Plot from '@observablehq/plot';
+  import { dataLayer } from '@/lib/data';
+
+  const container = document.getElementById('plot')!;
+  const url = container.dataset.url!;
+
+  async function render() {
+    container.innerHTML = '<div class="loading">Loading...</div>';
+
+    try {
+      const result = await dataLayer.query(`
+        SELECT
+          slot,
+          slot_start_date_time as time,
+          blob_count
+        FROM read_parquet('${url}')
+        ORDER BY slot
+      `);
+
+      const plot = Plot.plot({
+        width: container.clientWidth,
+        height: 400,
+        color: { scheme: 'plasma', legend: true },
+        marks: [
+          Plot.dot(result.toArray(), {
+            x: 'time',
+            y: 'blob_count',
+            fill: 'blob_count',
+            opacity: 0.7,
+            tip: true
+          })
+        ]
+      });
+
+      container.replaceChildren(plot);
+    } catch (err) {
+      container.innerHTML = `<div class="error">Failed to load: ${err.message}</div>`;
+    }
+  }
+
+  render();
+</script>
+
+<style>
+  figure {
+    width: 100%;
+    min-height: 400px;
+    margin: 2rem 0;
+  }
+  .loading, .error {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 400px;
+  }
+  .error { color: var(--color-error); }
+</style>
+```
+
+**Why self-contained files?**
+
+- Everything about a plot is in one place
+- No indirection through registries or type definitions
+- Easy to understand, copy, and modify
+- Astro bundles the `<script>` automatically
+- Natural code-splitting (each plot loads only what it needs)
+
+### Passing Data from Frontmatter to Script
+
+Astro's `<script>` tags are bundled separately and can't directly access frontmatter variables. Use data attributes:
+
+```astro
+---
+const date = '2025-01-17';
+const url = `https://data.example.com/${date}/file.parquet`;
+---
+
+<!-- Pass via data attributes -->
+<div id="plot" data-date={date} data-url={url}></div>
+
+<script>
+  // Read from DOM
+  const container = document.getElementById('plot')!;
+  const { date, url } = container.dataset;
+</script>
+```
+
+### Client-Side Data Layer with OPFS Caching
+
+**DuckDB WASM** handles all data operations. **OPFS (Origin Private File System)** provides persistent caching of Parquet files across browser sessions.
 
 ```typescript
 // site/src/lib/data.ts
+import * as duckdb from '@duckdb/duckdb-wasm';
 
-import * as duckdb from '@duckdb-wasm';
+const DATA_BASE_URL = import.meta.env.PUBLIC_DATA_URL;
 
 class DataLayer {
-  private db: duckdb.AsyncDuckDB;
-  private conn: duckdb.AsyncDuckDBConnection;
+  private db: duckdb.AsyncDuckDB | null = null;
+  private conn: duckdb.AsyncDuckDBConnection | null = null;
+  private initPromise: Promise<void> | null = null;
+  private registeredFiles = new Map<string, boolean>();
 
   async init(): Promise<void> {
-    // Initialize DuckDB WASM (~3MB bundle)
-    const bundle = await duckdb.selectBundle(DUCKDB_BUNDLES);
-    const worker = new Worker(bundle.mainWorker);
-    const logger = new duckdb.ConsoleLogger();
-    this.db = new duckdb.AsyncDuckDB(logger, worker);
-    await this.db.instantiate(bundle.mainModule);
-    this.conn = await this.db.connect();
+    if (this.db) return;
+    if (this.initPromise) return this.initPromise;
+
+    this.initPromise = (async () => {
+      const BUNDLES = duckdb.getJsDelivrBundles();
+      const bundle = await duckdb.selectBundle(BUNDLES);
+
+      const worker = new Worker(bundle.mainWorker!);
+      const logger = new duckdb.ConsoleLogger(duckdb.LogLevel.WARNING);
+
+      this.db = new duckdb.AsyncDuckDB(logger, worker);
+      await this.db.instantiate(bundle.mainModule, bundle.pthreadWorker);
+
+      // Persist DuckDB database in OPFS
+      await this.db.open({ path: 'opfs://observatory.db' });
+      this.conn = await this.db.connect();
+    })();
+
+    return this.initPromise;
   }
 
   async query(sql: string): Promise<arrow.Table> {
-    return await this.conn.query(sql);
+    await this.init();
+    return await this.conn!.query(sql);
   }
 
-  // Convenience: query remote Parquet with partial fetch
-  async queryParquet(
-    date: string,
-    file: string,
-    sql: string
-  ): Promise<arrow.Table> {
-    const url = `${DATA_BASE_URL}/${date}/${file}`;
-    const fullSql = sql.replace('$TABLE', `read_parquet('${url}')`);
-    return await this.conn.query(fullSql);
+  /**
+   * Ensure Parquet file is cached in OPFS, then query it
+   */
+  async queryParquet(date: string, filename: string, sql: string): Promise<arrow.Table> {
+    const opfsUri = await this.ensureParquet(date, filename);
+    const fullSql = sql.replace('$TABLE', `'${opfsUri}'`);
+    return await this.query(fullSql);
+  }
+
+  /**
+   * Cache Parquet file in OPFS if not already present
+   */
+  private async ensureParquet(date: string, filename: string): Promise<string> {
+    await this.init();
+
+    const opfsPath = `${date}/${filename}`;
+    const opfsUri = `opfs://${opfsPath}`;
+
+    if (this.registeredFiles.has(opfsPath)) {
+      return opfsUri;
+    }
+
+    const cached = await this.existsInOpfs(opfsPath);
+
+    if (!cached) {
+      const url = `${DATA_BASE_URL}/${date}/${filename}`;
+      await this.fetchToOpfs(url, opfsPath);
+    }
+
+    const handle = await this.getOpfsHandle(opfsPath);
+    await this.db!.registerFileHandle(
+      opfsPath,
+      handle,
+      duckdb.DuckDBDataProtocol.BROWSER_FSACCESS,
+      true
+    );
+
+    this.registeredFiles.set(opfsPath, true);
+    return opfsUri;
+  }
+
+  private async existsInOpfs(path: string): Promise<boolean> {
+    try {
+      const root = await navigator.storage.getDirectory();
+      const parts = path.split('/');
+      let dir = root;
+      for (const part of parts.slice(0, -1)) {
+        dir = await dir.getDirectoryHandle(part);
+      }
+      await dir.getFileHandle(parts.at(-1)!);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  private async fetchToOpfs(url: string, opfsPath: string): Promise<void> {
+    const response = await fetch(url);
+    if (!response.ok) throw new Error(`Failed to fetch ${url}`);
+    const data = await response.arrayBuffer();
+
+    const root = await navigator.storage.getDirectory();
+    const parts = opfsPath.split('/');
+    let dir = root;
+
+    for (const part of parts.slice(0, -1)) {
+      dir = await dir.getDirectoryHandle(part, { create: true });
+    }
+
+    const fileHandle = await dir.getFileHandle(parts.at(-1)!, { create: true });
+    const writable = await fileHandle.createWritable();
+    await writable.write(data);
+    await writable.close();
+  }
+
+  private async getOpfsHandle(path: string): Promise<FileSystemFileHandle> {
+    const root = await navigator.storage.getDirectory();
+    const parts = path.split('/');
+    let dir = root;
+    for (const part of parts.slice(0, -1)) {
+      dir = await dir.getDirectoryHandle(part);
+    }
+    return dir.getFileHandle(parts.at(-1)!);
+  }
+
+  async clearCache(): Promise<void> {
+    const root = await navigator.storage.getDirectory();
+    for await (const [name] of root.entries()) {
+      await root.removeEntry(name, { recursive: true });
+    }
+    this.registeredFiles.clear();
   }
 }
 
 export const dataLayer = new DataLayer();
 ```
 
-**Key capability**: DuckDB uses HTTP range requests to fetch only needed columns and row groups from remote Parquet files, avoiding full file downloads.
+### Caching Layers
 
-### Plot Registry
+| Layer | What's Cached | Persistence | Benefit |
+|-------|---------------|-------------|---------|
+| **Browser HTTP** | Parquet byte ranges | Session/disk | Partial fetch on cache miss |
+| **DuckDB Buffer** | Decoded Arrow data | Memory | Fast repeat queries |
+| **OPFS** | Full Parquet files | Persistent | Instant load on return visit |
 
-Plots are registered as TypeScript modules with metadata and render functions:
+**Performance comparison:**
+
+| Scenario | Load Time |
+|----------|-----------|
+| First visit (network) | ~500ms |
+| Same session (DuckDB buffer) | ~10ms |
+| Return visit (OPFS) | ~5ms |
+
+### Cache Invalidation
+
+Data refreshes daily. Use TTL-based invalidation:
 
 ```typescript
-// site/src/plots/registry.ts
+private async ensureParquet(date: string, filename: string): Promise<string> {
+  const cacheKey = `${date}/${filename}`;
+  const metaKey = `opfs-meta:${cacheKey}`;
 
-export interface PlotDefinition {
-  id: string;
-  title: string;
-  description: string;
-  category: CategoryId;
-  tags: string[];
+  const meta = JSON.parse(localStorage.getItem(metaKey) || 'null');
+  const maxAge = 24 * 60 * 60 * 1000; // 24 hours
+  const isStale = !meta || (Date.now() - meta.cachedAt > maxAge);
 
-  // Data dependencies
-  queries: QueryDefinition[];
+  if (isStale || !(await this.existsInOpfs(cacheKey))) {
+    await this.fetchToOpfs(url, cacheKey);
+    localStorage.setItem(metaKey, JSON.stringify({ cachedAt: Date.now() }));
+  }
 
-  // Render function
-  render: (data: arrow.Table[], container: HTMLElement, options?: PlotOptions) => void;
-}
-
-export interface QueryDefinition {
-  file: string;      // Parquet filename
-  sql: string;       // SQL to run against the file
-}
-
-export interface PlotOptions {
-  date: string;
-  width?: number;
-  height?: number;
-  interactive?: boolean;
+  // ... register with DuckDB
 }
 ```
 
-**Example plot definition:**
+### OPFS Browser Support
+
+OPFS is supported in Chrome 86+, Firefox 111+, Safari 15.2+. Feature detect:
 
 ```typescript
-// site/src/plots/blob-count-scatter.ts
+const hasOpfs = 'storage' in navigator && 'getDirectory' in navigator.storage;
 
-import * as Plot from '@observablehq/plot';
-import type { PlotDefinition } from './registry';
-
-export const blobCountScatter: PlotDefinition = {
-  id: 'blob-count-scatter',
-  title: 'Blob Count Over Time',
-  description: 'Scatter plot showing blob counts per slot throughout the day',
-  category: 'blob-analysis',
-  tags: ['blobs', 'time-series', 'scatter'],
-
-  queries: [{
-    file: 'blobs_per_slot.parquet',
-    sql: `
-      SELECT
-        slot,
-        slot_start_date_time as time,
-        blob_count
-      FROM $TABLE
-      ORDER BY slot
-    `
-  }],
-
-  render(data, container, options) {
-    const [blobs] = data;
-
-    const plot = Plot.plot({
-      width: options?.width ?? 800,
-      height: options?.height ?? 400,
-      color: { scheme: 'plasma' },
-      marks: [
-        Plot.dot(blobs, {
-          x: 'time',
-          y: 'blob_count',
-          fill: 'blob_count',
-          opacity: 0.7,
-          tip: true
-        })
-      ]
-    });
-
-    container.replaceChildren(plot);
-  }
-};
+if (hasOpfs) {
+  // Use OPFS caching
+} else {
+  // Fall back to direct HTTP range requests
+}
 ```
 
 ### Category System
@@ -510,6 +701,17 @@ export const dashboardStore = {
 
 ## Technical Decisions
 
+### Why Self-Contained Astro Files?
+
+| Aspect | Separate Registry | Self-Contained `.astro` |
+|--------|-------------------|-------------------------|
+| Discoverability | Registry file | File system |
+| Complexity | Types + registry + component | Single file |
+| Code splitting | Manual | Automatic per-page |
+| Modification | Multiple files | One file |
+
+**Decision**: Each plot is a single `.astro` file. The catalog discovers plots by scanning `site/src/pages/plot/*.astro` at build time (using Astro's `import.meta.glob`).
+
 ### Why DuckDB WASM?
 
 | Requirement | DuckDB WASM |
@@ -525,6 +727,19 @@ Alternatives considered:
 - **Danfo.js**: No partial fetch, larger bundle
 - **Raw Arrow JS**: Low-level, would need to build query layer
 
+### Why OPFS for Caching?
+
+| Storage | Max Size | Speed | Persistence | Use Case |
+|---------|----------|-------|-------------|----------|
+| localStorage | 5-10MB | Fast | Persistent | Metadata only |
+| IndexedDB | Large | Medium | Persistent | Structured data |
+| **OPFS** | Large | **Fast** | Persistent | **Binary files (Parquet)** |
+| Cache API | Large | Fast | Persistent | HTTP responses |
+
+**Decision**: Use OPFS for Parquet file caching. DuckDB WASM can read directly from OPFS via `opfs://` protocol, avoiding serialization overhead.
+
+**Fallback**: For browsers without OPFS, fall back to direct HTTP range requests (still works, just no persistent cache).
+
 ### Why Observable Plot over Plotly.js?
 
 | Aspect | Observable Plot | Plotly.js |
@@ -534,9 +749,9 @@ Alternatives considered:
 | Customization | CSS-based | Config objects |
 | Interactivity | Basic (zoom, tooltip) | Rich (but heavy) |
 
-**Decision**: Use Observable Plot for most charts, Plotly.js only for complex visualizations (Sankey diagrams, 3D plots) that Observable Plot doesn't support.
+**Decision**: Use Observable Plot for most charts, Plotly.js only for complex visualizations (Sankey diagrams, heatmaps) that Observable Plot doesn't support well.
 
-### Why localStorage over server-side?
+### Why localStorage for Dashboards?
 
 - No auth system needed
 - No backend to maintain
@@ -598,11 +813,27 @@ Future: Multi-date comparison, date range aggregation
 
 **Recommendation**: Keep single-date for MVP. Date range is a future enhancement that would require query changes.
 
-### 4. Offline Support
+### 4. Plot Metadata for Catalog
 
-Could cache Parquet files in browser for offline viewing.
+With self-contained `.astro` files, how does the catalog know each plot's title, category, and tags?
 
-**Recommendation**: Out of scope for MVP. Add via Service Worker later if needed.
+Options:
+- **A**: Parse frontmatter from `.astro` files at build time
+- **B**: Separate `plots.json` manifest (duplication)
+- **C**: Encode in filename/directory structure (`plot/blob-analysis/count-scatter.astro`)
+
+**Recommendation**: (A) — Use a build script or Astro integration to extract metadata from each plot file. Store result in a generated `plots-manifest.json` for the catalog to consume.
+
+### 5. OPFS Storage Limits
+
+OPFS shares quota with other storage APIs. With 365 days × ~10MB/day = ~3.6GB potential.
+
+Options:
+- **A**: Cache only recent N days (e.g., 14 days)
+- **B**: LRU eviction when approaching quota
+- **C**: Let user manage via "Clear Cache" button
+
+**Recommendation**: (A) + (C) — Cache recent 14 days automatically, provide manual clear option.
 
 ---
 
@@ -620,7 +851,7 @@ Could cache Parquet files in browser for offline viewing.
 
 ## Appendix: Example Plot Translations
 
-### Simple Scatter (Jupyter → JS)
+### Simple Scatter (Jupyter → Astro)
 
 **Jupyter (exploration):**
 ```python
@@ -636,28 +867,42 @@ fig = px.scatter(
 fig.show()
 ```
 
-**JS (production):**
-```typescript
-const blobCountScatter: PlotDefinition = {
-  id: 'blob-count-scatter',
-  queries: [{
-    file: 'blobs_per_slot.parquet',
-    sql: 'SELECT slot_start_date_time as time, blob_count FROM $TABLE'
-  }],
+**Astro (production):**
+```astro
+---
+// site/src/pages/plot/blob-count-scatter.astro
+import BaseLayout from '@/layouts/BaseLayout.astro';
+const date = Astro.params.date ?? '2025-01-17';
+---
 
-  render(data, container) {
-    const plot = Plot.plot({
-      color: { scheme: 'plasma' },
-      marks: [
-        Plot.dot(data[0], { x: 'time', y: 'blob_count', fill: 'blob_count' })
-      ]
-    });
-    container.replaceChildren(plot);
-  }
-};
+<BaseLayout title="Blob Count Over Time">
+  <h1>Blob Count Over Time</h1>
+  <figure id="plot" data-date={date}></figure>
+</BaseLayout>
+
+<script>
+  import * as Plot from '@observablehq/plot';
+  import { dataLayer } from '@/lib/data';
+
+  const container = document.getElementById('plot')!;
+  const date = container.dataset.date!;
+
+  const result = await dataLayer.queryParquet(date, 'blobs_per_slot.parquet', `
+    SELECT slot_start_date_time as time, blob_count FROM $TABLE
+  `);
+
+  const plot = Plot.plot({
+    color: { scheme: 'plasma' },
+    marks: [
+      Plot.dot(result.toArray(), { x: 'time', y: 'blob_count', fill: 'blob_count' })
+    ]
+  });
+
+  container.replaceChildren(plot);
+</script>
 ```
 
-### Row-wise Normalization (Jupyter → JS)
+### Row-wise Normalization (Jupyter → SQL)
 
 **Jupyter:**
 ```python
@@ -667,33 +912,44 @@ row_maxs = df[col_names].max(axis=1)
 df_normalized = (df[col_names].T - row_mins) / (row_maxs - row_mins)
 ```
 
-**JS (SQL):**
-```sql
-WITH bounds AS (
-  SELECT
-    slot,
-    MIN(value) OVER (PARTITION BY slot) as row_min,
-    MAX(value) OVER (PARTITION BY slot) as row_max
-  FROM (
-    UNPIVOT col_first_seen
-    ON c0, c1, c2, /* ... */ c127
-    INTO NAME column_name VALUE value
-  )
-)
-SELECT
-  slot,
-  column_name,
-  (value - row_min) / NULLIF(row_max - row_min, 0) as normalized
-FROM bounds
+**SQL in Astro:**
+```astro
+<script>
+  // DuckDB SQL handles the transformation
+  const result = await dataLayer.queryParquet(date, 'col_first_seen.parquet', `
+    WITH unpivoted AS (
+      UNPIVOT $TABLE
+      ON ${Array.from({length: 128}, (_, i) => `c${i}`).join(', ')}
+      INTO NAME column_idx VALUE value
+    ),
+    bounds AS (
+      SELECT
+        slot,
+        column_idx,
+        value,
+        MIN(value) OVER (PARTITION BY slot) as row_min,
+        MAX(value) OVER (PARTITION BY slot) as row_max
+      FROM unpivoted
+    )
+    SELECT
+      slot,
+      column_idx,
+      (value - row_min) / NULLIF(row_max - row_min, 0) as normalized
+    FROM bounds
+  `);
+</script>
 ```
 
-More complex, but DuckDB handles it efficiently.
+More verbose than Pandas, but DuckDB handles it efficiently and the transformation happens client-side.
 
 ---
 
 ## References
 
 - [DuckDB WASM Documentation](https://duckdb.org/docs/api/wasm/overview)
+- [DuckDB WASM OPFS Tests](https://github.com/duckdb/duckdb-wasm/blob/main/packages/duckdb-wasm/test/opfs.test.ts)
+- [Origin Private File System (OPFS)](https://developer.mozilla.org/en-US/docs/Web/API/File_System_API/Origin_private_file_system)
 - [Observable Plot](https://observablehq.com/plot/)
 - [Parquet Format Specification](https://parquet.apache.org/docs/file-format/)
 - [Apache Arrow JS](https://arrow.apache.org/docs/js/)
+- [Astro Islands Architecture](https://docs.astro.build/en/concepts/islands/)
