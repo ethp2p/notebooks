@@ -62,7 +62,7 @@ blob_count AS (
 
 -- Canonical block hash (to verify MEV payload was actually used)
 canonical_block AS (
-    SELECT
+    SELECT DISTINCT
         slot,
         execution_payload_block_hash
     FROM canonical_beacon_block

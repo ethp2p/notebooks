@@ -25,7 +25,7 @@ def fetch_blob_flow(
 
     query = f"""
 WITH blocks AS (
-    SELECT
+    SELECT DISTINCT
         slot,
         epoch,
         slot_start_date_time,
