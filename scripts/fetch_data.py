@@ -39,6 +39,37 @@ from scripts.pipeline import (
 )
 
 
+def get_client(database: str | None = None):
+    """Create a ClickHouse client for the specified database.
+
+    Args:
+        database: "contributoor" for Contributoor ClickHouse, None for default Sentries.
+    """
+    if database == "contributoor":
+        host = os.environ.get("CONTRIBUTOOR_CLICKHOUSE_HOST")
+        if not host:
+            raise ValueError(
+                "CONTRIBUTOOR_CLICKHOUSE_HOST not set. Add it to .env file."
+            )
+        port = int(os.environ.get("CONTRIBUTOOR_CLICKHOUSE_PORT", 8443))
+        user = os.environ.get("CONTRIBUTOOR_CLICKHOUSE_USER", os.environ["CLICKHOUSE_USER"])
+        password = os.environ.get("CONTRIBUTOOR_CLICKHOUSE_PASSWORD", os.environ["CLICKHOUSE_PASSWORD"])
+    else:
+        host = os.environ["CLICKHOUSE_HOST"]
+        port = int(os.environ.get("CLICKHOUSE_PORT", 8443))
+        user = os.environ["CLICKHOUSE_USER"]
+        password = os.environ["CLICKHOUSE_PASSWORD"]
+
+    return clickhouse_connect.get_client(
+        host=host,
+        port=port,
+        username=user,
+        password=password,
+        secure=True,
+        autogenerate_session_id=False,
+    )
+
+
 def get_fetcher(query_config: dict):
     """Dynamically import and return fetcher function."""
     module = importlib.import_module(query_config["module"])
@@ -84,7 +115,7 @@ def fetch_query(
 
 
 def fetch_date(
-    client,
+    default_client,
     config: dict,
     target_date: str,
     output_dir: Path,
@@ -100,13 +131,16 @@ def fetch_date(
     results = {}
     queries = config["queries"]
 
+    # Cache for clients by database to avoid creating multiple connections
+    client_cache: dict[str | None, object] = {None: default_client}
+
     for query_id, query_config in queries.items():
         if queries_to_fetch and query_id not in queries_to_fetch:
             # We explicitly skip if we have a fetch list and this query isn't in it
             # But we only log SKIP if we're in sync/force mode (i.e. we're processing a range)
             # This avoids clutter when fetching a single specific date/query.
             continue
-        
+
         if not queries_to_fetch:
             # If no specific fetch list, we fetch everything (legacy/fallback behavior)
             fetch_reason = "new"
@@ -116,6 +150,13 @@ def fetch_date(
         if fetch_reason == "SKIP":
             print(f"  SKIP: {query_id} (unchanged)")
             continue
+
+        # Get the appropriate client for this query's database
+        database = query_config.get("database")
+        if database not in client_cache:
+            print(f"  Creating client for database: {database}...")
+            client_cache[database] = get_client(database)
+        client = client_cache[database]
 
         print(f"  Fetching {query_id} ({fetch_reason})...")
         try:
@@ -288,17 +329,9 @@ def main() -> None:
         print("Nothing to fetch.")
         return
 
-    # Create ClickHouse client
-    # Disable session ID to avoid "session is locked" errors when CI runs are cancelled
-    # and restarted - sessions can remain locked server-side for a short period
-    client = clickhouse_connect.get_client(
-        host=os.environ["CLICKHOUSE_HOST"],
-        port=int(os.environ.get("CLICKHOUSE_PORT", 8443)),
-        username=os.environ["CLICKHOUSE_USER"],
-        password=os.environ["CLICKHOUSE_PASSWORD"],
-        secure=True,
-        autogenerate_session_id=False,
-    )
+    # Create default ClickHouse client (Sentries)
+    # Queries with database: "contributoor" will get their own client
+    client = get_client()
 
     output_dir.mkdir(parents=True, exist_ok=True)
 

@@ -125,6 +125,10 @@ jobs:
           CLICKHOUSE_PORT: ${{ secrets.CLICKHOUSE_PORT }}
           CLICKHOUSE_USER: ${{ secrets.CLICKHOUSE_USER }}
           CLICKHOUSE_PASSWORD: ${{ secrets.CLICKHOUSE_PASSWORD }}
+          CONTRIBUTOOR_CLICKHOUSE_HOST: ${{ secrets.CONTRIBUTOOR_CLICKHOUSE_HOST }}
+          CONTRIBUTOOR_CLICKHOUSE_PORT: ${{ secrets.CONTRIBUTOOR_CLICKHOUSE_PORT }}
+          CONTRIBUTOOR_CLICKHOUSE_USER: ${{ secrets.CONTRIBUTOOR_CLICKHOUSE_USER }}
+          CONTRIBUTOOR_CLICKHOUSE_PASSWORD: ${{ secrets.CONTRIBUTOOR_CLICKHOUSE_PASSWORD }}
         run: just fetch all ${{ env.FORCE_RENDER }}
 
       # ============================================

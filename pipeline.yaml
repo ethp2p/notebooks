@@ -100,6 +100,25 @@ queries:
     description: End-to-end block production timing from MEV bidding to column arrival
     output_file: block_production_timeline.parquet
 
+  block_propagation_by_size:
+    module: queries.block_propagation_by_size
+    function: fetch_block_propagation_by_size
+    description: Block propagation timing by wire size with MEV vs local classification
+    output_file: block_propagation_by_size.parquet
+
+  block_propagation_by_region:
+    module: queries.block_propagation_by_size
+    function: fetch_block_propagation_by_region
+    description: Block propagation by geographic region from Sentries
+    output_file: block_propagation_by_region.parquet
+
+  block_propagation_by_region_contributoor:
+    module: queries.block_propagation_contributoor
+    function: fetch_block_propagation_by_region_contributoor
+    database: contributoor
+    description: Block propagation by geographic region from Contributoor nodes
+    output_file: block_propagation_by_region_contributoor.parquet
+
 # ============================================
 # Notebook Registry
 # ============================================
@@ -221,6 +240,23 @@ notebooks:
         type: date
         required: true
     order: 8
+
+  - id: block-propagation-size
+    title: Block propagation
+    description: Block propagation timing by size with corrected MEV timing that isolates network latency from block building
+    icon: Gauge
+    source: notebooks/09-block-propagation-size.ipynb
+    schedule: daily
+    queries:
+      - block_propagation_by_size
+      - block_production_timeline
+      - block_propagation_by_region
+      - block_propagation_by_region_contributoor
+    parameters:
+      - name: target_date
+        type: date
+        required: true
+    order: 9
 
 # Schedule options: hourly, daily, weekly, manual
 # - hourly: Runs every hour, accumulating data throughout the day
