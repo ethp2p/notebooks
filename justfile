@@ -65,8 +65,12 @@ render target="all" force="false":
 build:
     cd site && pnpm build
 
-# Render all + build Astro
-publish: render build
+# Copy parquet files to dist for R2 publishing (only rendered dates)
+copy-data:
+    uv run python scripts/copy_data_to_dist.py
+
+# Render all + build Astro + copy data for publishing
+publish: render build copy-data
 
 # ============================================
 # CI / Full Pipeline

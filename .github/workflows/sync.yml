@@ -147,6 +147,9 @@ jobs:
           ASTRO_BASE: ${{ github.event_name == 'pull_request' && format('/pr-{0}/', github.event.pull_request.number) || '/' }}
         run: just build
 
+      - name: Copy data to dist
+        run: just copy-data
+
       # ============================================
       # Save Caches
       # ============================================
