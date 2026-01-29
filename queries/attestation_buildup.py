@@ -5,8 +5,6 @@ Tracks how attestations accumulate over slots after the attested slot.
 Attestations for slot A can be included in blocks up to slot A+32.
 """
 
-from pathlib import Path
-
 
 def _get_date_filter(target_date: str, column: str = "slot_start_date_time") -> str:
     """Generate SQL date filter for a specific date."""
@@ -34,7 +32,8 @@ WITH attestation_counts AS (
         epoch,
         slot_start_date_time,
         block_slot - slot AS inclusion_delay,
-        sum(length(validators)) AS validators_at_delay
+        -- Deduplicate validators across overlapping aggregates in the same block
+        arrayUniq(arrayFlatten(groupArray(validators))) AS validators_at_delay
     FROM default.canonical_beacon_elaborated_attestation
     WHERE meta_network_name = '{network}'
       AND {date_filter}
@@ -83,7 +82,7 @@ SELECT
     r.validators_at_delay AS validators_at_delay,
     r.cumulative_validators AS cumulative_validators,
     r.total_validators AS total_validators,
-    round(r.cumulative_validators * 100.0 / r.total_validators, 4) AS cumulative_pct,
+    round(r.cumulative_validators * 100.0 / nullif(r.total_validators, 0), 4) AS cumulative_pct,
     coalesce(b.blob_count, 0) AS blob_count,
     coalesce(bs.block_size_bytes, 0) AS block_size_bytes,
     coalesce(bs.block_first_seen_ms, 0) AS block_first_seen_ms
