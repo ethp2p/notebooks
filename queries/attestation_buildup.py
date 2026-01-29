@@ -89,8 +89,8 @@ SELECT
     coalesce(bs.block_size_bytes, 0) AS block_size_bytes,
     coalesce(bs.block_first_seen_ms, 0) AS block_first_seen_ms
 FROM running_totals r
-LEFT JOIN blobs b ON r.slot = b.slot
-LEFT JOIN block_sizes bs ON r.slot = bs.slot
+GLOBAL LEFT JOIN blobs b ON r.slot = b.slot
+GLOBAL LEFT JOIN block_sizes bs ON r.slot = bs.slot
 ORDER BY r.slot, r.inclusion_delay
 """
 
