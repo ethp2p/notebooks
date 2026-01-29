@@ -2,7 +2,8 @@
 Fetch functions for attestation buildup CDF analysis.
 
 Tracks how attestations accumulate over slots after the attested slot.
-Attestations for slot A can be included in blocks up to slot A+32.
+Per EIP-7045 (Deneb), attestations can be included through the end of the
+next epoch, giving a variable window of 32-64 slots depending on position.
 """
 
 
@@ -18,8 +19,9 @@ def fetch_attestation_buildup(
 ) -> tuple:
     """Fetch attestation buildup CDF per slot.
 
-    For each slot, shows cumulative attestation inclusion at each delay (1-32 slots).
-    Includes blob count and block size (compressed) for correlation analysis.
+    For each slot, shows cumulative attestation inclusion at each delay (1-64 slots).
+    Per EIP-7045, attestations can be included through the end of epoch N+1.
+    Includes blob count and block size for correlation analysis.
 
     Returns (df, query).
     """
@@ -37,7 +39,7 @@ WITH attestation_counts AS (
     FROM default.canonical_beacon_elaborated_attestation
     WHERE meta_network_name = '{network}'
       AND {date_filter}
-      AND block_slot - slot BETWEEN 1 AND 32
+      AND block_slot - slot BETWEEN 1 AND 64
     GROUP BY slot, epoch, slot_start_date_time, block_slot - slot
 ),
 
