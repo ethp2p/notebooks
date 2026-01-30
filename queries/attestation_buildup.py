@@ -28,19 +28,32 @@ def fetch_attestation_buildup(
     date_filter = _get_date_filter(target_date)
 
     query = f"""
-WITH attestation_counts AS (
+WITH first_inclusions AS (
+    -- Find the first block where each validator's attestation was included
     SELECT
         slot,
         epoch,
         slot_start_date_time,
-        block_slot - slot AS inclusion_delay,
-        -- Deduplicate validators across overlapping aggregates in the same block
-        arrayUniq(arrayFlatten(groupArray(validators))) AS validators_at_delay
+        validator,
+        min(block_slot) AS first_block_slot
     FROM default.canonical_beacon_elaborated_attestation
+    ARRAY JOIN validators AS validator
     WHERE meta_network_name = '{network}'
       AND {date_filter}
       AND block_slot - slot BETWEEN 1 AND 64
-    GROUP BY slot, epoch, slot_start_date_time, block_slot - slot
+    GROUP BY slot, epoch, slot_start_date_time, validator
+),
+
+attestation_counts AS (
+    -- Count validators at each inclusion delay (based on first inclusion only)
+    SELECT
+        slot,
+        epoch,
+        slot_start_date_time,
+        first_block_slot - slot AS inclusion_delay,
+        count() AS validators_at_delay
+    FROM first_inclusions
+    GROUP BY slot, epoch, slot_start_date_time, inclusion_delay
 ),
 
 running_totals AS (
