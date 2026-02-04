@@ -119,6 +119,36 @@ queries:
     description: Block propagation by geographic region from Contributoor nodes
     output_file: block_propagation_by_region_contributoor.parquet
 
+  transport_overall:
+    module: queries.transport_protocols
+    function: fetch_transport_overall
+    description: Overall QUIC vs TCP transport protocol distribution (7-day rolling)
+    output_file: transport_overall.parquet
+
+  transport_daily:
+    module: queries.transport_protocols
+    function: fetch_transport_daily
+    description: Daily transport protocol breakdown (7-day rolling)
+    output_file: transport_daily.parquet
+
+  transport_peers:
+    module: queries.transport_protocols
+    function: fetch_transport_peers
+    description: Unique peer breakdown by transport capability (7-day rolling)
+    output_file: transport_peers.parquet
+
+  transport_by_client:
+    module: queries.transport_protocols
+    function: fetch_transport_by_client
+    description: Transport protocol adoption by client implementation (7-day rolling)
+    output_file: transport_by_client.parquet
+
+  transport_connection_patterns:
+    module: queries.transport_protocols
+    function: fetch_transport_connection_patterns
+    description: Connection frequency patterns by transport protocol (7-day rolling)
+    output_file: transport_connection_patterns.parquet
+
 # ============================================
 # Notebook Registry
 # ============================================
@@ -257,6 +287,24 @@ notebooks:
         type: date
         required: true
     order: 9
+
+  - id: transport-protocols
+    title: Transport protocols
+    description: QUIC vs TCP transport protocol distribution across the P2P network by client
+    icon: Network
+    source: notebooks/10-transport-protocols.ipynb
+    schedule: daily
+    queries:
+      - transport_overall
+      - transport_daily
+      - transport_peers
+      - transport_by_client
+      - transport_connection_patterns
+    parameters:
+      - name: target_date
+        type: date
+        required: true
+    order: 10
 
 # Schedule options: hourly, daily, weekly, manual
 # - hourly: Runs every hour, accumulating data throughout the day
