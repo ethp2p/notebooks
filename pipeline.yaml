@@ -112,12 +112,24 @@ queries:
     description: Block propagation by geographic region from Sentries
     output_file: block_propagation_by_region.parquet
 
-  block_propagation_by_region_contributoor:
-    module: queries.block_propagation_contributoor
-    function: fetch_block_propagation_by_region_contributoor
-    database: contributoor
-    description: Block propagation by geographic region from Contributoor nodes
-    output_file: block_propagation_by_region_contributoor.parquet
+  attestation_arrivals:
+    module: queries.slot_propagation_metrics
+    function: fetch_attestation_arrivals
+    description: Attestation arrivals
+    output_file: attestation_arrivals.parquet
+
+  block_and_column_broadcast_info:
+    module: queries.slot_propagation_metrics
+    function: fetch_block_and_column_broadcast_info
+    description: Block and Data Column broadcast Info
+    output_file: block_and_column_broadcast_info.parquet
+
+  aggregation_broadcast_info:
+    module: queries.slot_propagation_metrics
+    function: fetch_aggregation_broadcast_info
+    description: Attestation's aggregation broadcast Info
+    output_file: aggregation_broadcast_info.parquet
+
 
 # ============================================
 # Notebook Registry

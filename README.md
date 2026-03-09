@@ -36,15 +36,16 @@ just dev
 
 ## Notebooks
 
-| Notebook                                                              | Description                                            |
-| --------------------------------------------------------------------- | ------------------------------------------------------ |
-| [Blob Inclusion](notebooks/01-blob-inclusion.ipynb)                   | Blob inclusion patterns per block and epoch            |
-| [Blob Flow](notebooks/02-blob-flow.ipynb)                             | Blob flow across validators, builders, and relays      |
-| [Column Propagation](notebooks/03-column-propagation.ipynb)           | Column propagation timing across 128 data columns      |
-| [Mempool Visibility](notebooks/04-mempool-visibility.ipynb)           | Transaction visibility in the public mempool           |
-| [MEV Pipeline](notebooks/05-mev-pipeline.ipynb)                       | MEV bidding timing, relay/builder performance          |
-| [Block/Column Timing](notebooks/06-block-column-timing.ipynb)         | Block arrival to column propagation delay              |
-| [Propagation Anomalies](notebooks/07-propagation-anomalies.ipynb)     | Blocks that propagated slower than expected            |
+| Notebook                                                          | Description                                        |
+|-------------------------------------------------------------------|----------------------------------------------------|
+| [Blob Inclusion](notebooks/01-blob-inclusion.ipynb)               | Blob inclusion patterns per block and epoch        |
+| [Blob Flow](notebooks/02-blob-flow.ipynb)                         | Blob flow across validators, builders, and relays  |
+| [Column Propagation](notebooks/03-column-propagation.ipynb)       | Column propagation timing across 128 data columns  |
+| [Mempool Visibility](notebooks/04-mempool-visibility.ipynb)       | Transaction visibility in the public mempool       |
+| [MEV Pipeline](notebooks/05-mev-pipeline.ipynb)                   | MEV bidding timing, relay/builder performance      |
+| [Block/Column Timing](notebooks/06-block-column-timing.ipynb)     | Block arrival to column propagation delay          |
+| [Propagation Anomalies](notebooks/07-propagation-anomalies.ipynb) | Blocks that propagated slower than expected        |
+| [Attestation Inclusion](notebooks/10-attestation-inclusion.ipynb) | Inclusion of attestations based on network metrics |
 
 ## Architecture
 
@@ -56,6 +57,7 @@ queries/                        # ClickHouse query modules -> Parquet
 ├── column_propagation.py       # fetch_col_first_seen()
 ├── mempool_visibility.py       # fetch_tx_per_slot(), fetch_mempool_coverage(), ...
 └── block_production_timeline.py # fetch_block_production_timeline()
+└── att_inclusion.py            # fetch_attestations_arrivals(), ...
 scripts/
 ├── pipeline.py            # Coordinator: config loading, hash computation, staleness
 ├── fetch_data.py          # CLI: ClickHouse -> notebooks/data/*.parquet
@@ -233,7 +235,6 @@ just preview
 ## Adding New Analyses
 
 1. **Create query function** in `queries/`:
-
    ```python
    def fetch_my_data(client, target_date: str, output_path: Path, network: str) -> int:
        query = f"SELECT ... WHERE slot_start_date_time >= '{target_date}' ..."
@@ -242,8 +243,24 @@ just preview
        df.to_parquet(output_path, index=False)
        return len(df)
    ```
+   __NOTE: don't forget to expose the new methods under `./queries/__init__.py`:__
+   ```python
+      from queries.my_module import fetch_my_data
+      
+      __all__ = [
+         ...
+         "fetch_my_data",
+         ...
+      ]
+   ```
 
-2. **Register in `pipeline.yaml`**:
+2. **Create notebook** `notebooks/04-my-analysis.ipynb`:
+   - Add a cell tagged "parameters" with `target_date = None`
+   - Use `loaders.load_parquet("my_data")` to load data (The name of the file should match the one from the field `queries/my_data/output_file` in the `./pipeline.yaml`file)
+   - Create Plotly visualizations
+
+
+3. **Register in `pipeline.yaml`** to automate the deployment:
 
    ```yaml
    queries:
@@ -259,11 +276,6 @@ just preview
        source: notebooks/04-my-analysis.ipynb
        queries: [my_data]
    ```
-
-3. **Create notebook** `notebooks/04-my-analysis.ipynb`:
-   - Add a cell tagged "parameters" with `target_date = None`
-   - Use `loaders.load_parquet("my_data")` to load data
-   - Create Plotly visualizations
 
 4. **Fetch and render**:
    ```bash
