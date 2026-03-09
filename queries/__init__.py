@@ -12,7 +12,7 @@ from queries.blob_inclusion import (
 )
 from queries.blob_flow import fetch_blob_flow
 from queries.column_propagation import fetch_col_first_seen, NUM_COLUMNS
-from queries.slot_propagation_metrics import (
+from queries.att_propagation import (
     fetch_attestation_arrivals,
     fetch_block_and_column_broadcast_info,
     fetch_aggregation_broadcast_info,

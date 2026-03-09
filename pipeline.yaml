@@ -8,14 +8,14 @@ version: "1.0"
 # ============================================
 dates:
   # Mode: "rolling" | "range" | "list"
-  mode: rolling
+  mode: list
 
   # For mode: rolling - relative to today
   # Generates dates from (today - window) to yesterday
   # Optional start: won't go earlier than this date
-  rolling:
-    window: 365 # Number of days to keep (yesterday through N days ago)
-    start: "2025-12-03" # Optional: earliest date to include
+  # rolling:
+  #   window: 365 # Number of days to keep (yesterday through N days ago)
+  #   start: "2025-03-04" # Optional: earliest date to include
 
   # For mode: range - fixed date boundaries
   # Required: start date
@@ -25,8 +25,8 @@ dates:
   #   end: "2025-12-31"  # Optional: defaults to yesterday
 
   # For mode: list - explicit dates
-  # list:
-  #   - "2025-12-15"
+  list:
+    - "2026-03-04"
   #   - "2025-12-16"
   #   - "2025-12-17"
 
@@ -113,19 +113,19 @@ queries:
     output_file: block_propagation_by_region.parquet
 
   attestation_arrivals:
-    module: queries.slot_propagation_metrics
+    module: queries.att_propagation
     function: fetch_attestation_arrivals
     description: Attestation arrivals
     output_file: attestation_arrivals.parquet
 
   block_and_column_broadcast_info:
-    module: queries.slot_propagation_metrics
+    module: queries.att_propagation
     function: fetch_block_and_column_broadcast_info
     description: Block and Data Column broadcast Info
     output_file: block_and_column_broadcast_info.parquet
 
   aggregation_broadcast_info:
-    module: queries.slot_propagation_metrics
+    module: queries.att_propagation
     function: fetch_aggregation_broadcast_info
     description: Attestation's aggregation broadcast Info
     output_file: aggregation_broadcast_info.parquet
@@ -253,22 +253,21 @@ notebooks:
         required: true
     order: 8
 
-  - id: block-propagation-size
-    title: Block propagation
-    description: Block propagation timing by size with corrected MEV timing that isolates network latency from block building
-    icon: Gauge
-    source: notebooks/09-block-propagation-size.ipynb
+  - id: attestation-preview
+    title: Preview of Attestations
+    description: Propagation of attestations in the network and metrics around their inclusion
+    icon: XCircle
+    source: notebooks/10-attestation-propagation.ipynb
     schedule: daily
     queries:
-      - block_propagation_by_size
-      - block_production_timeline
-      - block_propagation_by_region
-      - block_propagation_by_region_contributoor
+      - attestation_arrivals
+      - block_and_column_broadcast_info
+      - aggregation_broadcast_info
     parameters:
       - name: target_date
         type: date
         required: true
-    order: 9
+    order: 10
 
 # Schedule options: hourly, daily, weekly, manual
 # - hourly: Runs every hour, accumulating data throughout the day

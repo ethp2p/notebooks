@@ -50,14 +50,14 @@ just dev
 ## Architecture
 
 ```
-pipeline.yaml              # Central config: dates, queries, notebooks
-queries/                        # ClickHouse query modules -> Parquet
-├── blob_inclusion.py           # fetch_blobs_per_slot(), fetch_blocks_blob_epoch(), ...
-├── blob_flow.py                # fetch_blob_flow()
-├── column_propagation.py       # fetch_col_first_seen()
-├── mempool_visibility.py       # fetch_tx_per_slot(), fetch_mempool_coverage(), ...
+pipeline.yaml                    # Central config: dates, queries, notebooks
+queries/                         # ClickHouse query modules -> Parquet
+├── blob_inclusion.py            # fetch_blobs_per_slot(), fetch_blocks_blob_epoch(), ...
+├── blob_flow.py                 # fetch_blob_flow()
+├── column_propagation.py        # fetch_col_first_seen()
+├── mempool_visibility.py        # fetch_tx_per_slot(), fetch_mempool_coverage(), ...
 └── block_production_timeline.py # fetch_block_production_timeline()
-└── att_inclusion.py            # fetch_attestations_arrivals(), ...
+└── att_propagation.py           # fetch_attestations_arrivals(), ...
 scripts/
 ├── pipeline.py            # Coordinator: config loading, hash computation, staleness
 ├── fetch_data.py          # CLI: ClickHouse -> notebooks/data/*.parquet
