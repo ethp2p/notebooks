@@ -119,6 +119,12 @@ queries:
     description: Block propagation by geographic region from Contributoor nodes
     output_file: block_propagation_by_region_contributoor.parquet
 
+  slot_tags:
+    module: queries.slot_tagger
+    function: fetch_slot_tags
+    description: Classify each slot for what happened based on the events
+    output_file: slot_tags.parquet
+
 # ============================================
 # Notebook Registry
 # ============================================
@@ -257,6 +263,20 @@ notebooks:
         type: date
         required: true
     order: 9
+
+  - id: slot-tags
+    title: Slot types
+    description: Visualize and aggregate metrics based on what happened on each slot
+    icon: Gauge
+    source: notebooks/12-slot-classifier.ipynb
+    schedule: daily
+    queries:
+      - slot_tags
+    parameters:
+      - name: target_date
+        type: date
+        required: true
+    order: 12
 
 # Schedule options: hourly, daily, weekly, manual
 # - hourly: Runs every hour, accumulating data throughout the day
