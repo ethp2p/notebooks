@@ -447,14 +447,14 @@ class DataColumnBroadcastRule:
             SELECT
                 slot,
                 CASE
-                    WHEN first_col_proposal IS NULL THEN '{MISSED_SLOT}'
+                    WHEN first_col_proposal IS NULL THEN '{NO_BLOBS}'
                     WHEN first_col_proposal < 1000 THEN '{EARLY_PROPOSAL}'
                     WHEN first_col_proposal <= 2000 THEN '{NEUTRAL_PROPOSAL}'
                     WHEN first_col_proposal <= 4000 THEN '{AGGRESSIVE_PROPOSAL}'
                     ELSE '{LATE_PROPOSAL}'
                 END AS first_col_proposal_tag,
                 CASE
-                    WHEN last_col_proposal IS NULL THEN '{MISSED_SLOT}'
+                    WHEN last_col_proposal IS NULL THEN '{NO_BLOBS}'
                     WHEN last_col_proposal < 1000 THEN '{EARLY_PROPOSAL}'
                     WHEN last_col_proposal <= 2000 THEN '{NEUTRAL_PROPOSAL}'
                     WHEN last_col_proposal <= 4000 THEN '{AGGRESSIVE_PROPOSAL}'
@@ -583,7 +583,7 @@ class SlotTagger:
 
         # Slots with no blobs have no data-column sidecar events, so all col_* tag
         # columns are None after the left merge. Fill them with NO_BLOBS.
-        col_tag_cols = [c for c in final_df.columns if c.startswith("col_") and c.endswith("_tag")]
+        col_tag_cols = [c for c in final_df.columns if c.contains("_col_") or (c.startswith("col_") and c.endswith("_tag"))]
         if col_tag_cols:
             final_df[col_tag_cols] = final_df[col_tag_cols].fillna(NO_BLOBS)
 

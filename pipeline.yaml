@@ -112,12 +112,11 @@ queries:
     description: Block propagation by geographic region from Sentries
     output_file: block_propagation_by_region.parquet
 
-  block_propagation_by_region_contributoor:
-    module: queries.block_propagation_contributoor
-    function: fetch_block_propagation_by_region_contributoor
-    database: contributoor
-    description: Block propagation by geographic region from Contributoor nodes
-    output_file: block_propagation_by_region_contributoor.parquet
+  slot_tags:
+    module: queries.slot_tagger
+    function: fetch_slot_tags
+    description: Classify each slot for what happened based on the events
+    output_file: slot_tags.parquet
 
   slot_tags:
     module: queries.slot_tagger
@@ -247,22 +246,19 @@ notebooks:
         required: true
     order: 8
 
-  - id: block-propagation-size
-    title: Block propagation
-    description: Block propagation timing by size with corrected MEV timing that isolates network latency from block building
+  - id: slot-tags
+    title: Slot types
+    description: Visualize and aggregate metrics based on what happened on each slot
     icon: Gauge
-    source: notebooks/09-block-propagation-size.ipynb
+    source: notebooks/12-slot-classifier.ipynb
     schedule: daily
     queries:
-      - block_propagation_by_size
-      - block_production_timeline
-      - block_propagation_by_region
-      - block_propagation_by_region_contributoor
+      - slot_tags
     parameters:
       - name: target_date
         type: date
         required: true
-    order: 9
+    order: 12
 
   - id: slot-tags
     title: Slot types
