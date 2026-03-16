@@ -21,6 +21,12 @@ dependencies = [
     "polars>=1.38.1",
 ]
 
+[tool.uv]
+package = true
+
+[tool.setuptools.packages.find]
+include = ["queries*"]
+
 [dependency-groups]
 dev = [
     "ipykernel>=7.1.0",

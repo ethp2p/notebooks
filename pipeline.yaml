@@ -118,12 +118,6 @@ queries:
     description: Classify each slot for what happened based on the events
     output_file: slot_tags.parquet
 
-  slot_tags:
-    module: queries.slot_tagger
-    function: fetch_slot_tags
-    description: Classify each slot for what happened based on the events
-    output_file: slot_tags.parquet
-
 # ============================================
 # Notebook Registry
 # ============================================
@@ -245,20 +239,6 @@ notebooks:
         type: date
         required: true
     order: 8
-
-  - id: slot-tags
-    title: Slot types
-    description: Visualize and aggregate metrics based on what happened on each slot
-    icon: Gauge
-    source: notebooks/12-slot-classifier.ipynb
-    schedule: daily
-    queries:
-      - slot_tags
-    parameters:
-      - name: target_date
-        type: date
-        required: true
-    order: 12
 
   - id: slot-tags
     title: Slot types
