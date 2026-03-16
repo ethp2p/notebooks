@@ -12,6 +12,11 @@ from queries.blob_inclusion import (
 )
 from queries.blob_flow import fetch_blob_flow
 from queries.column_propagation import fetch_col_first_seen, NUM_COLUMNS
+from queries.att_propagation import (
+    fetch_attestation_arrivals,
+    fetch_block_and_column_broadcast_info,
+    fetch_aggregation_broadcast_info,
+)
 
 __all__ = [
     # Blob inclusion
@@ -23,5 +28,9 @@ __all__ = [
     "fetch_blob_flow",
     # Column propagation
     "fetch_col_first_seen",
+    # Attestation inclusion
+    "fetch_attestation_arrivals",
+    "fetch_aggregation_broadcast_info",
+    "fetch_block_and_column_broadcast_info",
     "NUM_COLUMNS",
 ]

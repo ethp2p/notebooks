@@ -18,6 +18,7 @@ dependencies = [
     "boto3>=1.35.0",
     "scipy>=1.16.3",
     "statsmodels>=0.14.6",
+    "polars>=1.37.1",
 ]
 
 [dependency-groups]

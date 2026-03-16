@@ -14,9 +14,7 @@ Reads notebook configuration from pipeline.yaml.
 import argparse
 import hashlib
 import json
-import os
 import random
-import shutil
 import sys
 import tempfile
 import time
@@ -26,7 +24,6 @@ from pathlib import Path
 
 import nbformat
 import papermill as pm
-import yaml
 from nbconvert import HTMLExporter
 from traitlets.config import Config
 
@@ -37,7 +34,6 @@ from scripts.pipeline import (
     load_config as load_pipeline_config,
     load_data_manifest,
     check_staleness,
-    print_staleness_report,
     resolve_dates,
 )
 
