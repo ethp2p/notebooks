@@ -1,0 +1,15 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import DateNav from '@/components/DateNav.astro';
+import OverviewContent from '@/components/OverviewContent.astro';
+import { getLatestDate, getAvailableDates, getNotebooks } from '@/lib/data';
+
+const latestDate = getLatestDate();
+const availableDates = getAvailableDates();
+const notebooks = getNotebooks();
+---
+
+<BaseLayout title="Overview" description="Network health summary for the Ethereum P2P Observatory">
+  <DateNav slot="header" currentDate={latestDate} notebookId="overview" availableDates={availableDates} />
+  <OverviewContent date={latestDate} notebooks={notebooks} />
+</BaseLayout>

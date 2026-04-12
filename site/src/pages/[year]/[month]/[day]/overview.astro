@@ -1,0 +1,35 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import DateNav from '@/components/DateNav.astro';
+import OverviewContent from '@/components/OverviewContent.astro';
+import { getAvailableDates, getNotebooks, getManifest } from '@/lib/data';
+
+export function getStaticPaths() {
+  const manifest = getManifest();
+  const paths: Array<{
+    params: { year: string; month: string; day: string };
+    props: { isoDate: string };
+  }> = [];
+
+  for (const isoDate of Object.keys(manifest.dates || {})) {
+    const [year, month, day] = isoDate.split('-');
+    paths.push({ params: { year, month, day }, props: { isoDate } });
+  }
+  return paths;
+}
+
+const { year, month, day } = Astro.params;
+const { isoDate } = Astro.props;
+
+const dateIso = isoDate || `${year}-${month}-${day}`;
+const availableDates = getAvailableDates();
+const notebooks = getNotebooks();
+---
+
+<BaseLayout
+  title={`Overview — ${dateIso}`}
+  description={`Network health summary for ${dateIso}`}
+>
+  <DateNav slot="header" currentDate={dateIso} notebookId="overview" availableDates={availableDates} />
+  <OverviewContent date={dateIso} notebooks={notebooks} />
+</BaseLayout>

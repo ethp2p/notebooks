@@ -1,6 +1,6 @@
 import React from 'react';
 import { cn, toPathDate, formatShortDate } from '@/lib/utils';
-import { FileText, Calendar, Download } from 'lucide-react';
+import { FileText, Calendar, Download, LayoutDashboard } from 'lucide-react';
 
 interface Notebook {
   id: string;
@@ -31,6 +31,24 @@ export function SidebarList({ notebooks, latestDate, historicalDates, currentPat
           </span>
         </div>
         <ul className="m-0 flex list-none flex-col p-0">
+          <li key="overview">
+            <a
+              href={`${base}latest/overview`}
+              className={cn(
+                'group text-muted-foreground relative flex items-center gap-2 px-2 py-1.5 text-[0.8125rem] no-underline transition-all duration-200',
+                "before:bg-primary before:absolute before:top-1/2 before:left-0 before:h-0 before:w-[2px] before:-translate-y-1/2 before:transition-all before:duration-200 before:content-['']",
+                'hover:text-foreground hover:bg-muted hover:before:h-1/2',
+                currentPath.includes('/latest/overview') || currentPath === `${base}latest` || currentPath === `${base}latest/`
+                  ? 'text-foreground bg-[var(--mauve-4)] font-medium before:!h-[60%]' : '',
+              )}
+              title="Network health overview"
+            >
+              <span className="group-hover:text-primary group-[.active]:text-primary flex shrink-0 items-center justify-center opacity-50 transition-all duration-200 group-hover:opacity-100 group-[.active]:opacity-100">
+                <LayoutDashboard size={12} />
+              </span>
+              <span className="min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap">Overview</span>
+            </a>
+          </li>
           {notebooks.map((nb) => {
             const href = `${base}latest/${nb.id}`;
             const isActive = currentPath.includes(`/latest/${nb.id}`);

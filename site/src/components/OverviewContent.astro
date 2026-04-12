@@ -1,0 +1,436 @@
+---
+// src/components/OverviewContent.astro
+// Shared by /latest/overview and /[year]/[month]/[day]/overview
+import type { NotebookConfig } from '@/lib/data';
+import { getLatestDate } from '@/lib/data';
+
+interface Props {
+  date: string;        // YYYY-MM-DD
+  notebooks: NotebookConfig[];
+}
+
+const { date, notebooks } = Astro.props;
+const latestDate = getLatestDate();
+const isLatest = date === latestDate;
+
+function notebookUrl(id: string): string {
+  if (isLatest) return `/latest/${id}`;
+  const [y, m, d] = date.split('-');
+  return `/${y}/${m}/${d}/${id}`;
+}
+
+const groups = [
+  {
+    icon: '📦',
+    label: 'Blob / Data Availability',
+    ids: ['blob-inclusion', 'blob-flow', 'block-column-timing'],
+  },
+  {
+    icon: '📡',
+    label: 'Propagation',
+    ids: ['block-propagation-size', 'column-propagation', 'propagation-anomalies'],
+  },
+  {
+    icon: '⚡',
+    label: 'MEV & Mempool',
+    ids: ['mev-pipeline', 'mempool-visibility'],
+  },
+  {
+    icon: '🏥',
+    label: 'Network Health',
+    ids: ['missed-slots'],
+  },
+];
+
+const displayDate = new Date(date + 'T12:00:00Z').toLocaleDateString('en-US', {
+  weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC',
+});
+---
+
+<div class="overview-root">
+
+  <!-- Header -->
+  <div class="overview-header">
+    <div>
+      <h1 class="overview-title">Network Overview</h1>
+      <p class="overview-sub">{displayDate} · Mainnet</p>
+    </div>
+    {isLatest && (
+      <span class="live-badge">
+        <span class="live-dot" />
+        Latest
+      </span>
+    )}
+  </div>
+
+  <!-- Stat cards (values injected client-side from parquet) -->
+  <div class="stat-grid">
+
+    <div class="stat-card" id="card-blobs" data-color="neutral">
+      <div class="stat-label">Avg Blobs / Slot</div>
+      <div class="stat-value" id="val-blobs"><span class="skeleton">——</span></div>
+      <div class="stat-sub"  id="sub-blobs">loading…</div>
+      <a class="stat-drill"  href={notebookUrl('blob-inclusion')}>blob-inclusion →</a>
+    </div>
+
+    <div class="stat-card" id="card-missed" data-color="neutral">
+      <div class="stat-label">Missed Slots</div>
+      <div class="stat-value" id="val-missed"><span class="skeleton">——</span></div>
+      <div class="stat-sub"  id="sub-missed">loading…</div>
+      <a class="stat-drill"  href={notebookUrl('missed-slots')}>missed-slots →</a>
+    </div>
+
+    <div class="stat-card" id="card-mempool" data-color="neutral">
+      <div class="stat-label">Mempool Coverage</div>
+      <div class="stat-value" id="val-mempool"><span class="skeleton">——</span></div>
+      <div class="stat-sub"  id="sub-mempool">loading…</div>
+      <a class="stat-drill"  href={notebookUrl('mempool-visibility')}>mempool-visibility →</a>
+    </div>
+
+    <div class="stat-card" id="card-slots" data-color="neutral">
+      <div class="stat-label">Total Slots</div>
+      <div class="stat-value" id="val-slots"><span class="skeleton">——</span></div>
+      <div class="stat-sub"  id="sub-slots">loading…</div>
+      <a class="stat-drill"  href={notebookUrl('blob-inclusion')}>blob-inclusion →</a>
+    </div>
+
+  </div>
+
+  <!-- Notebook grid -->
+  <div class="section-label">Notebooks</div>
+  <div class="nb-grid">
+    {groups.map(group => {
+      const members = group.ids
+        .map(id => notebooks.find((nb: NotebookConfig) => nb.id === id))
+        .filter((nb): nb is NotebookConfig => nb !== undefined);
+      if (!members.length) return null;
+      return (
+        <div class="nb-group">
+          <div class="nb-group-header">
+            <span>{group.icon}</span>
+            <span class="nb-group-title">{group.label}</span>
+          </div>
+          <div class="nb-group-body">
+            {members.map((nb: NotebookConfig) => (
+              <a class="nb-row" href={notebookUrl(nb.id)}>
+                <div class="nb-row-info">
+                  <span class="nb-row-name">
+                    {nb.icon && <span class="nb-icon">{nb.icon}</span>}
+                    {nb.title}
+                  </span>
+                  <span class="nb-row-desc">{nb.description}</span>
+                </div>
+                <span class="nb-row-arrow">→</span>
+              </a>
+            ))}
+          </div>
+        </div>
+      );
+    })}
+  </div>
+
+</div>
+
+<!-- Client-side parquet fetch using hyparquet (pure JS, no WASM) -->
+<script define:vars={{ date }}>
+
+const DATA_BASE = '/data';
+
+/**
+ * Read rows from a parquet file using hyparquet.
+ * Returns array of objects with column names as keys.
+ */
+async function readParquet(date, filename, columns) {
+  const url = `${DATA_BASE}/${date}/${filename}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`HTTP ${res.status}: ${url}`);
+  const buffer = await res.arrayBuffer();
+
+  const { parquetReadObjects } = await import(
+    'https://esm.sh/hyparquet'
+  );
+
+  return await parquetReadObjects({ file: buffer, columns });
+}
+
+function setVal(id, text) {
+  const el = document.getElementById(id);
+  if (el) el.innerHTML = text;
+}
+function setSub(id, text) {
+  const el = document.getElementById(`sub-${id}`);
+  if (el) el.textContent = text;
+}
+function setColor(id, color) {
+  const el = document.getElementById(`card-${id}`);
+  if (el) el.dataset.color = color;
+}
+
+async function loadBlobStats() {
+  try {
+    const rows = await readParquet(date, 'blobs_per_slot.parquet', ['blob_count']);
+    const counts = rows.map(r => r.blob_count);
+    const total   = counts.length;
+    const missed  = counts.filter(v => v === 0 || v == null).length;
+    const active  = counts.filter(v => v > 0);
+    const avg     = active.length
+      ? (active.reduce((a, b) => a + Number(b), 0) / active.length).toFixed(2)
+      : '—';
+    const missRate = total ? ((missed / total) * 100).toFixed(1) : '—';
+
+    setVal('val-blobs', avg);
+    setSub('blobs', `${active.length.toLocaleString()} slots with blobs`);
+    setColor('blobs', parseFloat(avg) >= 3 ? 'green' : parseFloat(avg) >= 1 ? 'yellow' : 'red');
+
+    setVal('val-missed', missed.toLocaleString());
+    setSub('missed', `${missRate}% miss rate`);
+    setColor('missed', missed <= 5 ? 'green' : missed <= 20 ? 'yellow' : 'red');
+
+    setVal('val-slots', total.toLocaleString());
+    setSub('slots', `${date} · mainnet`);
+    setColor('slots', 'blue');
+
+  } catch (e) {
+    console.warn('[overview] blobs_per_slot failed:', e);
+    for (const id of ['blobs', 'missed', 'slots']) {
+      setVal(`val-${id}`, '—');
+      setSub(id, 'data unavailable');
+    }
+  }
+}
+
+async function loadMempoolStats() {
+  try {
+    const rows = await readParquet(
+      date, 'mempool_coverage.parquet',
+      ['total_txs', 'seen_in_mempool']
+    );
+
+    let totalTxs = 0;
+    let totalSeen = 0;
+    for (const r of rows) {
+      totalTxs  += Number(r.total_txs  || 0);
+      totalSeen += Number(r.seen_in_mempool || 0);
+    }
+    const pct = totalTxs > 0 ? ((totalSeen / totalTxs) * 100).toFixed(1) : '—';
+
+    setVal('val-mempool', `${pct}%`);
+    setSub('mempool', 'avg tx visibility pre-inclusion');
+    setColor('mempool',
+      parseFloat(pct) >= 70 ? 'green' :
+      parseFloat(pct) >= 40 ? 'yellow' : 'red'
+    );
+  } catch (e) {
+    console.warn('[overview] mempool_coverage failed:', e);
+    setVal('val-mempool', '—');
+    setSub('mempool', 'see notebook');
+  }
+}
+
+Promise.allSettled([loadBlobStats(), loadMempoolStats()]);
+
+</script>
+
+<style>
+.overview-root {
+  font-family: var(--font-sans, system-ui, sans-serif);
+}
+
+/* Header */
+.overview-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.75rem;
+}
+.overview-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--foreground);
+}
+.overview-sub {
+  font-size: 0.8rem;
+  color: var(--muted-foreground);
+  margin-top: 0.25rem;
+  font-family: var(--font-mono, monospace);
+}
+.live-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.7rem;
+  font-family: var(--font-mono, monospace);
+  color: var(--muted-foreground);
+  background: var(--muted);
+  border-radius: 4px;
+  padding: 0.25rem 0.6rem;
+  white-space: nowrap;
+  margin-top: 4px;
+}
+.live-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #3fb950;
+  animation: blink 2s ease-in-out infinite;
+}
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+/* Stat grid */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 2.5rem;
+}
+.stat-card {
+  border-radius: 8px;
+  padding: 1rem 1.25rem;
+  border: 1px solid var(--border);
+  background: var(--card, var(--background));
+  position: relative;
+  overflow: hidden;
+}
+.stat-card::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 2px;
+  border-radius: 8px 8px 0 0;
+  background: var(--border);
+  transition: background 0.3s;
+}
+.stat-card[data-color="green"]::before  { background: #3fb950; }
+.stat-card[data-color="yellow"]::before { background: #d29922; }
+.stat-card[data-color="red"]::before    { background: #f85149; }
+.stat-card[data-color="blue"]::before   { background: var(--primary, #58a6ff); }
+
+.stat-label {
+  font-size: 0.67rem;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--muted-foreground);
+  font-family: var(--font-mono, monospace);
+  margin-bottom: 0.5rem;
+}
+.stat-value {
+  font-size: 1.8rem;
+  font-weight: 500;
+  line-height: 1;
+  color: var(--foreground);
+  font-family: var(--font-mono, monospace);
+  margin-bottom: 0.3rem;
+  min-height: 1.8rem;
+}
+.skeleton {
+  color: var(--border);
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+@keyframes shimmer { 0%,100%{opacity:.3} 50%{opacity:.8} }
+.stat-sub {
+  font-size: 0.72rem;
+  color: var(--muted-foreground);
+  font-family: var(--font-mono, monospace);
+  min-height: 1rem;
+}
+.stat-drill {
+  display: inline-block;
+  margin-top: 0.6rem;
+  font-size: 0.7rem;
+  font-family: var(--font-mono, monospace);
+  color: var(--primary, #58a6ff);
+  text-decoration: none;
+}
+.stat-drill:hover { text-decoration: underline; }
+
+/* Section label */
+.section-label {
+  font-size: 0.67rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--muted-foreground);
+  font-family: var(--font-mono, monospace);
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 1rem;
+}
+
+/* Notebook grid */
+.nb-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1rem;
+}
+.nb-group {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--card, var(--background));
+}
+.nb-group-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--muted);
+}
+.nb-group-title {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted-foreground);
+  font-family: var(--font-mono, monospace);
+  font-weight: 500;
+}
+.nb-group-body { padding: 0.4rem; }
+.nb-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.55rem 0.75rem;
+  border-radius: 5px;
+  text-decoration: none;
+  color: var(--foreground);
+  gap: 0.75rem;
+  transition: background 0.1s;
+}
+.nb-row:hover { background: var(--muted); }
+.nb-row-info  { flex: 1; min-width: 0; }
+.nb-row-name  {
+  font-size: 0.875rem;
+  font-weight: 500;
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.nb-icon { margin-right: 0.3rem; }
+.nb-row-desc {
+  font-size: 0.72rem;
+  color: var(--muted-foreground);
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 0.1rem;
+  font-family: var(--font-mono, monospace);
+}
+.nb-row-arrow {
+  color: var(--muted-foreground);
+  font-size: 0.8rem;
+  flex-shrink: 0;
+  transition: color 0.1s, transform 0.1s;
+}
+.nb-row:hover .nb-row-arrow {
+  color: var(--primary, #58a6ff);
+  transform: translateX(2px);
+}
+
+@media (max-width: 640px) {
+  .stat-value { font-size: 1.4rem; }
+  .overview-header { flex-direction: column; }
+}
+</style>
