@@ -642,3 +642,33 @@ Two stubs were also added to `tests/setup.ts`:
 **Reason:** No consolidated equivalent of `sentry_coverage` exists. The query aggregates per-sentry coverage rates from `mempool_transaction`; `mempool_events` carries no sentry field (per Plan 03 Task 03 ERRATA). Deleting would break typecheck and the query registry.
 
 **Downstream impact:** `mempool_visibility.ts` remains active in `observatory/src/queries/index.ts`. The three other queries it provides (`tx_per_slot`, `mempool_coverage`, `mempool_availability`) are unused by any chart but do not cause harm. A future cleanup can remove those three query registrations once confirmed unnecessary.
+
+### 2026-04-23 · Plan 07 Tasks 01-02 · site/tsconfig.json includes ../worker/src/legacy.ts
+
+**What the plan said:** Import `resolveLegacy` from `'../../../worker/src/legacy'` in `Legacy.tsx`. No tsconfig change was mentioned.
+
+**What was done instead:** Added `"../worker/src/legacy.ts"` to the `include` array in `site/tsconfig.json` (not the full `../worker/src` directory, only the specific file). Without this, `tsc` cannot find the external module and fails TS2307.
+
+**Reason:** The site tsconfig `include` array covers only `src` and `tests`. A relative import from `../worker/src/legacy` is valid at bundle time (Vite/Bun resolve it), but `tsc --noEmit` needs the file in scope. Including only `legacy.ts` avoids pulling `index.ts` (which uses `@cloudflare/workers-types` not present in the site) into the site's type graph.
+
+**Downstream impact:** Any future module added to `worker/src/` that is imported by the site must also be added to `site/tsconfig.json`'s `include` array. The full `../worker/src` directory must NOT be added because `index.ts` uses Cloudflare-specific types unavailable in the site tsconfig.
+
+### 2026-04-23 · Plan 07 Task 03 · getDatesJson fetches via manifest entry, not a separate R2 path
+
+**What the plan said:** Implement `getDatesJson(env)` fetching `manifests/main.json` or equivalent to get `dates.latest`. Suggested looking at existing worker code for patterns.
+
+**What was done instead:** `getDatesJson` accepts `(bucket: R2Bucket, manifest: Manifest)` (the manifest is already loaded at the call site). It resolves `manifest['/dates.json']` to a `ManifestEntry`, then fetches that blob from R2 via `bucket.get(entry.blob)`. Returns `null` if the entry or blob is missing.
+
+**Reason:** The worker's manifest is a content-addressed map of site paths to blob keys. `dates.json` is served as a static site asset, so it appears in the manifest as `/dates.json`. Fetching via the manifest entry reuses the existing R2 pattern consistently with the rest of the worker. The plan's proposed signature (`getDatesJson(env)`) was impractical because fetching a second manifest for just the dates.json blob key would require knowing which manifest to load (prod vs staging), but the manifest is already resolved at the call site.
+
+**Downstream impact:** The worker now requires `dates.json` to be present in the site manifest as `/dates.json`. If the key changes (e.g., to `/dates/index.json`), `getDatesJson` must be updated. Also, redirects to /w/<encoded> will use an empty string for `latestDate` if `dates.json` is absent from the manifest (fallback: blob-inclusion preset with no date).
+
+### 2026-04-23 · Plan 07 Task 04 · legacy e2e tests use waitForURL instead of relying on goto to follow client-side redirect
+
+**What the plan said:** "Since Playwright's `goto` waits for the target page, the final URL should reflect the redirect."
+
+**What was done instead:** Added `await page.waitForURL(/\/w\//, { timeout: 10_000 })` after each `goto` call. The `<Navigate replace>` is a client-side React Router redirect, not an HTTP redirect. Playwright's `goto` with `waitUntil: 'load'` only guarantees the initial page is loaded; it does not wait for React to mount and fire the `<Navigate>`. An explicit `waitForURL` is required to wait for the URL change after React reconciles.
+
+**Reason:** Client-side redirects are not network-level events. `goto` with `waitUntil: 'load'` returns after the DOMContentLoaded + network idle, but the React hydration and `<Navigate>` dispatch happen in JavaScript after load. Without `waitForURL`, the test reads `page.url()` before the redirect fires and asserts the original path.
+
+**Downstream impact:** Any future Playwright test that verifies a client-side React Router redirect must use `waitForURL` (or `waitForNavigation`) rather than relying on `goto` alone.
