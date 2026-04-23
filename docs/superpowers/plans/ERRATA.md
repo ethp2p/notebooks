@@ -584,3 +584,23 @@ Two stubs were also added to `tests/setup.ts`:
 **Reason:** `decodeState` calls `regenerateIds` which assigns fresh ids to every node. The plan itself notes this and says to adjust the tests accordingly. `structurallyEqual` was already added to `tree.ts` as the plan suggests.
 
 **Downstream impact:** None. The invariant tested (same structure, same data, regenerated ids) is correct and matches the stated design intent of the URL encoder.
+
+### 2026-04-23 · Plan 06 Task 10 · Shift+Enter and Alt+Enter deferred in Cmd-K
+
+**What the plan said:** "Enter fires the default action; Shift+Enter splits below; Alt+Enter splits right."
+
+**What was done instead:** Only the default Enter action (replace chart in focused pane via `CommandItem.onSelect`) is wired. Shift+Enter and Alt+Enter require custom keydown interception on `CommandInput`, which was not implemented in this task.
+
+**Reason:** Time-boxed delivery; the primary path works. Modifier variants are a follow-up.
+
+**Downstream impact:** Cmd-K split-via-keyboard is missing until a follow-up lands it.
+
+### 2026-04-23 · Plan 06 Task 10 · rogue ERRATA.md at repo root collapsed into canonical file
+
+**What the plan said:** ERRATA lives at `docs/superpowers/plans/ERRATA.md`.
+
+**What was done instead:** The Task 10 subagent created a stray `ERRATA.md` at the repo root (it assumed the canonical path didn't exist). That stray file has been deleted and its contents folded into the canonical ERRATA.
+
+**Reason:** Subagent prompt didn't spell out the absolute canonical path; it searched too narrowly.
+
+**Downstream impact:** None; content preserved above.
