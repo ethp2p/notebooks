@@ -392,3 +392,95 @@ IBM Plex Sans (Regular 400, Medium 500, Bold 700) was downloaded from `https://g
 **Reason:** Zod's `z.object()` requires a statically-typed shape parameter. Building 128 field names statically would require either 128 literal entries or code generation. The dynamic approach with a controlled cast is a pragmatic workaround with no runtime safety loss.
 
 **Downstream impact:** The `MempoolAvailabilityRow` schema for `mempool_availability` uses the same pattern for its 30 histogram fields (`age_hist_0..14`, `delay_hist_0..14`). Both schemas validate fully at runtime; the cast only affects static types.
+
+### 2026-04-23 · Plan 03 Tasks 08-09 · live dry-runs deferred (no ClickHouse credentials)
+
+**What the plan said:** Tasks 08 and 09 require running `bun run fetch --date <yesterday>` and `bun run fetch --workers 1/8 --only region_size_matrix` to verify end-to-end output and row counts.
+
+**What was done instead:** Both tasks were skipped. `bun run typecheck` (pass, no errors), `bun test` (8/8 pass), `bun run fetch --help` (exit 0), and the registry count check (`QUERY_REGISTRY.size === 21`) were run as proxy verification.
+
+**Reason:** No ClickHouse credentials are present in the session environment. This matches the precedent set in Plan 02 ERRATA (Tasks 09-10 dry-run deferral entry).
+
+**Downstream impact:** The self-review checklist items on row counts (non-empty arrow files, `col_first_seen_binned` ≤ 61,440, etc.) are deferred until the first real fetch with credentials. All 7 new query IDs are verified in the registry at schema-load time.
+
+### 2026-04-23 · Plan 03 Task 01 · block_events — no pre-built sentry/arrival tables; SQL rewritten from raw sources
+
+**What the plan said:** Use `canonical_beacon_block_sentry_arrival` for block arrivals, `data_column_first_seen` / `data_column_last_seen` for column events, `mev_relay_bid_trace` for bids, and `mev_relay_winning_bid` for winning bids. Columns include `bid_received_at`, `proposer_pubkey`, `first_seen_at`, `first_column_at`, `last_column_at`, `value_wei`.
+
+**What was done instead:** All table and column names verified against Python query files before writing SQL:
+- `canonical_beacon_block_sentry_arrival` does not exist. Block arrivals computed from `libp2p_gossipsub_beacon_block` (column `propagation_slot_start_diff`, grouped by `slot` + `meta_client_geo_continent_code`).
+- `data_column_first_seen` / `data_column_last_seen` do not exist. First/last column seen computed from `libp2p_gossipsub_data_column_sidecar` using `min` / `max` of `propagation_slot_start_diff`, filtered by `event_date_time > '1970-01-01 00:00:01'` (matches Python).
+- `mev_relay_winning_bid` does not exist. Winning bid data taken from `mev_relay_proposer_payload_delivered` (column `value`, not `value_wei`).
+- `bid_received_at` does not exist; bid timing derived as `timestamp_ms - slot_start epoch_ms`.
+- `proposer_pubkey` is not available in any of these event tables; added as `NULL` in the schema with `nullable()` (plan had it non-nullable).
+- `is_mev` is not a column in gossipsub tables; derived via `IN (SELECT slot FROM mev_relay_proposer_payload_delivered)`.
+- `blob_count` is not available in arrival/bid tables; joined from `canonical_beacon_blob_sidecar` CTE.
+- `arrivals` CTE emits one row per (slot, region, event_type) rather than one row per slot, to preserve geographic information.
+
+**Reason:** The plan's table names are illustrative placeholders. Real Xatu schema verified from working Python files.
+
+**Downstream impact:** Charts consuming `block_events` should expect: `proposer_pubkey` always NULL; `region` populated only for `block_arrival` rows; one row per (slot, region) for `block_arrival` (not strictly one per slot); `latency_ms` for `bid_received` rows is relative to `slot_start_date_time` using timestamp_ms arithmetic.
+
+### 2026-04-23 · Plan 03 Task 02 · blob_events — entity and is_mev require JOINs; proposer_pubkey not available
+
+**What the plan said:** `SELECT DISTINCT ... FROM canonical_beacon_block WHERE ...` with `proposer_entity AS entity` and `is_mev` as direct columns.
+
+**What was done instead:** `canonical_beacon_block` has `proposer_index` (not `proposer_entity` or `proposer_pubkey`). Entity derived via `GLOBAL LEFT JOIN ethseer_validator_entity`. `is_mev` derived via `IN (SELECT slot FROM mev_relay_proposer_payload_delivered)`. `proposer_pubkey` not available anywhere in this query path; added as `NULL` with `z.string().nullable()`. `proposer_index` added to schema (plan omitted it; useful for entity JOIN transparency).
+
+**Reason:** `canonical_beacon_block` does not materialise entity or MEV flag; these require joins, matching blob_flow.py.
+
+**Downstream impact:** `BlobEventsRow` has two extra nullable fields (`proposer_index`, `proposer_pubkey`) not in the plan schema. Charts reading `blob_events` can safely ignore them. The plan's `entity` field is present but may be NULL for unknown validators.
+
+### 2026-04-23 · Plan 03 Task 03 · mempool_events — no mempool_tx_events table; tx_type is integer string; sentry field dropped
+
+**What the plan said:** Query `mempool_tx_events` with columns `tx_hash`, `tx_type` (enum string), `sentry_name AS sentry`, `mempool_seen_at`, `included_at`, `age_ms`, `delay_ms`.
+
+**What was done instead:**
+- No `mempool_tx_events` table exists. Query joins `canonical_beacon_block_execution_transaction` with `mempool_transaction` (see mempool_visibility.py). The `hash` column is the join key.
+- `type` in the execution transaction table is an integer (0=legacy, 1=eip2930, 2=eip1559, 3=blob, 4=setcode). Cast to string with `toString(c.type)`; `MempoolEventsRow.tx_type` changed from `z.enum(['legacy',...])` to `z.string()` to accept raw integer values.
+- `sentry_name` does not exist in `canonical_beacon_block_execution_transaction`. The plan's `sentry` field (single sentry per tx) is conceptually wrong: `mempool_transaction` has one row per (hash, sentry); the join collapses to first-seen-at (min over all sentries). The `sentry` field is dropped from the schema entirely.
+- `included_at` is set to `slot_start_date_time` (no exact inclusion timestamp in the table).
+- `age_ms` and `delay_ms` are computed as before but `age_ms` = ms from seen to slot_start; `delay_ms` = ms from slot_start to seen (semantically opposite signs for before/after).
+
+**Reason:** Real table schema verified from mempool_visibility.py. The plan's enum for tx_type cannot be guaranteed without additional mapping logic; using raw integer strings is safer until a mapping is confirmed live.
+
+**Downstream impact:** Charts expecting `tx_type` as a named enum string will need to map integers (0-4) to display labels. `sentry` is absent; per-sentry analysis requires joining `mempool_transaction` directly with `meta_client_name`.
+
+### 2026-04-23 · Plan 03 Tasks 04-06 · col_first_seen_binned — col_first_seen table does not exist; date string interpolation workaround
+
+**What the plan said:** Query `col_first_seen` with `first_seen_ms` and `slot_start_date_time`. Time bucket via subtraction from midnight.
+
+**What was done instead:**
+- `col_first_seen` does not exist. The real table is `libp2p_gossipsub_data_column_sidecar` with `propagation_slot_start_diff` (ms since slot start) and dual date filter on `event_date_time` + `slot_start_date_time` (matches column_propagation.py).
+- `first_seen_ms` -> `propagation_slot_start_diff`.
+- The time bucket formula `toUnixTimestamp(slot_start_date_time) - toUnixTimestamp(toDateTime({date:Date} || ' 00:00:00'))` uses string concatenation with `{date:String}` because ClickHouse's `toDateTime({date:Date})` may not accept a Date parameter in all contexts. Added `TODO: validate against live schema` comment.
+
+**Reason:** Real source table verified from column_propagation.py.
+
+**Downstream impact:** Time bucket calculation depends on `slot_start_date_time` (5-minute aligned to slot), not raw event time. Null `propagation_slot_start_diff` handling is preserved with `quantileExactIf` / `minIf` / `maxIf`.
+
+### 2026-04-23 · Plan 03 Tasks 05-06 · block_timeline_cdf and region_size_matrix — no pre-built arrival tables; size_bucket and region computed from raw sources; schema loosened
+
+**What the plan said:** Query `canonical_beacon_block_sentry_arrival` and `canonical_beacon_block_contributoor_arrival` which have `latency_ms`, `size_bucket`, `region`, `is_mev` as columns. Schema uses `region` as `z.enum(['eu-west', 'eu-east', 'us-east', 'us-west'])`.
+
+**What was done instead:**
+- Neither arrival table exists. Sentry data computed from `libp2p_gossipsub_beacon_block` (column `propagation_slot_start_diff`) joined with `canonical_beacon_block` for size. Contributoor data from `mainnet.fct_block_first_seen_by_node` joined with `mainnet.int_block_canonical`.
+- `size_bucket` derived via `multiIf` on `block_total_bytes_compressed`: tiny < 100 KB, small 100-500 KB, medium 500 KB-1 MB, large >= 1 MB. These thresholds are reasonable but unvalidated against the distribution; adjust on first live run.
+- `region` is `meta_client_geo_continent_code` (`EU`, `NA`, `AS`, `OC`) not the plan's enum values. Schema changed: `BlockTimelineCdfRow.region` is `z.string()` (was `z.enum([...])`); `RegionSizeMatrixRow.region` was already `z.string()`.
+- `is_mev` / `builder_type` derived via IN subquery on `mev_relay_proposer_payload_delivered`.
+- `block_timeline_cdf` uses `ARRAY JOIN range(0,101) AS p` with `quantileExact(toFloat64(p)/100)(latency_ms)` per the plan's primary form. If ClickHouse rejects per-row quantile level at plan time, rewrite using `quantilesExact(...)` and `ARRAY JOIN` over the result array.
+- `block_timeline_cdf` mixes default and contributoor database contexts in the same query (cross-database join). This may require ClickHouse distributed query support. If rejected, split into two queries.
+
+**Reason:** No pre-built arrival tables in the real Xatu schema. Verified from block_propagation_by_size.py and block_propagation_contributoor.py.
+
+**Downstream impact:** `BlockTimelineCdfRow.region` and `RegionSizeMatrixRow.region` will contain continent codes (`EU`, `NA`, `AS`, `OC`), not the plan's named sub-regions. Charts must map continent codes to display labels. Size bucket thresholds may need tuning. Cross-database join in `block_timeline_cdf` needs live validation.
+
+### 2026-04-23 · Plan 03 Task 07 · blob_flow_edges — proposer_entity and relay_name require JOINs
+
+**What the plan said:** Query `canonical_beacon_block` with `proposer_entity AS entity` and `relay_name AS relay` as direct columns.
+
+**What was done instead:** `canonical_beacon_block` has `proposer_index` (not `proposer_entity`). Entity derived via `GLOBAL LEFT JOIN ethseer_validator_entity`. Relay derived via `GLOBAL LEFT JOIN mev_relay_proposer_payload_delivered` with `max(relay_name) AS relay_name` per slot (matches blob_flow.py). Slots without a relay delivery get `relay = 'none'` (coalesce). The `base` CTE matches the blob_flow.py structure exactly.
+
+**Reason:** Real column availability verified from blob_flow.py.
+
+**Downstream impact:** None relative to chart consumption; `entity` and `relay` field values are the same semantically. The extra JOIN cost is expected given the existing blob_flow query uses the same pattern.
