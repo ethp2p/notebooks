@@ -564,3 +564,23 @@ Two stubs were also added to `tests/setup.ts`:
 **What the plan said:** `tx_type` is an integer 0-4. Map to label in chart code.
 
 **What was done instead:** Per Plan 03 Task 03 ERRATA, the ClickHouse query casts `type` to `toString(c.type)`, so the Arrow column carries string values like `"0"`, `"1"`, etc. All nine charts call `Number(typeCol[i])` before passing to `txTypeLabel()`, which is correct for both integer and string representations. The `txTypeLabel()` helper is inlined in each chart file that needs it.
+
+### 2026-04-23 · Plan 06 Task 02 · tree.test.ts rewrites `as any` with discriminated-union narrowing
+
+**What the plan said:** The test for `closePane` uses `(next as any)?.id` and the test for `setRatio` uses `(setRatio(...) as any).ratio`. The test for `swapPanes` checks `next.a.id` / `next.b.id` via `as any`.
+
+**What was done instead:** All three patterns replaced with explicit `if (next.kind === 'split')` / `if (next.kind === 'pane')` branches and `expect.fail('expected split')` / `expect.fail('expected pane')` guards. `swapPanes` test asserts both chartId swap and id-in-place behaviour via discriminated narrowing.
+
+**Reason:** The plan rules prohibit `as any`. TypeScript's discriminated-union narrowing is the correct way to satisfy `noUncheckedIndexedAccess` + strict mode here.
+
+**Downstream impact:** None. The assertions are semantically identical; only the type-narrowing pattern changed.
+
+### 2026-04-23 · Plan 06 Task 03 · url.test.ts uses structurallyEqual instead of toEqual
+
+**What the plan said:** The single-pane round-trip test uses `expect(dec).toEqual(s)`, which implies exact equality including `id` fields.
+
+**What was done instead:** Tests use a local `statesStructurallyEqual` helper (built on `structurallyEqual` from `tree.ts`) that compares tree shape, `chartId`, `date`, and `defaultDate` while ignoring `id` fields. `focusedPaneId` is also excluded because it refers to a pane id that is regenerated on decode.
+
+**Reason:** `decodeState` calls `regenerateIds` which assigns fresh ids to every node. The plan itself notes this and says to adjust the tests accordingly. `structurallyEqual` was already added to `tree.ts` as the plan suggests.
+
+**Downstream impact:** None. The invariant tested (same structure, same data, regenerated ids) is correct and matches the stated design intent of the URL encoder.
