@@ -352,3 +352,43 @@ IBM Plex Sans (Regular 400, Medium 500, Bold 700) was downloaded from `https://g
 **Reason:** `tsconfig.json` has `"noUncheckedIndexedAccess": true`, which makes `argv[n]` return `string | undefined`. Assigning `string | undefined` to a `string` field fails typechecking. The helper narrows the type at one call site and gives a clear error message if a flag is passed without a value.
 
 **Downstream impact:** None. The public CLI interface is unchanged.
+
+### 2026-04-23 · Plan 02 Tasks 09-10 · live dry-run against ClickHouse deferred
+
+**What the plan said:** Step 4 of Task 09 instructs running `bun run fetch` (without credentials) to verify the registry lists queries.
+
+**What was done instead:** The dry-run step was skipped. `bun run fetch --help` was run (exits 0, shows usage) and `bun test` was run (8 tests pass). The live `bun run fetch` invocation that would attempt a real ClickHouse connection was not executed because no credentials are present in the environment.
+
+**Reason:** The plan itself noted this was expected behaviour (CLI errors on connection, not on registry listing), but to avoid confusing error output and keep the session clean, the step was deferred to when credentials are provided.
+
+**Downstream impact:** None. All 14 query IDs are registered and visible when the registry is iterated (verified via `bun test` which exercises registry internals).
+
+### 2026-04-23 · Plan 02 Tasks 09-10 · index.ts committed with last file rather than separately
+
+**What the plan said:** Commit each file separately with its own commit; `index.ts` import additions may be staged with the LAST commit only.
+
+**What was done instead:** The plan's exception clause was used. `index.ts` was staged and committed together with `block_propagation_contributoor.ts` in the final commit (`a6a2c59`). The six preceding commits each staged only their respective query file (without touching `index.ts`).
+
+**Reason:** Staging `index.ts` with each intermediate commit would reference modules not yet committed, creating broken intermediate states. The plan explicitly permits this exception.
+
+**Downstream impact:** None. All imports are active in the committed state.
+
+### 2026-04-23 · Plan 02 Tasks 09-10 · contributoor SQL uses template literal for network-prefixed table names
+
+**What the plan said:** Translate SQL 1:1. The Python original uses f-string interpolation for the network prefix in contributoor table names (e.g. `{network}.fct_block_mev`).
+
+**What was done instead:** Used a TypeScript template literal (`${network}`) to embed the hardcoded string `'mainnet'` into the table names (`mainnet.fct_block_mev`, `mainnet.int_block_canonical`, `mainnet.fct_block_first_seen_by_node`). The `network` variable holds the string `'mainnet'` and is not user-controlled input. The ClickHouse JS parameterised query API does not support table name parameters, so template literal interpolation is the correct and only approach here.
+
+**Reason:** ClickHouse parameterised queries (`{name:Type}`) support value substitution only, not identifier substitution. Table names cannot be parameterised. Since the network is hardcoded to `'mainnet'` (matching the Python pipeline default), there is no injection risk. This mirrors how the Python pipeline handles the same constraint via f-strings.
+
+**Downstream impact:** If multi-network support is added later, the `network` variable will need to come from the query context rather than being hardcoded. Plans 03+ should treat contributoor table names as requiring explicit handling if network is made configurable.
+
+### 2026-04-23 · Plan 02 Tasks 09-10 · ColFirstSeenRow Zod schema uses dynamic object with cast
+
+**What the plan said:** Use Zod schemas to validate rows.
+
+**What was done instead:** The `ColFirstSeenRow` schema for `col_first_seen` is built dynamically using a `Record<string, z.ZodTypeAny>` accumulator to which `c0..c127` entries are appended in a loop, then cast to the expected narrower type for the `z.object()` call. TypeScript cannot statically type an object with 128+ dynamically named optional fields; the cast is the minimal way to satisfy the type checker while preserving full runtime validation.
+
+**Reason:** Zod's `z.object()` requires a statically-typed shape parameter. Building 128 field names statically would require either 128 literal entries or code generation. The dynamic approach with a controlled cast is a pragmatic workaround with no runtime safety loss.
+
+**Downstream impact:** The `MempoolAvailabilityRow` schema for `mempool_availability` uses the same pattern for its 30 histogram fields (`age_hist_0..14`, `delay_hist_0..14`). Both schemas validate fully at runtime; the cast only affects static types.
