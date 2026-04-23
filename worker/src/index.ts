@@ -9,6 +9,8 @@
  *   - STAGING_DOMAIN (observatory-staging.ethp2p.dev): serves PR previews at /pr-{number}/
  */
 
+import { resolveLegacy } from './legacy';
+
 interface Env {
   R2_BUCKET: R2Bucket;
   PROD_DOMAIN: string; // e.g., "observatory.ethp2p.dev"
@@ -59,6 +61,28 @@ export default {
       });
     }
 
+    // Legacy notebook URL redirect — before normal path resolution
+    const latestMatch = actualPath.match(/^\/latest\/([a-z0-9-]+)\/?$/);
+    const datedMatch = actualPath.match(/^\/(\d{4})\/(\d{2})\/(\d{2})(?:\/([a-z0-9-]+))?\/?$/);
+    if (latestMatch || datedMatch) {
+      const dates = await getDatesJson(env.R2_BUCKET, manifest);
+      const latest = dates?.latest ?? '';
+      if (latestMatch) {
+        const target = resolveLegacy({ notebookId: latestMatch[1] }, latest);
+        return new Response(null, { status: 302, headers: { Location: target } });
+      }
+      if (datedMatch) {
+        const target = resolveLegacy(
+          {
+            date: `${datedMatch[1]}-${datedMatch[2]}-${datedMatch[3]}`,
+            notebookId: datedMatch[4],
+          },
+          latest,
+        );
+        return new Response(null, { status: 301, headers: { Location: target } });
+      }
+    }
+
     // Resolve path to manifest entry
     const entry = resolvePath(actualPath, manifest);
     if (!entry) {
@@ -72,6 +96,23 @@ export default {
     return serveBlob(env.R2_BUCKET, entry.blob, request);
   },
 };
+
+interface DatesJson {
+  latest: string;
+  dates: string[];
+}
+
+/**
+ * Fetch dates.json from the R2 bucket via the manifest entry for /dates.json.
+ * Returns null if the manifest does not list dates.json or the blob is unavailable.
+ */
+async function getDatesJson(bucket: R2Bucket, manifest: Manifest): Promise<DatesJson | null> {
+  const entry = manifest['/dates.json'];
+  if (!entry) return null;
+  const obj = await bucket.get(entry.blob);
+  if (!obj) return null;
+  return obj.json<DatesJson>();
+}
 
 /**
  * Parse request to determine manifest name and actual path.
