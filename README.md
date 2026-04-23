@@ -3,12 +3,9 @@
 Real-time insights into Ethereum's peer-to-peer layer. Tracking blob propagation, node connectivity, and network health across mainnet.
 
 ## Requirements
-To successfully test out the reports locally and to extend the repo with new ones, there are a few expected dependencies before starting the Quickstart chapter:
-- `just`: a cross-platform command runner alternative to `make` ([link](https://github.com/casey/just))
-- `pnpm`: a dependency manager alternative to `npm` ([link](https://github.com/pnpm/pnpm))
-- `python` on its `v3.13` or higher 
-- `uv`: a python package manager ([link](https://github.com/astral-sh/uv))
 
+- [`bun`](https://bun.sh/) v1.1 or later
+- [`just`](https://github.com/casey/just) command runner
 
 ## Quickstart
 
@@ -18,260 +15,91 @@ just install
 
 # Create .env with ClickHouse credentials
 cat > .env << 'EOF'
-CLICKHOUSE_HOST=your-host
-CLICKHOUSE_PORT=8443
-CLICKHOUSE_USER=your-user
+CLICKHOUSE_URL=https://your-host:8443
+CLICKHOUSE_USERNAME=your-user
 CLICKHOUSE_PASSWORD=your-password
 EOF
 
-# Fetch yesterday's data
+# Fetch data and build
 just fetch
-
-# Render notebooks and build site
-just publish
+just build
 
 # Start dev server
 just dev
 ```
 
-## Notebooks
-
-| Notebook                                                              | Description                                            |
-| --------------------------------------------------------------------- | ------------------------------------------------------ |
-| [Blob Inclusion](notebooks/01-blob-inclusion.ipynb)                   | Blob inclusion patterns per block and epoch            |
-| [Blob Flow](notebooks/02-blob-flow.ipynb)                             | Blob flow across validators, builders, and relays      |
-| [Column Propagation](notebooks/03-column-propagation.ipynb)           | Column propagation timing across 128 data columns      |
-| [Mempool Visibility](notebooks/04-mempool-visibility.ipynb)           | Transaction visibility in the public mempool           |
-| [MEV Pipeline](notebooks/05-mev-pipeline.ipynb)                       | MEV bidding timing, relay/builder performance          |
-| [Block/Column Timing](notebooks/06-block-column-timing.ipynb)         | Block arrival to column propagation delay              |
-| [Propagation Anomalies](notebooks/07-propagation-anomalies.ipynb)     | Blocks that propagated slower than expected            |
-
 ## Architecture
 
-```
-pipeline.yaml              # Central config: dates, queries, notebooks
-queries/                        # ClickHouse query modules -> Parquet
-├── blob_inclusion.py           # fetch_blobs_per_slot(), fetch_blocks_blob_epoch(), ...
-├── blob_flow.py                # fetch_blob_flow()
-├── column_propagation.py       # fetch_col_first_seen()
-├── mempool_visibility.py       # fetch_tx_per_slot(), fetch_mempool_coverage(), ...
-└── block_production_timeline.py # fetch_block_production_timeline()
-scripts/
-├── pipeline.py            # Coordinator: config loading, hash computation, staleness
-├── fetch_data.py          # CLI: ClickHouse -> notebooks/data/*.parquet
-└── render_notebooks.py    # CLI: .ipynb -> site/rendered/*.html
-notebooks/
-├── *.ipynb                # Jupyter notebooks (Plotly visualizations)
-├── loaders.py             # load_parquet() utility
-├── templates/             # nbconvert HTML templates
-└── data/                  # Parquet cache + manifest.json (gitignored)
-site/                      # Astro static site
-├── rendered/              # Pre-rendered HTML + manifest.json (gitignored)
-└── src/
-    ├── layouts/           # BaseLayout, NotebookLayout
-    ├── pages/             # index, [date]/[notebook] routes
-    ├── components/        # Sidebar, DateNav, NotebookEmbed, etc.
-    ├── lib/               # SiteData (data access), utils
-    └── styles/            # global.css, notebook.css
-```
-
-### Data Flow
+The stack is Bun throughout. Data flows from ClickHouse through an observatory pipeline into a Vite + React + ECharts site, then deploys to Cloudflare R2.
 
 ```
-ClickHouse ──[fetch_data.py]──> Parquet files ──[render_notebooks.py]──> HTML ──[Astro]──> Static site
-                                     │
-                                     └── Cached in GitHub Actions (CI)
-                                         or notebooks/data/ (local dev)
+pipeline.v2.yaml               # Central config: dates, parallelism, settings
+observatory/                   # Bun pipeline
+├── src/fetch.ts               # CLI: ClickHouse -> build/data/*.arrow
+├── src/registry-manifest.ts   # CLI: scan chart topics -> site/public/registry.json
+├── src/upload.ts              # CLI: site/dist -> Cloudflare R2 (CAS)
+└── src/queries/               # Query definitions per topic
+site/                          # Vite + React static site
+├── src/workspace/charts/      # ECharts chart definitions (defineChart)
+├── src/components/            # React UI (shadcn/ui primitives)
+└── public/registry.json       # Chart registry (generated)
+worker/                        # Cloudflare Worker: manifest resolution + blob serving
 ```
 
-### Pipeline Configuration
+Data flow: ClickHouse -> Arrow files (`build/data/`) -> site fetches at runtime -> static build -> Cloudflare R2
 
-All configuration is centralized in `pipeline.yaml`:
-
-```yaml
-# Date range (rolling window, explicit range, or list)
-dates:
-  mode: rolling
-  rolling:
-    window: 14
-
-# Query registry with module paths
-queries:
-  blobs_per_slot:
-    module: queries.blob_inclusion
-    function: fetch_blobs_per_slot
-    output_file: blobs_per_slot.parquet
-
-# Notebook registry
-notebooks:
-  - id: blob-inclusion
-    title: Blob Inclusion
-    icon: Layers
-    source: notebooks/01-blob-inclusion.ipynb
-    queries: [blobs_per_slot, blocks_blob_epoch, ...]
-```
-
-### Staleness Detection
-
-The pipeline tracks query source code hashes to detect when queries change:
-
-```bash
-# Check for stale data
-just check-stale
-
-# Fetch handles missing + stale automatically
-just fetch
-
-# View current query hashes
-just show-hashes
-```
-
-## Commands
+## Common commands
 
 ```bash
 # Development
-just dev              # Start Astro dev server
-just install          # Install all dependencies
+just install          # Install all Bun dependencies
+just dev              # Start Vite dev server
 
-# Data Pipeline
-just fetch               # Fetch all data (missing + stale)
-just fetch 2025-12-15    # Fetch specific date
-
-# Staleness
-just check-stale         # Report stale data
-just show-dates          # Show resolved date range
-just show-hashes         # Show query hashes
-
-# Rendering
-just render              # Render all dates (cached)
-just render latest       # Render latest date only
-just render 2025-12-15   # Render specific date
+# Data pipeline
+just fetch            # Fetch all data (missing + stale)
+just fetch 2025-12-15 # Fetch a specific date
 
 # Build
-just build               # Build Astro site
-just publish             # render + build
-just sync                # Full pipeline: fetch + render + build
+just manifest         # Generate site/public/registry.json
+just build            # manifest + Vite build
+just upload           # Upload site/dist to Cloudflare R2
+
+# Quality
+just typecheck        # TypeScript in both packages
+just lint             # ESLint in site/
+just test             # Unit tests in both packages
+just test-e2e         # Playwright e2e in site/
+just verify           # typecheck + lint + test
 ```
+
+## Staleness detection
+
+The pipeline tracks each query function's AST hash (Babel parse, comments stripped). On `just fetch`, current hashes are compared to hashes stored in `build/data/manifest.json`. Any changed query is re-fetched for all dates in the window.
 
 ## CI/CD
 
-Single unified workflow (`sync.yml`) handles everything:
+Two GitHub Actions workflows:
 
-- **Schedule**: Daily at 1am UTC - fetches data, renders notebooks, deploys
-- **Push to main**: Full sync and deploy to production
-- **Pull requests**: Preview deploy to staging
+- **`ci.yml`**: runs on push to main and all PRs; typechecks, lints, tests, and builds.
+- **`deploy.yml`**: runs on push to main and manually; fetches data, builds, and uploads to R2.
 
-Data and rendered outputs are cached in GitHub Actions cache (keyed by query/notebook hashes and date) to avoid redundant work.
+## R2 deployment
 
-### R2 Deployment
+Site is deployed to Cloudflare R2 with content-addressed storage. Blobs are stored at `blobs/{sha256}.{ext}` (immutable, cached forever). A manifest at `manifests/main.json` maps request paths to blob keys. A Cloudflare Worker resolves requests at the edge.
 
-Site is deployed to Cloudflare R2 with content-addressed storage (site is ~1.3GB with rendered Plotly notebooks, exceeds Cloudflare Pages 25MB limit).
-
-**Architecture:**
-- Blobs stored at `blobs/{sha256-hash}.{ext}` (immutable, cached forever)
-- Manifests at `manifests/{name}.json` map paths to blob hashes
-- Cloudflare Worker resolves requests to blobs
-
-**Domains:**
-- Production: `observatory.ethp2p.dev` (serves `main` manifest)
+Domains:
+- Production: `observatory.ethp2p.dev`
 - PR previews: `observatory-staging.ethp2p.dev/pr-{number}/`
 
-**Benefits:**
-- Only uploads changed files (deduplication via SHA256)
-- CSS change: ~1MB upload (just new asset blobs)
-- New date: ~40MB upload (only new notebook renders)
-- PR preview: Just manifest (~100KB) if content unchanged
+## Environment variables
 
-## Development
-
-### Fetching Data
-
-```bash
-# Fetch all data (missing + stale)
-just fetch
-
-# Fetch specific date
-just fetch 2025-01-15
-
-# Check what's stale
-just check-stale
-```
-
-### Running Notebooks Locally
-
-```bash
-# Option 1: Jupyter Lab
-uv run jupyter lab
-
-# Option 2: VS Code with Jupyter extension
-# Open any .ipynb file
-```
-
-### Building the Site
-
-```bash
-# Render notebooks + build Astro site
-just publish
-
-# Or step by step:
-just render    # Render notebooks to HTML
-just build     # Build Astro static site
-
-# Preview the build
-just preview
-```
-
-## Environment Variables
-
-| Variable              | Description                            |
-| --------------------- | -------------------------------------- |
-| `CLICKHOUSE_HOST`     | ClickHouse server hostname             |
-| `CLICKHOUSE_PORT`     | ClickHouse server port (default: 8443) |
-| `CLICKHOUSE_USER`     | ClickHouse username                    |
-| `CLICKHOUSE_PASSWORD` | ClickHouse password                    |
-
-## Adding New Analyses
-
-1. **Create query function** in `queries/`:
-
-   ```python
-   def fetch_my_data(client, target_date: str, output_path: Path, network: str) -> int:
-       query = f"SELECT ... WHERE slot_start_date_time >= '{target_date}' ..."
-       df = client.query_df(query)
-       output_path.parent.mkdir(parents=True, exist_ok=True)
-       df.to_parquet(output_path, index=False)
-       return len(df)
-   ```
-
-2. **Register in `pipeline.yaml`**:
-
-   ```yaml
-   queries:
-     my_data:
-       module: queries.my_module
-       function: fetch_my_data
-       output_file: my_data.parquet
-
-   notebooks:
-     - id: my-analysis
-       title: My Analysis
-       icon: BarChart
-       source: notebooks/04-my-analysis.ipynb
-       queries: [my_data]
-   ```
-
-3. **Create notebook** `notebooks/04-my-analysis.ipynb`:
-   - Add a cell tagged "parameters" with `target_date = None`
-   - Use `loaders.load_parquet("my_data")` to load data
-   - Create Plotly visualizations
-
-4. **Fetch and render**:
-   ```bash
-   just fetch && just render && just build
-   ```
-
-## Package Managers
-
-- **Python**: [uv](https://github.com/astral-sh/uv) - `uv sync`, `uv run python ...`
-- **Node.js**: [pnpm](https://pnpm.io/) - used in `site/` directory
-- **Task runner**: [just](https://github.com/casey/just) - see `justfile` for all commands
+| Variable              | Description                        |
+| --------------------- | ---------------------------------- |
+| `CLICKHOUSE_URL`      | ClickHouse server URL (with port)  |
+| `CLICKHOUSE_USERNAME` | ClickHouse username                |
+| `CLICKHOUSE_PASSWORD` | ClickHouse password                |
+| `R2_ACCOUNT_ID`       | Cloudflare account ID              |
+| `R2_ACCESS_KEY`       | R2 access key                      |
+| `R2_SECRET_KEY`       | R2 secret key                      |
+| `R2_BUCKET`           | R2 bucket name                     |
+| `R2_MANIFEST_KEY`     | Manifest key (e.g. `manifests/main.json`) |
