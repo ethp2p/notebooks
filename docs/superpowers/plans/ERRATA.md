@@ -548,3 +548,19 @@ Two stubs were also added to `tests/setup.ts`:
 **Reason:** The plan explicitly requested this guard. Bracket notation is required to satisfy `noUncheckedIndexedAccess: true` in tsconfig.
 
 **Downstream impact:** Visual regression baselines must be generated locally with `VISUAL_REGRESSION=1 bun run test:e2e` before they can be used. CI always skips these tests unless the flag is explicitly set in the workflow.
+
+### 2026-04-23 · Plan 05 Section 04 · sentry-coverage-bar uses sentry_coverage query, not mempool_events
+
+**What the plan said:** The `sentry-coverage-bar` chart uses `queries: ['mempool_events']`. Since the `sentry` field is dropped from `mempool_events` (per Plan 03 Task 03 ERRATA), the chart cannot derive per-sentry coverage from that query. The plan says to check `observatory/src/queries/mempool_visibility.ts` and use `sentry_coverage` if it exists.
+
+**What was done instead:** Verified that `sentry_coverage` exists in `observatory/src/queries/mempool_visibility.ts` with fields `sentry` (string), `txs_seen` (int), `coverage_pct` (float). The `sentry_coverage_bar` chart uses `queries: ['sentry_coverage'] as const` and reads those three columns directly from the Arrow table.
+
+**Reason:** `mempool_events` carries one row per (slot, tx_hash) with no sentry field. Per-sentry coverage requires the `sentry_coverage` aggregation query which groups by `meta_client_name` and computes coverage against canonical hashes.
+
+**Downstream impact:** The chart registry for `sentry-coverage-bar` must declare `sentry_coverage` in its `queries` array, not `mempool_events`. Any workspace loader that resolves required queries for mempool-visibility charts must include `sentry_coverage` in addition to `mempool_events`.
+
+### 2026-04-23 · Plan 05 Section 04 · tx_type treated as integer string in Arrow column
+
+**What the plan said:** `tx_type` is an integer 0-4. Map to label in chart code.
+
+**What was done instead:** Per Plan 03 Task 03 ERRATA, the ClickHouse query casts `type` to `toString(c.type)`, so the Arrow column carries string values like `"0"`, `"1"`, etc. All nine charts call `Number(typeCol[i])` before passing to `txTypeLabel()`, which is correct for both integer and string representations. The `txTypeLabel()` helper is inlined in each chart file that needs it.

@@ -1,0 +1,2 @@
+Each panel shows the distribution of mempool age (time spent in mempool before inclusion) for one transaction type, using logarithmically spaced time buckets.
+The shape of the distribution reveals whether transactions are included quickly (left-skewed, small age) or queued for long periods (heavy right tail). Differences across panels highlight how inclusion dynamics vary between legacy, EIP-1559, blob, and other transaction types.

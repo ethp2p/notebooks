@@ -1,0 +1,2 @@
+Each panel shows the distribution of post-inclusion delay for one transaction type (how long after block inclusion the transaction appeared in the public mempool).
+Buckets use logarithmic time boundaries. A concentration in short-delay buckets suggests transactions leak into the mempool quickly after inclusion, while long-delay buckets indicate sustained private order flow that is only broadcast later or not at all.
