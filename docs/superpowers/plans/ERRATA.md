@@ -129,3 +129,48 @@ IBM Plex Sans (Regular 400, Medium 500, Bold 700) was downloaded from `https://g
 **Reason:** The intermediate state (Task 01 deletions committed without a package.json) would be a broken tree. Folding both into one commit keeps the branch in a working state at every commit.
 
 **Downstream impact:** None. The commit message `chore(site): initialise Vite + React on Bun` accurately describes both actions as a single logical unit.
+
+### 2026-04-23 · Plan 01 Task 09 · kbd from registry, not hand-written
+
+**What the plan said:** `shadcn@latest add kbd` may fail because `kbd` is not part of the official shadcn/ui registry. If it fails, hand-write `site/src/components/ui/kbd.tsx` with a specific forwardRef implementation.
+
+**What was done instead:** `bunx --bun shadcn@latest add kbd --yes` succeeded and created `kbd.tsx` from the registry. The registry version exports `Kbd` and `KbdGroup` as named functions (not a forwardRef class), uses `<kbd>` natively, and omits the `border-border bg-bg text-muted` classes the plan's fallback used. The `rounded-sm` class was stripped as part of the standard post-install cleanup.
+
+**Reason:** The registry now includes `kbd`. The registry version is more idiomatic and consistent with the rest of the shadcn primitive set.
+
+**Downstream impact:** Call sites that import `Kbd` from `@/components/ui/kbd` get `Kbd` and `KbdGroup` as named exports rather than the single default-style `Kbd` from the hand-written fallback. The interface is compatible for simple uses.
+
+### 2026-04-23 · Plan 01 Task 09 · class-variance-authority and lucide-react not auto-installed by shadcn CLI
+
+**What the plan said:** Running `bunx shadcn@latest add` would install all required peer dependencies automatically.
+
+**What was done instead:** The shadcn CLI added all `@radix-ui/*` and `cmdk` packages to `package.json` but did not add `class-variance-authority` or `lucide-react`, which are used by `badge.tsx`, `button.tsx`, `label.tsx`, `toggle.tsx`, `command.tsx`, `context-menu.tsx`, `dialog.tsx`, and `dropdown-menu.tsx`. Both were installed manually with `bun add class-variance-authority lucide-react` after typecheck surfaced TS2307 errors.
+
+**Reason:** The shadcn CLI (version resolved at runtime by `bunx`) appears to assume these are already present or does not inject them into `package.json` when Bun's resolver can satisfy them at install time without an explicit entry. The typecheck gate caught it.
+
+**Downstream impact:** `package.json` and `bun.lock` now explicitly list `class-variance-authority@0.7.1` and `lucide-react@1.9.0`. Any task that references "shadcn deps" should include these two.
+
+### 2026-04-23 · Plan 01 Task 09 · rounded- and shadow- classes stripped from 11 files
+
+**What the plan said:** After installing primitives, grep for `rounded-*` and `shadow-*` and remove them from classNames in `site/src/components/ui/*.tsx`.
+
+**What was done instead:** Stripped all occurrences from the following files (class count removed per file):
+
+- `button.tsx`: `rounded-md` in base cva string; `shadow-sm` from destructive, outline, secondary variants; `rounded-md` from sm and lg size variants (5 removals)
+- `toggle.tsx`: `rounded-md` in base cva string; `shadow-sm` from outline variant (2 removals)
+- `badge.tsx`: `rounded-md` in base cva string (1 removal)
+- `tabs.tsx`: `rounded-lg` from TabsList; `rounded-md` and `shadow` from TabsTrigger (3 removals)
+- `input.tsx`: `rounded-md`, `shadow-sm` (2 removals)
+- `dialog.tsx`: `shadow-lg` and `sm:rounded-lg` from DialogContent; `rounded-sm` from DialogClose (3 removals)
+- `popover.tsx`: `rounded-md`, `shadow-md` from PopoverContent (2 removals)
+- `tooltip.tsx`: `rounded-md` from TooltipContent (1 removal)
+- `switch.tsx`: `rounded-full`, `shadow-sm` from root; `rounded-full`, `shadow-lg` from thumb (4 removals)
+- `scroll-area.tsx`: `rounded-[inherit]` from Viewport; `rounded-full` from ScrollAreaThumb (2 removals)
+- `command.tsx`: `rounded-md` from Command root; `rounded-md` from CommandInput; `rounded-sm` from CommandItem (3 removals)
+- `dropdown-menu.tsx`: `rounded-sm` from SubTrigger; `rounded-md`, `shadow-lg` from SubContent; `rounded-md`, `shadow-md` from Content; `rounded-sm` from MenuItem; `rounded-sm` from CheckboxItem; `rounded-sm` from RadioItem (8 removals)
+- `context-menu.tsx`: `rounded-sm` from SubTrigger; `rounded-md`, `shadow-lg` from SubContent; `rounded-md`, `shadow-md` from Content; `rounded-sm` from MenuItem; `rounded-sm` from CheckboxItem; `rounded-sm` from RadioItem (8 removals)
+- `kbd.tsx`: `rounded-sm` (1 removal)
+
+**Reason:** Per `.impeccable.md` and `tailwind.config.ts` (`borderRadius: { DEFAULT: '0', none: '0' }`), this project uses zero border radius everywhere. Leaving shadcn defaults would cause visual inconsistency.
+
+**Downstream impact:** None. All changes are scoped to default className strings in the primitive components; consumers can still pass `className` props to override.
