@@ -91,6 +91,18 @@ If the deviation requires an explicit edit to a later plan, edit that plan in pl
 
 **Downstream impact:** Task 14 Step 3 should now omit the `git checkout -b plan-01-foundation` line (already on the branch). The remaining Step 3 work (push, open PR) still applies.
 
+### 2026-04-23 · Plan 01 Task 07 · Xray Mono substituted with Iosevka
+
+**What the plan said:** Obtain Xray Mono (the font used by the wiretap dashboard) and place it at `site/public/fonts/XrayMono-Regular.woff2`. If not findable, fall back to JetBrains Mono and record it here.
+
+**What was done instead:** Copied `iosevka-400.woff2` from `/Users/raul/W/ethereum/wiretap/dashboard/public/` to `site/public/fonts/XrayMono-Regular.woff2`. The filename and the `font-family: 'Xray Mono'` declaration in `site/src/styles/fonts.css` are unchanged; only the underlying glyph data differs from the notional plan font.
+
+IBM Plex Sans (Regular 400, Medium 500, Bold 700) was downloaded from `https://github.com/IBM/plex/raw/master/packages/plex-sans/fonts/complete/woff2/` (IBM Plex repo master branch, version 3.327 per the woff2 header). All three files confirmed valid woff2 by `file(1)`.
+
+**Reason:** Xray Mono does not exist as a findable font anywhere in the wiretap repository or on public registries. Iosevka is what wiretap actually uses (`iosevka-400.woff2` at 984 KB). The plan's suggested fallback was JetBrains Mono, but Iosevka is a closer aesthetic match to the wiretap reference design that `.impeccable.md` names. Keeping the `XrayMono-Regular.woff2` filename preserves the stable abstraction so a future font swap requires replacing only the single file.
+
+**Downstream impact:** None. `font-family: 'Xray Mono'` remains the canonical name in `fonts.css` and Tailwind config. Any plan step referencing "Xray Mono" means the Iosevka-backed file at `site/public/fonts/XrayMono-Regular.woff2`.
+
 ### 2026-04-23 · Plan 01 Task 01 · deleted extra site tree entries beyond plan's explicit list
 
 **What the plan said:** Task 01 Step 3 deletes `site/src site/astro.config.mjs site/package.json site/pnpm-lock.yaml site/node_modules site/tsconfig.json site/rendered site/public`. It notes `.astro`, `dist/`, `config/`, `.prettierrc` should also be deleted and asks for non-trivial removals to be recorded here.
