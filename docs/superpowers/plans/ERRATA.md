@@ -622,3 +622,23 @@ Two stubs were also added to `tests/setup.ts`:
 **What was done instead:** `toUrl` is not called in the keydown handler (save uses `saveAs(name, ws)` with the already-captured `ws`). The `toUrl` import in the hook is removed to avoid an unused variable lint error. The lint rule prohibits unused variables without exception.
 
 **Downstream impact:** None. `toUrl` is available from the store wherever sharing logic is needed (Header uses it for the share button).
+
+### 2026-04-23 · Plan 07 Task 10 · column_propagation.ts kept; col_first_seen still active
+
+**What the plan said:** Delete `observatory/src/queries/column_propagation.ts` as a retired per-chart query.
+
+**What was done instead:** The file was kept. `col_first_seen` is still referenced by `site/src/workspace/charts/column_propagation/spread_timeseries.ts` and `spread_histogram.ts` (both declare `queries: ['col_first_seen'] as const`). Deleting it would break typecheck and the query registry.
+
+**Reason:** The task's deletion list was based on the plan's intended consolidation state, but the column_propagation charts were not migrated to a consolidated query equivalent in Plans 03-05. The aggregated `col_first_seen_binned` serves different charts (heatmaps). The raw `col_first_seen` is still the correct source for the spread charts.
+
+**Downstream impact:** A follow-up task should either migrate spread_timeseries and spread_histogram to use `col_first_seen_binned` or keep `column_propagation.ts` alive permanently. Until then, `column_propagation.ts` is a required module in `observatory/src/queries/index.ts`.
+
+### 2026-04-23 · Plan 07 Task 10 · mempool_visibility.ts kept; sentry_coverage still active
+
+**What the plan said:** Delete `observatory/src/queries/mempool_visibility.ts` as a retired per-chart query.
+
+**What was done instead:** The file was kept. `sentry_coverage` is referenced by `site/src/workspace/charts/mempool_visibility/sentry_coverage_bar.ts` (declares `queries: ['sentry_coverage'] as const`). This is consistent with the existing ERRATA entry from Plan 05 Section 04.
+
+**Reason:** No consolidated equivalent of `sentry_coverage` exists. The query aggregates per-sentry coverage rates from `mempool_transaction`; `mempool_events` carries no sentry field (per Plan 03 Task 03 ERRATA). Deleting would break typecheck and the query registry.
+
+**Downstream impact:** `mempool_visibility.ts` remains active in `observatory/src/queries/index.ts`. The three other queries it provides (`tx_per_slot`, `mempool_coverage`, `mempool_availability`) are unused by any chart but do not cause harm. A future cleanup can remove those three query registrations once confirmed unnecessary.

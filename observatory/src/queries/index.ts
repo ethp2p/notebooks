@@ -1,12 +1,8 @@
 // This file imports every query submodule so that their query() calls
 // register themselves on import. Keep this list exhaustive.
-import './blob_inclusion';
-import './blob_flow';
-import './column_propagation';
-import './mempool_visibility';
-import './block_production_timeline';
-import './block_propagation_by_size';
-import './block_propagation_contributoor';
+// Per-chart legacy queries kept alive because charts still reference them.
+import './column_propagation';   // col_first_seen (spread_timeseries, spread_histogram)
+import './mempool_visibility';   // sentry_coverage (sentry-coverage-bar)
 // Plan 03: primary datasets
 import './block_production_events';
 import './blob_inclusion_events';
