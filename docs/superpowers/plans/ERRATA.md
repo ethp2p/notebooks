@@ -322,3 +322,13 @@ IBM Plex Sans (Regular 400, Medium 500, Bold 700) was downloaded from `https://g
 **Reason:** The `bun-types` package does not exist in the node_modules (Plan 01 installed `@types/bun` as the dev dependency). TypeScript's `types` array resolves entries via `@types/<name>`, so `"bun"` finds `@types/bun`. Using `"bun-types"` caused TS2688 ("cannot find type definition file for 'bun-types'").
 
 **Downstream impact:** None. All downstream plans that reference the `types` array should use `"bun"` not `"bun-types"`.
+
+### 2026-04-23 · Plan 02 Task 06 · staleness hashSource must also strip File-level comment/location fields
+
+**What the plan said:** Use `traverse(ast, { enter(p) { delete n.loc; ... } })` to strip position and comment data from all AST nodes before hashing.
+
+**What was done instead:** Added explicit stripping of the `File` root node's own fields (`comments`, `loc`, `start`, `end`) before the traverse call, because `@babel/traverse` does not visit the root `File` node itself. Also introduced a `STRIP_KEYS` set and a `stripNode()` helper to avoid duplicating the delete calls for both the root and the traverse callback.
+
+**Reason:** Babel's `parse()` returns a `File` node that carries a top-level `comments` array containing all comment tokens. This array differs between `// a` and `/* hi */` even after traverse strips `leadingComments` from the `ExportNamedDeclaration` body node. Since `traverse` starts from the `File`'s children (not the `File` itself), the root's `comments`, `loc`, `start`, and `end` survived and caused the hash to differ between comment-only edits.
+
+**Downstream impact:** None. The fix is internal to `hashSource`. The public contract (hash changes when code changes, stable across comment edits) is upheld.
