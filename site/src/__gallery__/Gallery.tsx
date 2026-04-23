@@ -13,6 +13,12 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  Command, CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem,
+} from '@/components/ui/command';
+import {
+  ContextMenu, ContextMenuTrigger, ContextMenuContent, ContextMenuItem,
+} from '@/components/ui/context-menu';
 
 export default function Gallery() {
   return (
@@ -69,6 +75,35 @@ export default function Gallery() {
         </section>
 
         <Separator />
+
+        <section>
+          <h2 className="text-xs uppercase tracking-caps text-muted">command</h2>
+          <Command className="mt-2 max-w-sm border border-border">
+            <CommandInput placeholder="search" />
+            <CommandList>
+              <CommandEmpty>no results</CommandEmpty>
+              <CommandGroup heading="suggestions">
+                <CommandItem>blob inclusion</CommandItem>
+                <CommandItem>block propagation</CommandItem>
+                <CommandItem>mempool visibility</CommandItem>
+              </CommandGroup>
+            </CommandList>
+          </Command>
+        </section>
+
+        <section>
+          <h2 className="text-xs uppercase tracking-caps text-muted">context menu (right-click the box)</h2>
+          <ContextMenu>
+            <ContextMenuTrigger className="mt-2 inline-flex h-12 w-48 items-center justify-center border border-border">
+              right-click
+            </ContextMenuTrigger>
+            <ContextMenuContent>
+              <ContextMenuItem>open</ContextMenuItem>
+              <ContextMenuItem>copy</ContextMenuItem>
+              <ContextMenuItem>delete</ContextMenuItem>
+            </ContextMenuContent>
+          </ContextMenu>
+        </section>
 
         <section className="flex flex-wrap gap-4">
           <Dialog>

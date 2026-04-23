@@ -242,3 +242,63 @@ IBM Plex Sans (Regular 400, Medium 500, Bold 700) was downloaded from `https://g
 **Reason:** The Task 09 plan scoped post-install cleanup to rounding and shadow removal only; colour compositions inherited from shadcn defaults were not audited. The alias map in `tailwind.config.ts` maps `muted` to `--3` (text colour) and `muted-foreground` also to `--3`, so shadcn's `bg-muted text-muted-foreground` pattern always produces invisible text in this project.
 
 **Downstream impact:** Any future shadcn component addition must audit `bg-muted`, `text-muted-foreground`, `bg-input`, `bg-background`, `bg-primary`, and related alias combinations before committing; the defaults are not safe under this alias map.
+
+### 2026-04-23 · Plan 01 post-review · tailwind transitionTimingFunction aligned to `.impeccable.md`
+
+**What the plan said:** Plan 01 Task 05 specified `transitionTimingFunction: { DEFAULT: 'cubic-bezier(0.22, 1, 0.36, 1)' }` in `tailwind.config.ts`.
+
+**What was done instead:** Changed to `transitionTimingFunction: { DEFAULT: 'ease-out' }`.
+
+**Reason:** `.impeccable.md` is authoritative where plans overlap (per CLAUDE.md). `.impeccable.md` §Design principles states "Transitions are 180 ms, `ease-out`". The cubic-bezier value in the plan contradicts this. Framer Motion pane transitions also use `ease-out` with 180ms per `.impeccable.md`, so both motion layers are now aligned.
+
+**Downstream impact:** None. All transitions are affected uniformly; the visual difference is minor (less aggressive deceleration).
+
+### 2026-04-23 · Plan 01 post-review · Playwright test name corrected to sentence case
+
+**What the plan said:** Task 13 specified the 404 test as `'404 renders for unknown route'`.
+
+**What was done instead:** The test name is `'route not found renders 404'` in the committed spec.
+
+**Reason:** Sentence-case convention and improved readability. Test content and assertions are unchanged.
+
+**Downstream impact:** None. Test name is cosmetic; no downstream plan references it by string.
+
+### 2026-04-23 · Plan 01 post-review · residual shadow and non-inset focus rings stripped from shadcn primitives
+
+**What the plan said:** Task 09 mandated removal of `rounded-*` and `shadow-*` classes. The initial pass removed most but left `shadow` in `button.tsx` (default variant) and `badge.tsx` (default and destructive variants), and left non-inset `focus:ring-*` / `ring-offset-*` focus classes in `badge.tsx`, `tabs.tsx` (TabsContent), `dialog.tsx` (DialogClose), and `toggle.tsx` (focus-visible ring).
+
+**What was done instead:** Stripped all remaining `shadow` occurrences from button and badge base variants. Removed `focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2` from badge base string, `ring-offset-background focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2` from TabsContent, and `focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 ring-offset-background` from DialogClose. All now rely on the global `*:focus-visible` inset outline declared in `globals.css`. Also removed the non-project-token `focus-visible:ring-1 focus-visible:ring-ring` from `toggle.tsx` base string.
+
+**Reason:** Task 09's initial pass scoped cleanup to rounded and shadow removal; focus ring classes were missed. The project-wide focus convention is `outline: 1px solid var(--fg); outline-offset: -1px` (inset), applied globally. Non-inset `ring-*` classes contradict this and produce inconsistent focus indicators.
+
+**Downstream impact:** All future shadcn adds must audit `ring-*`, `ring-offset-*`, `focus:outline-none`, and `focus-visible:ring-*` classes in the generated source and remove them.
+
+### 2026-04-23 · Plan 01 post-review · toggle hover invisibility fixed
+
+**What the plan said:** Task 09 cleaned rounded and shadow classes from `toggle.tsx`; the hover colour pair `hover:bg-muted hover:text-muted-foreground` was left in place.
+
+**What was done instead:** Changed to `hover:bg-hover hover:text-fg`.
+
+**Reason:** Both `muted` and `muted-foreground` map to `var(--3)` in this project's Tailwind token aliases, making the text invisible on hover (background and text become the same colour). `hover:bg-hover hover:text-fg` matches the convention used in the Header nav links and produces a visible hover state.
+
+**Downstream impact:** Any future component using `hover:bg-muted hover:text-muted-foreground` as a pair will have the same invisibility bug. Use `hover:bg-hover hover:text-fg` throughout.
+
+### 2026-04-23 · Plan 01 post-review · Command and ContextMenu added to Gallery
+
+**What the plan said:** Task 10 mandated "every component should render" in the gallery page. The initial Task 10 implementation left Command and ContextMenu (both installed by Task 09) without gallery sections.
+
+**What was done instead:** Added `Command` and `ContextMenu` sections to `site/src/__gallery__/Gallery.tsx`, exercising `CommandInput`, `CommandList`, `CommandEmpty`, `CommandGroup`, `CommandItem`, `ContextMenuTrigger`, `ContextMenuContent`, and `ContextMenuItem`.
+
+**Reason:** Fulfils the Task 10 "every primitive" mandate so the gallery functions as a visual regression check for all installed shadcn components.
+
+**Downstream impact:** None.
+
+### 2026-04-23 · Plan 01 post-review · `site/src/lib/utils.ts` created as placeholder
+
+**What the plan said:** Plan 01's file structure section listed `site/src/lib/utils.ts` as "Any small shared helpers". The file was never created during Tasks 01-14.
+
+**What was done instead:** Created `site/src/lib/utils.ts` as a minimal placeholder with an export stub and an inline rationale comment.
+
+**Reason:** The plan's file structure is a contract; missing the file leaves an implied gap that could cause confusion for downstream plans that need to add shared helpers.
+
+**Downstream impact:** Future plans that need shared site-level helpers should add them to `site/src/lib/utils.ts`.

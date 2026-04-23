@@ -117,7 +117,7 @@ check-stale-warn:
 
 # Clean build artifacts
 clean:
-    rm -rf site/dist site/.astro site/rendered
+    rm -rf site/dist
 
 # Clean all (including node_modules and venv)
 clean-all: clean
