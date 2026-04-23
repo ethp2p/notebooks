@@ -312,3 +312,13 @@ IBM Plex Sans (Regular 400, Medium 500, Bold 700) was downloaded from `https://g
 **Reason:** The date range `2025-04-24` to `2026-04-22` inclusive is 364 days, not 365. With `today = 2026-04-23`, yesterday = `2026-04-22`. The natural window start is `2026-04-22 - 364 = 2025-04-23`. The `start` floor `2025-04-24` is one day later, so `begin = 2025-04-24`. The resulting range is 364 dates. The plan's `expect(dates[0]).toBe('2025-04-24')` and `expect(dates[dates.length - 1]).toBe('2026-04-22')` are self-consistent with 364; the length assertion of 365 was an off-by-one error in the plan (window - floor_clamp = 365 - 1 = 364).
 
 **Downstream impact:** None. The `resolveDates` implementation is unchanged. Any plan referencing this test should expect length 364 for this fixture.
+
+### 2026-04-23 · Plan 02 Task 03 · tsconfig `types` entry changed from `bun-types` to `bun`
+
+**What the plan said:** Plan 01 scaffolded `observatory/tsconfig.json` with `"types": ["bun-types"]`.
+
+**What was done instead:** Changed to `"types": ["bun"]` which resolves to `node_modules/@types/bun`.
+
+**Reason:** The `bun-types` package does not exist in the node_modules (Plan 01 installed `@types/bun` as the dev dependency). TypeScript's `types` array resolves entries via `@types/<name>`, so `"bun"` finds `@types/bun`. Using `"bun-types"` caused TS2688 ("cannot find type definition file for 'bun-types'").
+
+**Downstream impact:** None. All downstream plans that reference the `types` array should use `"bun"` not `"bun-types"`.
