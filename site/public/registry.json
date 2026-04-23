@@ -1,0 +1,52 @@
+{
+  "schemaVersion": "2.0",
+  "generatedAt": "2026-04-23T19:41:23.141Z",
+  "topics": [
+    {
+      "id": "blob-inclusion",
+      "title": "Blob inclusion",
+      "order": 1
+    },
+    {
+      "id": "blob-flow",
+      "title": "Blob flow",
+      "order": 2
+    },
+    {
+      "id": "column-propagation",
+      "title": "Column propagation",
+      "order": 3
+    },
+    {
+      "id": "mempool-visibility",
+      "title": "Mempool visibility",
+      "order": 4
+    },
+    {
+      "id": "mev-pipeline",
+      "title": "MEV pipeline",
+      "order": 5
+    },
+    {
+      "id": "block-column-timing",
+      "title": "Block / column timing",
+      "order": 6
+    },
+    {
+      "id": "propagation-anomalies",
+      "title": "Propagation anomalies",
+      "order": 7
+    },
+    {
+      "id": "missed-slots",
+      "title": "Missed slots",
+      "order": 8
+    },
+    {
+      "id": "block-propagation",
+      "title": "Block propagation",
+      "order": 9
+    }
+  ],
+  "charts": {}
+}

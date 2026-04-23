@@ -8,15 +8,17 @@
   },
   "scripts": {
     "fetch": "bun run src/fetch.ts",
+    "manifest": "bun run src/registry-manifest.ts",
     "test": "bun test",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@babel/parser": "^7.25.0",
-    "@babel/traverse": "^7.25.0",
-    "@babel/types": "^7.25.0",
+    "@babel/parser": "^7.29.2",
+    "@babel/traverse": "^7.29.0",
+    "@babel/types": "^7.29.0",
     "@clickhouse/client": "^1.7.0",
     "apache-arrow": "^17.0.0",
+    "fast-glob": "^3.3.3",
     "p-limit": "^6.1.0",
     "yaml": "^2.6.0",
     "zod": "^3.23.8"

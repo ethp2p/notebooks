@@ -508,3 +508,23 @@ Two stubs were also added to `tests/setup.ts`:
 **Reason:** jsdom's CanvasRenderer does not support `getContext('2d')`. When `getContext` returns null, ECharts' CanvasRenderer does not create a `<canvas>` element, so the DOM assertion fails. Mocking `echarts.init` gives the test direct control over the canvas element. The mock approach is explicitly listed in the plan as a valid alternative.
 
 **Downstream impact:** The PlotRenderer tests exercise the React lifecycle (mount/unmount/ref cleanup) correctly. Real ECharts rendering is verified by the Playwright e2e spec (Task 13) where a real browser is available.
+
+### 2026-04-23 · Plan 04 Task 10 · manifest CLI named registry-manifest.ts instead of manifest.ts
+
+**What the plan said:** Create `observatory/src/manifest.ts` as the chart registry manifest CLI entry point.
+
+**What was done instead:** The CLI was created at `observatory/src/registry-manifest.ts`. The package.json `manifest` script points to `src/registry-manifest.ts`.
+
+**Reason:** `observatory/src/manifest.ts` already exists from Plan 02 and contains the data manifest (fetch/save of query manifests for the fetch pipeline). Overwriting it would destroy that functionality. The new file has a distinct name that clarifies its purpose: it generates the chart registry manifest, not the data fetch manifest.
+
+**Downstream impact:** Any plan step or script that references `observatory/src/manifest.ts` as the chart registry CLI should use `registry-manifest.ts` instead. The data manifest at `manifest.ts` is unchanged. The `just manifest` justfile target (if added in a later plan) should invoke `bun run manifest` from within `observatory/`.
+
+### 2026-04-23 · Plan 04 Task 10 · scanner imports topics via Bun dynamic import of .ts file
+
+**What the plan said:** Import `TOPIC_REGISTRY` from `../../site/src/workspace/charts/topics` in the manifest CLI. If TypeScript complains, adjust tsconfig or duplicate topics.
+
+**What was done instead:** Used `await import(topicsPath)` where `topicsPath` is an absolute filesystem path resolved at runtime. Bun's native TypeScript execution supports importing `.ts` files by absolute path with `import()`. No tsconfig changes were needed; the import resolves correctly at runtime without any module path alias.
+
+**Reason:** The observatory `tsconfig.json` `include` array covers only `src` and `tests` within the observatory package. A static `import` from a path outside that directory would require adding it to `include` (or `references`), which would pull in the entire site source tree into observatory's typechecking. The dynamic import at runtime is clean and does not affect typecheck, which only sees the return type as `unknown` (accessed via `mod.TOPIC_REGISTRY as Record<string, TopicDef>`).
+
+**Downstream impact:** None for typecheck. At runtime, Bun must be the executor (it is, per package.json scripts). Node.js would not support this pattern without a TypeScript loader.
