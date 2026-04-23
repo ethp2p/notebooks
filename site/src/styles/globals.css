@@ -1,5 +1,6 @@
 @import './tokens.css';
 @import './fonts.css';
+@import 'react-mosaic-component/react-mosaic-component.css';
 
 @tailwind base;
 @tailwind components;
@@ -69,3 +70,16 @@ img, svg { display: block; }
   0%, 100% { color: var(--3); }
   50%      { color: var(--fg); }
 }
+
+.mosaic-tile,
+.mosaic-window,
+.mosaic-window-toolbar,
+.mosaic-window-body,
+.mosaic-drop-target,
+.mosaic-preview {
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+.mosaic-window-toolbar { display: none !important; }
+.mosaic-split { background: var(--2); }
+.mosaic-root  { background: var(--0); }
