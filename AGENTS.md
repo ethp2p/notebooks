@@ -119,6 +119,8 @@ The pipeline tracks query source code hashes to detect when queries change:
 
 ## Design Preferences
 
+**Full design context is in `.impeccable.md`. Read it before any UI work.** It specifies palette, typography, spacing, components, accessibility, and anti-patterns in detail. The rules below are the short list; `.impeccable.md` is authoritative where they overlap.
+
 - **Simplicity** - Prefer removing features over adding complexity. When in doubt, simplify.
 - **No rounded corners** - `--radius: 0` globally; never use `rounded-*` classes
 - **No inline SVG** - Use `Icon.tsx` or `NotebookIcon.tsx` with Lucide icon names
@@ -129,6 +131,8 @@ The pipeline tracks query source code hashes to detect when queries change:
 - **Rebasing preference** - Prefer rebasing work on `main` before PR creation for clean history.
 - **Git style** - Use [conventional commits](https://www.conventionalcommits.org/) for all changes.
 - **Selectable tables** - Use HTML tables (not Plotly go.Table) when text needs to be selectable/copyable.
+- **No em dashes in any documentation** - use colons, parentheses, commas, semicolons, or separate sentences.
+- **Sentence case for all headings** in markdown and generated docs.
 
 
 ## Import Strategy
