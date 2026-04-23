@@ -302,3 +302,13 @@ IBM Plex Sans (Regular 400, Medium 500, Bold 700) was downloaded from `https://g
 **Reason:** The plan's file structure is a contract; missing the file leaves an implied gap that could cause confusion for downstream plans that need to add shared helpers.
 
 **Downstream impact:** Future plans that need shared site-level helpers should add them to `site/src/lib/utils.ts`.
+
+### 2026-04-23 · Plan 02 Task 02 · config test `length` expectation corrected from 365 to 364
+
+**What the plan said:** `expect(dates.length).toBe(365)` for the rolling-dates test with `window: 365`, `start: "2025-04-24"`, and `today = new Date('2026-04-23')`.
+
+**What was done instead:** Changed the assertion to `expect(dates.length).toBe(364)`.
+
+**Reason:** The date range `2025-04-24` to `2026-04-22` inclusive is 364 days, not 365. With `today = 2026-04-23`, yesterday = `2026-04-22`. The natural window start is `2026-04-22 - 364 = 2025-04-23`. The `start` floor `2025-04-24` is one day later, so `begin = 2025-04-24`. The resulting range is 364 dates. The plan's `expect(dates[0]).toBe('2025-04-24')` and `expect(dates[dates.length - 1]).toBe('2026-04-22')` are self-consistent with 364; the length assertion of 365 was an off-by-one error in the plan (window - floor_clamp = 365 - 1 = 364).
+
+**Downstream impact:** None. The `resolveDates` implementation is unchanged. Any plan referencing this test should expect length 364 for this fixture.

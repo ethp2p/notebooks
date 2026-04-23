@@ -1,0 +1,18 @@
+version: "2.0"
+
+dates:
+  mode: rolling
+  rolling:
+    window: 365
+    start: "2025-04-24"
+
+parallelism:
+  fetch: 4
+  build: 4
+
+settings:
+  network: mainnet
+  timezone: UTC
+  flagship_chart_id: "block-propagation-by-size"
+  data_dir: "build/data"
+  dist_dir: "site/dist"
