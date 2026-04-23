@@ -13,7 +13,7 @@
     "baseUrl": ".",
     "paths": { "@/*": ["./src/*"] },
     "lib": ["ES2022"],
-    "types": ["bun-types"]
+    "types": ["bun"]
   },
   "include": ["src", "tests"]
 }
