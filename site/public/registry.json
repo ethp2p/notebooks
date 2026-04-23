@@ -1,6 +1,6 @@
 {
   "schemaVersion": "2.0",
-  "generatedAt": "2026-04-23T19:41:23.141Z",
+  "generatedAt": "2026-04-23T19:43:06.237Z",
   "topics": [
     {
       "id": "blob-inclusion",
@@ -48,5 +48,16 @@
       "order": 9
     }
   ],
-  "charts": {}
+  "charts": {
+    "region-winner-grouped-bar": {
+      "id": "region-winner-grouped-bar",
+      "topic": "block-propagation",
+      "title": "Median block propagation latency by region",
+      "description": "Median block propagation latency per region, split by observation source (sentry vs contributoor).",
+      "related": [],
+      "order": 11,
+      "activeFrom": "2025-12-03",
+      "activeTo": null
+    }
+  }
 }
