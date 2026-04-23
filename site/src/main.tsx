@@ -13,3 +13,9 @@ ReactDOM.createRoot(rootEl).render(
     </BrowserRouter>
   </React.StrictMode>,
 );
+
+if ('serviceWorker' in navigator && !import.meta.env.DEV) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => undefined);
+  });
+}
