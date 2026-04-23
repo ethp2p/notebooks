@@ -1,0 +1,1 @@
+Scatter plot of block arrival latency vs blob count. Normal events are shown in one colour, anomalies (latency exceeding the P95 for their blob-count bucket) in another. A linear regression line is fitted through normal events only, and a shaded band marks the P95 boundary per blob-count bucket.

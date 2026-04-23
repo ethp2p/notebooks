@@ -1,0 +1,1 @@
+Count of propagation anomalies per proposer (validator index), top 15. Proposers consistently associated with anomalous block latency may indicate geographic location, client diversity, or attestation timing differences.

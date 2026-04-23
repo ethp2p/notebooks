@@ -1,0 +1,1 @@
+Count of propagation anomalies per relay, top 15. An anomaly is a block whose arrival latency exceeds the P95 for its blob-count bucket. Relays with persistent high anomaly counts may indicate infrastructure or routing issues on that relay's path.

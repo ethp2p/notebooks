@@ -1,0 +1,1 @@
+Count of propagation anomalies per builder, top 15. Builders whose blocks are frequently anomalous may be injecting blocks late relative to expected slot timing, or producing unusually large blocks that take longer to propagate.
