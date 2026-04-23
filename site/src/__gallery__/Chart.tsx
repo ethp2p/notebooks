@@ -5,6 +5,11 @@ import { fetchArrowBundle } from '@/workspace/data/fetcher';
 import { renderContext } from '@/workspace/charts/context';
 import { PlotRenderer } from '@/workspace/charts/PlotRenderer';
 import type { EChartsOption } from 'echarts';
+import type { ChartDef } from '@/workspace/charts/types';
+
+function getChart(id: string): ChartDef | undefined {
+  return (ALL_CHARTS as Record<string, ChartDef>)[id];
+}
 
 type LoadState =
   | { status: 'loading' }
@@ -30,7 +35,7 @@ export default function ChartGallery() {
       return;
     }
 
-    const chart = ALL_CHARTS[id as keyof typeof ALL_CHARTS];
+    const chart = getChart(id);
     if (!chart) {
       setState({ status: 'error', message: `Unknown chart id: "${id}"` });
       return;

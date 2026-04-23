@@ -1,6 +1,6 @@
 {
   "schemaVersion": "2.0",
-  "generatedAt": "2026-04-23T19:50:29.285Z",
+  "generatedAt": "2026-04-23T20:31:33.675Z",
   "topics": [
     {
       "id": "blob-inclusion",
@@ -49,6 +49,291 @@
     }
   ],
   "charts": {
+    "entity-blobcount-sankey": {
+      "id": "entity-blobcount-sankey",
+      "topic": "blob-flow",
+      "title": "Entity to blob count",
+      "description": "Block counts per (proposing entity, blob count) pair.",
+      "related": [],
+      "order": 1,
+      "activeFrom": "2025-12-03",
+      "activeTo": null
+    },
+    "entity-relay-sankey": {
+      "id": "entity-relay-sankey",
+      "topic": "blob-flow",
+      "title": "Entity to relay",
+      "description": "Block flow from proposing entities to relays.",
+      "related": [],
+      "order": 3,
+      "activeFrom": "2025-12-03",
+      "activeTo": null
+    },
+    "entity-relay-blobcount-sankey": {
+      "id": "entity-relay-blobcount-sankey",
+      "topic": "blob-flow",
+      "title": "Entity through relay to blob count",
+      "description": "Three-column flow: proposing entity through relay to blob count bucket.",
+      "related": [],
+      "order": 4,
+      "activeFrom": "2025-12-03",
+      "activeTo": null
+    },
+    "relay-blobcount-sankey": {
+      "id": "relay-blobcount-sankey",
+      "topic": "blob-flow",
+      "title": "Relay to blob count",
+      "description": "Block counts per (relay, blob count) pair.",
+      "related": [],
+      "order": 2,
+      "activeFrom": "2025-12-03",
+      "activeTo": null
+    },
+    "blob-count-stacked-epoch": {
+      "id": "blob-count-stacked-epoch",
+      "topic": "blob-inclusion",
+      "title": "Blobs per slot by epoch",
+      "description": "Stacked bar chart of slot counts per epoch, broken down by blob-count bucket.",
+      "related": [
+        "blob-density-scatter",
+        "blob-popularity-heatmap"
+      ],
+      "order": 2,
+      "activeFrom": "2025-12-03",
+      "activeTo": null
+    },
+    "blob-density-scatter": {
+      "id": "blob-density-scatter",
+      "topic": "blob-inclusion",
+      "title": "Blobs per slot",
+      "description": "Scatter plot of blob count per slot over the day, colored by blob count.",
+      "related": [
+        "blob-count-stacked-epoch",
+        "blob-popularity-heatmap"
+      ],
+      "order": 1,
+      "activeFrom": "2025-12-03",
+      "activeTo": null
+    },
+    "blob-popularity-heatmap": {
+      "id": "blob-popularity-heatmap",
+      "topic": "blob-inclusion",
+      "title": "Blob count popularity heatmap",
+      "description": "Heatmap of how often each blob-count value (0-9) appears, bucketed by epoch.",
+      "related": [
+        "blob-density-scatter",
+        "blob-count-stacked-epoch"
+      ],
+      "order": 3,
+      "activeFrom": "2025-12-03",
+      "activeTo": null
+    },
+    "blob-slot-heatmap-facet": {
+      "id": "blob-slot-heatmap-facet",
+      "topic": "blob-inclusion",
+      "title": "Blob count by slot-in-epoch (faceted)",
+      "description": "Four-panel heatmap splitting the day into contiguous epoch windows for detail.",
+      "related": [
+        "blob-slot-heatmap-vertical"
+      ],
+      "order": 5,
+      "activeFrom": "2025-12-03",
+      "activeTo": null
+    },
+    "blob-slot-heatmap-vertical": {
+      "id": "blob-slot-heatmap-vertical",
+      "topic": "blob-inclusion",
+      "title": "Blob count by slot-in-epoch",
+      "description": "Heatmap of blob count per slot, with slot position within epoch on the y-axis.",
+      "related": [
+        "blob-slot-heatmap-facet",
+        "blob-popularity-heatmap"
+      ],
+      "order": 4,
+      "activeFrom": "2025-12-03",
+      "activeTo": null
+    },
+    "block-to-column-boxplot": {
+      "id": "block-to-column-boxplot",
+      "topic": "block-column-timing",
+      "title": "Block-to-last-column spread by blob count (MEV vs local)",
+      "description": "Boxplot of per-slot spread between block arrival and last column seen, grouped by blob count bucket and MEV vs local.",
+      "related": [
+        "block-to-column-histogram",
+        "column-spread-boxplot-blob"
+      ],
+      "order": 2,
+      "activeFrom": "2025-12-03",
+      "activeTo": null
+    },
+    "block-to-column-histogram": {
+      "id": "block-to-column-histogram",
+      "topic": "block-column-timing",
+      "title": "Block-to-last-column spread histogram (MEV vs local)",
+      "description": "Distribution of per-slot spread between block arrival and last column seen, split by MEV vs local block. 60 bins over 0-2000 ms.",
+      "related": [
+        "block-to-column-boxplot",
+        "block-to-column-timeseries"
+      ],
+      "order": 1,
+      "activeFrom": "2025-12-03",
+      "activeTo": null
+    },
+    "column-spread-boxplot-blob": {
+      "id": "column-spread-boxplot-blob",
+      "topic": "block-column-timing",
+      "title": "Block-to-last-column spread by blob count",
+      "description": "Boxplot of per-slot spread between block arrival and last column seen, grouped by blob count bucket (MEV and local combined).",
+      "related": [
+        "block-to-column-boxplot"
+      ],
+      "order": 4,
+      "activeFrom": "2025-12-03",
+      "activeTo": null
+    },
+    "block-to-column-timeseries": {
+      "id": "block-to-column-timeseries",
+      "topic": "block-column-timing",
+      "title": "Block-to-last-column spread over time",
+      "description": "Per-slot spread between block arrival and last column seen, plotted over the day. Points are colored by blob count.",
+      "related": [
+        "block-to-column-histogram",
+        "block-to-column-boxplot"
+      ],
+      "order": 3,
+      "activeFrom": "2025-12-03",
+      "activeTo": null
+    },
+    "building-vs-network-stacked": {
+      "id": "building-vs-network-stacked",
+      "topic": "block-propagation",
+      "title": "Building time vs network propagation by size bucket",
+      "description": "Horizontal stacked bar showing mean building phase vs mean network propagation latency, grouped by wire-size bucket.",
+      "related": [
+        "raw-vs-corrected-box",
+        "spread-by-size-box"
+      ],
+      "order": 4,
+      "activeFrom": "2025-12-03",
+      "activeTo": null
+    },
+    "compression-ratio-scatter": {
+      "id": "compression-ratio-scatter",
+      "topic": "block-propagation",
+      "title": "Block compression ratio vs wire size",
+      "description": "Scatter of compression ratio (compressed/uncompressed) versus wire size in bytes. Includes a 1:1 reference line and an OLS regression line.",
+      "related": [
+        "size-dist-histogram",
+        "corrected-vs-size-scatter"
+      ],
+      "order": 2,
+      "activeFrom": "2025-12-03",
+      "activeTo": null
+    },
+    "corrected-by-sizebucket-box": {
+      "id": "corrected-by-sizebucket-box",
+      "topic": "block-propagation",
+      "title": "Size-corrected latency by wire-size bucket",
+      "description": "Horizontal grouped boxplot of size-corrected propagation latency, one box per wire-size bucket.",
+      "related": [
+        "raw-vs-corrected-box",
+        "corrected-vs-size-scatter"
+      ],
+      "order": 7,
+      "activeFrom": "2025-12-03",
+      "activeTo": null
+    },
+    "corrected-density-by-builder": {
+      "id": "corrected-density-by-builder",
+      "topic": "block-propagation",
+      "title": "Size-corrected latency density (MEV vs local)",
+      "description": "Two 2D density heatmaps (MEV and local) showing the joint distribution of wire size and size-corrected latency.",
+      "related": [
+        "top-entity-density-facets",
+        "corrected-by-sizebucket-box"
+      ],
+      "order": 8,
+      "activeFrom": "2025-12-03",
+      "activeTo": null
+    },
+    "corrected-vs-size-scatter": {
+      "id": "corrected-vs-size-scatter",
+      "topic": "block-propagation",
+      "title": "Size-corrected latency vs wire size",
+      "description": "Per-slot scatter of size-corrected propagation latency versus wire size in bytes.",
+      "related": [
+        "raw-vs-corrected-box",
+        "corrected-by-sizebucket-box"
+      ],
+      "order": 6,
+      "activeFrom": "2025-12-03",
+      "activeTo": null
+    },
+    "double-outlier-quadrant-scatter": {
+      "id": "double-outlier-quadrant-scatter",
+      "topic": "block-propagation",
+      "title": "Double-outlier quadrant: large and slow blocks",
+      "description": "Scatter of propagation latency vs wire size with p95 threshold lines defining four quadrants. Points in the top-right quadrant are both large and slow.",
+      "related": [
+        "size-residuals-scatter",
+        "entity-anomaly-rate-bar"
+      ],
+      "order": 17,
+      "activeFrom": "2025-12-03",
+      "activeTo": null
+    },
+    "entity-anomaly-rate-bar": {
+      "id": "entity-anomaly-rate-bar",
+      "topic": "block-propagation",
+      "title": "Anomaly rate by entity",
+      "description": "Horizontal bar chart ranking entities by the fraction of their slots in the double-outlier quadrant (large and slow). The mark line shows the population average anomaly rate.",
+      "related": [
+        "double-outlier-quadrant-scatter",
+        "entity-percentile-bars"
+      ],
+      "order": 18,
+      "activeFrom": "2025-12-03",
+      "activeTo": null
+    },
+    "entity-percentile-bars": {
+      "id": "entity-percentile-bars",
+      "topic": "block-propagation",
+      "title": "Propagation latency percentiles by entity",
+      "description": "Bar chart of p50/p95/p99 propagation latency per entity, with individual slot observations as scatter overlay.",
+      "related": [
+        "entity-anomaly-rate-bar",
+        "top-entity-density-facets"
+      ],
+      "order": 14,
+      "activeFrom": "2025-12-03",
+      "activeTo": null
+    },
+    "raw-vs-corrected-box": {
+      "id": "raw-vs-corrected-box",
+      "topic": "block-propagation",
+      "title": "Raw vs size-corrected propagation latency",
+      "description": "Side-by-side boxplot comparing raw block propagation latency to size-corrected latency across all slots.",
+      "related": [
+        "corrected-vs-size-scatter",
+        "corrected-by-sizebucket-box"
+      ],
+      "order": 5,
+      "activeFrom": "2025-12-03",
+      "activeTo": null
+    },
+    "region-size-heatmap-subplots": {
+      "id": "region-size-heatmap-subplots",
+      "topic": "block-propagation",
+      "title": "Region x size median latency heatmaps",
+      "description": "Two heatmaps (sentry and contributoor) showing median propagation latency by region (rows) and wire-size bucket (columns).",
+      "related": [
+        "regional-cdf-subplots",
+        "regional-corrected-box"
+      ],
+      "order": 11,
+      "activeFrom": "2025-12-03",
+      "activeTo": null
+    },
     "region-winner-grouped-bar": {
       "id": "region-winner-grouped-bar",
       "topic": "block-propagation",
@@ -56,6 +341,585 @@
       "description": "Median block propagation latency per region, split by observation source (sentry vs contributoor).",
       "related": [],
       "order": 11,
+      "activeFrom": "2025-12-03",
+      "activeTo": null
+    },
+    "regional-cdf-subplots": {
+      "id": "regional-cdf-subplots",
+      "topic": "block-propagation",
+      "title": "Regional CDF subplots by source and size bucket",
+      "description": "CDF of block propagation latency in a 4x2 grid (4 regions x 2 sources). Each subplot shows one line per wire-size bucket.",
+      "related": [
+        "regional-corrected-box",
+        "region-size-heatmap-subplots"
+      ],
+      "order": 10,
+      "activeFrom": "2025-12-03",
+      "activeTo": null
+    },
+    "regional-corrected-box": {
+      "id": "regional-corrected-box",
+      "topic": "block-propagation",
+      "title": "Size-corrected latency by region",
+      "description": "Boxplot of size-corrected propagation latency grouped by region, surfacing geographic routing asymmetries.",
+      "related": [
+        "regional-cdf-subplots",
+        "region-size-heatmap-subplots"
+      ],
+      "order": 9,
+      "activeFrom": "2025-12-03",
+      "activeTo": null
+    },
+    "size-dist-histogram": {
+      "id": "size-dist-histogram",
+      "topic": "block-propagation",
+      "title": "Block wire-size distribution (MEV vs local)",
+      "description": "Overlaid histogram of block wire sizes in 100 KB bins, split by MEV and local builder types.",
+      "related": [
+        "corrected-by-sizebucket-box",
+        "spread-by-size-box"
+      ],
+      "order": 1,
+      "activeFrom": "2025-12-03",
+      "activeTo": null
+    },
+    "size-residuals-scatter": {
+      "id": "size-residuals-scatter",
+      "topic": "block-propagation",
+      "title": "Propagation latency residuals from size regression",
+      "description": "Scatter of residuals from a linear regression of propagation latency on wire size. Points above zero are slower than the model predicts.",
+      "related": [
+        "corrected-vs-size-scatter",
+        "double-outlier-quadrant-scatter"
+      ],
+      "order": 16,
+      "activeFrom": "2025-12-03",
+      "activeTo": null
+    },
+    "spread-by-size-box": {
+      "id": "spread-by-size-box",
+      "topic": "block-propagation",
+      "title": "Propagation spread by wire-size bucket",
+      "description": "Horizontal boxplots of per-slot propagation spread (max observer minus min observer latency), grouped by wire-size bucket.",
+      "related": [
+        "spread-vs-size-scatter",
+        "corrected-by-sizebucket-box"
+      ],
+      "order": 12,
+      "activeFrom": "2025-12-03",
+      "activeTo": null
+    },
+    "spread-vs-size-scatter": {
+      "id": "spread-vs-size-scatter",
+      "topic": "block-propagation",
+      "title": "Propagation spread vs wire size",
+      "description": "Per-slot scatter of propagation spread (max minus min observer latency) versus wire size in bytes.",
+      "related": [
+        "spread-by-size-box",
+        "corrected-vs-size-scatter"
+      ],
+      "order": 13,
+      "activeFrom": "2025-12-03",
+      "activeTo": null
+    },
+    "top-entity-density-facets": {
+      "id": "top-entity-density-facets",
+      "topic": "block-propagation",
+      "title": "Block density facets by top entity",
+      "description": "Grid of 2D density heatmaps (up to 10), one per top entity by slot count, showing wire size vs propagation latency.",
+      "related": [
+        "entity-percentile-bars",
+        "corrected-density-by-builder"
+      ],
+      "order": 15,
+      "activeFrom": "2025-12-03",
+      "activeTo": null
+    },
+    "winning-bid-histogram": {
+      "id": "winning-bid-histogram",
+      "topic": "block-propagation",
+      "title": "Winning bid value distribution",
+      "description": "Histogram of winning bid values (ETH) binned in equal-width intervals across the observed range.",
+      "related": [
+        "entity-percentile-bars",
+        "entity-anomaly-rate-bar"
+      ],
+      "order": 3,
+      "activeFrom": "2025-12-03",
+      "activeTo": null
+    },
+    "column-delta-heatmap": {
+      "id": "column-delta-heatmap",
+      "topic": "column-propagation",
+      "title": "Column delta heatmap",
+      "description": "Per-bucket delta from each column's minimum median_ms across all buckets.",
+      "related": [
+        "column-first-seen-heatmap",
+        "column-normalized-heatmap",
+        "column-missing-heatmap"
+      ],
+      "order": 2,
+      "activeFrom": "2025-12-03",
+      "activeTo": null
+    },
+    "column-first-seen-heatmap": {
+      "id": "column-first-seen-heatmap",
+      "topic": "column-propagation",
+      "title": "Column first-seen heatmap",
+      "description": "Median first-seen ms per column per 5-minute bucket.",
+      "related": [
+        "column-delta-heatmap",
+        "column-normalized-heatmap",
+        "column-missing-heatmap"
+      ],
+      "order": 1,
+      "activeFrom": "2025-12-03",
+      "activeTo": null
+    },
+    "column-missing-heatmap": {
+      "id": "column-missing-heatmap",
+      "topic": "column-propagation",
+      "title": "Column missing-observation heatmap",
+      "description": "Boolean flag per (column, bucket): 1 means at least one slot in that bucket had no observation for that column.",
+      "related": [
+        "column-first-seen-heatmap",
+        "column-delta-heatmap",
+        "column-normalized-heatmap"
+      ],
+      "order": 4,
+      "activeFrom": "2025-12-03",
+      "activeTo": null
+    },
+    "column-normalized-heatmap": {
+      "id": "column-normalized-heatmap",
+      "topic": "column-propagation",
+      "title": "Column normalized heatmap",
+      "description": "Per-column min-max normalization of median_ms; 0 is the column's fastest bucket, 1 the slowest.",
+      "related": [
+        "column-first-seen-heatmap",
+        "column-delta-heatmap",
+        "column-missing-heatmap"
+      ],
+      "order": 3,
+      "activeFrom": "2025-12-03",
+      "activeTo": null
+    },
+    "column-spread-histogram": {
+      "id": "column-spread-histogram",
+      "topic": "column-propagation",
+      "title": "Column spread histogram",
+      "description": "Distribution of per-slot column spread (max minus min first-seen ms across 128 columns), binned into 60 buckets.",
+      "related": [
+        "column-spread-timeseries"
+      ],
+      "order": 5,
+      "activeFrom": "2025-12-03",
+      "activeTo": null
+    },
+    "column-spread-timeseries": {
+      "id": "column-spread-timeseries",
+      "topic": "column-propagation",
+      "title": "Column spread over time",
+      "description": "Per-slot column spread (max minus min first-seen ms across 128 columns) plotted over the day.",
+      "related": [
+        "column-spread-histogram"
+      ],
+      "order": 6,
+      "activeFrom": "2025-12-03",
+      "activeTo": null
+    },
+    "age-histogram-facets": {
+      "id": "age-histogram-facets",
+      "topic": "mempool-visibility",
+      "title": "Mempool age distribution by transaction type",
+      "description": "Bar histogram of mempool age (ms before inclusion) per transaction type, using log-scale time buckets.",
+      "related": [
+        "age-percentile-lines",
+        "delay-histogram-facets"
+      ],
+      "order": 6,
+      "activeFrom": "2025-12-03",
+      "activeTo": null
+    },
+    "age-percentile-lines": {
+      "id": "age-percentile-lines",
+      "topic": "mempool-visibility",
+      "title": "Mempool age percentiles by transaction type",
+      "description": "P50/P75/P90/P95/P99 of mempool age (ms) per transaction type, for transactions seen before inclusion.",
+      "related": [
+        "age-histogram-facets",
+        "delay-percentile-lines"
+      ],
+      "order": 5,
+      "activeFrom": "2025-12-03",
+      "activeTo": null
+    },
+    "coverage-heatmap": {
+      "id": "coverage-heatmap",
+      "topic": "mempool-visibility",
+      "title": "Mempool coverage heatmap (tx type × hour)",
+      "description": "Heatmap of mempool coverage fraction across 5 transaction types and 24 hours of the day.",
+      "related": [
+        "hourly-coverage-lines",
+        "coverage-stacked-bar"
+      ],
+      "order": 4,
+      "activeFrom": "2025-12-03",
+      "activeTo": null
+    },
+    "coverage-stacked-bar": {
+      "id": "coverage-stacked-bar",
+      "topic": "mempool-visibility",
+      "title": "Mempool coverage by transaction type",
+      "description": "Stacked bar showing before/after/never mempool visibility counts per transaction type.",
+      "related": [
+        "hourly-coverage-lines",
+        "coverage-heatmap"
+      ],
+      "order": 1,
+      "activeFrom": "2025-12-03",
+      "activeTo": null
+    },
+    "delay-histogram-facets": {
+      "id": "delay-histogram-facets",
+      "topic": "mempool-visibility",
+      "title": "Post-inclusion delay distribution by transaction type",
+      "description": "Bar histogram of post-inclusion delay (ms after inclusion) per transaction type, using log-scale time buckets.",
+      "related": [
+        "delay-percentile-lines",
+        "age-histogram-facets"
+      ],
+      "order": 8,
+      "activeFrom": "2025-12-03",
+      "activeTo": null
+    },
+    "delay-percentile-lines": {
+      "id": "delay-percentile-lines",
+      "topic": "mempool-visibility",
+      "title": "Post-inclusion delay percentiles by transaction type",
+      "description": "P50/P75/P90/P95/P99 of post-inclusion delay (ms) per transaction type, for transactions seen after inclusion.",
+      "related": [
+        "delay-histogram-facets",
+        "age-percentile-lines"
+      ],
+      "order": 7,
+      "activeFrom": "2025-12-03",
+      "activeTo": null
+    },
+    "hourly-coverage-lines": {
+      "id": "hourly-coverage-lines",
+      "topic": "mempool-visibility",
+      "title": "Hourly mempool coverage",
+      "description": "Fraction of transactions seen in the mempool before block inclusion, per hour per tx type.",
+      "related": [
+        "coverage-stacked-bar",
+        "coverage-heatmap"
+      ],
+      "order": 2,
+      "activeFrom": "2025-12-03",
+      "activeTo": null
+    },
+    "sentry-coverage-bar": {
+      "id": "sentry-coverage-bar",
+      "topic": "mempool-visibility",
+      "title": "Mempool coverage per sentry (top 15)",
+      "description": "Horizontal bar chart showing the top 15 Xatu sentry nodes by mempool coverage percentage.",
+      "related": [
+        "coverage-stacked-bar"
+      ],
+      "order": 9,
+      "activeFrom": "2025-12-03",
+      "activeTo": null
+    },
+    "tx-volume-stacked-time": {
+      "id": "tx-volume-stacked-time",
+      "topic": "mempool-visibility",
+      "title": "Transaction volume by visibility and hour",
+      "description": "Hourly transaction totals stacked by mempool visibility (before/after/never).",
+      "related": [
+        "coverage-stacked-bar",
+        "hourly-coverage-lines"
+      ],
+      "order": 3,
+      "activeFrom": "2025-12-03",
+      "activeTo": null
+    },
+    "bid-timing-density-facets": {
+      "id": "bid-timing-density-facets",
+      "topic": "mev-pipeline",
+      "title": "Bid timing density by blob count",
+      "description": "2D density heatmap of winning bid vs block arrival latency, one grid per blob count bucket.",
+      "related": [
+        "bid-timing-density-outliers",
+        "builder-density-facets"
+      ],
+      "order": 13,
+      "activeFrom": "2025-12-03",
+      "activeTo": null
+    },
+    "bid-timing-density-outliers": {
+      "id": "bid-timing-density-outliers",
+      "topic": "mev-pipeline",
+      "title": "Bid timing density with P95 outliers",
+      "description": "Heatmap of winning bid vs block arrival latency with P95 outliers overlaid as scatter points.",
+      "related": [
+        "bid-vs-block-scatter",
+        "bid-timing-density-facets"
+      ],
+      "order": 12,
+      "activeFrom": "2025-12-03",
+      "activeTo": null
+    },
+    "bid-to-block-scatter-median": {
+      "id": "bid-to-block-scatter-median",
+      "topic": "mev-pipeline",
+      "title": "Bid-to-block scatter with medians",
+      "description": "Scatter of winning bid vs block arrival latency with median lines per blob count.",
+      "related": [
+        "bid-vs-block-scatter"
+      ],
+      "order": 3,
+      "activeFrom": "2025-12-03",
+      "activeTo": null
+    },
+    "bid-trace-coverage-stacked": {
+      "id": "bid-trace-coverage-stacked",
+      "topic": "mev-pipeline",
+      "title": "Bid trace coverage by relay",
+      "description": "Horizontal stacked bar showing winning vs non-winning bid counts per relay.",
+      "related": [
+        "bid-vs-block-scatter"
+      ],
+      "order": 1,
+      "activeFrom": "2025-12-03",
+      "activeTo": null
+    },
+    "bid-value-vs-block": {
+      "id": "bid-value-vs-block",
+      "topic": "mev-pipeline",
+      "title": "Bid value vs block arrival",
+      "description": "Winning bid value (ETH, log scale) vs block first-seen latency (ms), colored by blob count.",
+      "related": [
+        "bid-vs-block-scatter"
+      ],
+      "order": 4,
+      "activeFrom": "2025-12-03",
+      "activeTo": null
+    },
+    "bid-vs-block-scatter": {
+      "id": "bid-vs-block-scatter",
+      "topic": "mev-pipeline",
+      "title": "Winning bid vs first-seen",
+      "description": "Per-slot comparison of winning bid latency (ms) to block arrival latency (ms), colored by blob count.",
+      "related": [
+        "bid-to-block-scatter-median"
+      ],
+      "order": 2,
+      "activeFrom": "2025-12-03",
+      "activeTo": null
+    },
+    "bidding-duration-vs-block": {
+      "id": "bidding-duration-vs-block",
+      "topic": "mev-pipeline",
+      "title": "Bidding duration vs block arrival",
+      "description": "Scatter of bidding window duration (winning bid ms minus earliest bid received ms) vs block first-seen latency.",
+      "related": [
+        "bid-vs-block-scatter",
+        "bid-timing-density-outliers"
+      ],
+      "order": 5,
+      "activeFrom": "2025-12-03",
+      "activeTo": null
+    },
+    "blocks-by-blobcount-mev-local": {
+      "id": "blocks-by-blobcount-mev-local",
+      "topic": "mev-pipeline",
+      "title": "Block arrival latency: MEV vs local",
+      "description": "Horizontal grouped boxplots of block arrival latency split by MEV vs local builder, per blob count.",
+      "related": [
+        "relay-box-by-blobbin",
+        "first-col-by-blob-mev-local"
+      ],
+      "order": 7,
+      "activeFrom": "2025-12-03",
+      "activeTo": null
+    },
+    "builder-density-facets": {
+      "id": "builder-density-facets",
+      "topic": "mev-pipeline",
+      "title": "Builder density facets",
+      "description": "2D density heatmap of winning bid vs block arrival latency, one grid per top builder (up to 9).",
+      "related": [
+        "relay-density-facets",
+        "bid-vs-block-scatter"
+      ],
+      "order": 10,
+      "activeFrom": "2025-12-03",
+      "activeTo": null
+    },
+    "first-col-by-blob-mev-local": {
+      "id": "first-col-by-blob-mev-local",
+      "topic": "mev-pipeline",
+      "title": "First column seen: MEV vs local",
+      "description": "Horizontal grouped boxplots of first column seen latency split by MEV vs local builder, per blob count.",
+      "related": [
+        "last-col-by-blob-mev-local",
+        "blocks-by-blobcount-mev-local"
+      ],
+      "order": 8,
+      "activeFrom": "2025-12-03",
+      "activeTo": null
+    },
+    "last-col-by-blob-mev-local": {
+      "id": "last-col-by-blob-mev-local",
+      "topic": "mev-pipeline",
+      "title": "Last column seen: MEV vs local",
+      "description": "Horizontal grouped boxplots of last column seen latency split by MEV vs local builder, per blob count.",
+      "related": [
+        "first-col-by-blob-mev-local",
+        "blocks-by-blobcount-mev-local"
+      ],
+      "order": 9,
+      "activeFrom": "2025-12-03",
+      "activeTo": null
+    },
+    "relay-box-by-blobbin": {
+      "id": "relay-box-by-blobbin",
+      "topic": "mev-pipeline",
+      "title": "Block arrival latency by relay and blob count",
+      "description": "Grouped boxplots of block first-seen latency per relay, broken out by blob count bucket.",
+      "related": [
+        "blocks-by-blobcount-mev-local"
+      ],
+      "order": 6,
+      "activeFrom": "2025-12-03",
+      "activeTo": null
+    },
+    "relay-density-facets": {
+      "id": "relay-density-facets",
+      "topic": "mev-pipeline",
+      "title": "Relay density facets",
+      "description": "2D density heatmap of winning bid vs block arrival latency, one grid per relay (up to 9).",
+      "related": [
+        "builder-density-facets",
+        "bid-vs-block-scatter"
+      ],
+      "order": 11,
+      "activeFrom": "2025-12-03",
+      "activeTo": null
+    },
+    "missed-slots-by-entity-bar": {
+      "id": "missed-slots-by-entity-bar",
+      "topic": "missed-slots",
+      "title": "Missed slots by entity",
+      "description": "Top 15 entities ranked by missed-slot count for the selected day. An entity misses a slot when it submitted a bid but no block arrival was observed.",
+      "related": [
+        "entity-miss-rate-bar",
+        "missed-slots-table"
+      ],
+      "order": 1,
+      "activeFrom": "2025-12-03",
+      "activeTo": null
+    },
+    "missed-slots-hourly-bar": {
+      "id": "missed-slots-hourly-bar",
+      "topic": "missed-slots",
+      "title": "Missed slots per hour",
+      "description": "Count of missed slots grouped by UTC hour. A slot is missed when it appears in bid events but has no block arrival event.",
+      "related": [
+        "missed-slots-timeline-scatter",
+        "missed-slots-by-entity-bar"
+      ],
+      "order": 3,
+      "activeFrom": "2025-12-03",
+      "activeTo": null
+    },
+    "entity-miss-rate-bar": {
+      "id": "entity-miss-rate-bar",
+      "topic": "missed-slots",
+      "title": "Entity miss rate",
+      "description": "Percentage of bid slots that had no corresponding block arrival, per entity. Entities with fewer than 5 bids are excluded. Color encodes miss rate severity.",
+      "related": [
+        "missed-slots-by-entity-bar",
+        "missed-slots-table"
+      ],
+      "order": 2,
+      "activeFrom": "2025-12-03",
+      "activeTo": null
+    },
+    "missed-slots-timeline-scatter": {
+      "id": "missed-slots-timeline-scatter",
+      "topic": "missed-slots",
+      "title": "Missed slots timeline",
+      "description": "Strip plot of missed slots along the time axis. Each cross marks a slot where a bid was observed but no block arrival occurred. Clusters indicate periods of elevated miss activity.",
+      "related": [
+        "missed-slots-hourly-bar",
+        "missed-slots-by-entity-bar"
+      ],
+      "order": 4,
+      "activeFrom": "2025-12-03",
+      "activeTo": null
+    },
+    "anomalies-by-blobcount-bar": {
+      "id": "anomalies-by-blobcount-bar",
+      "topic": "propagation-anomalies",
+      "title": "Anomalous blocks by blob count",
+      "description": "Anomaly count per blob-count bucket (0-9). Shows whether the anomaly rate rises uniformly with blob count or whether certain blob counts produce disproportionately many outliers.",
+      "related": [
+        "anomaly-regression-scatter"
+      ],
+      "order": 5,
+      "activeFrom": "2025-12-03",
+      "activeTo": null
+    },
+    "anomalies-by-builder-bar": {
+      "id": "anomalies-by-builder-bar",
+      "topic": "propagation-anomalies",
+      "title": "Anomalous blocks by builder",
+      "description": "Top 15 builders ranked by count of propagation anomalies (block arrival latency exceeding P95 for its blob-count bucket).",
+      "related": [
+        "anomaly-regression-scatter",
+        "anomalies-by-relay-bar"
+      ],
+      "order": 4,
+      "activeFrom": "2025-12-03",
+      "activeTo": null
+    },
+    "anomalies-by-proposer-bar": {
+      "id": "anomalies-by-proposer-bar",
+      "topic": "propagation-anomalies",
+      "title": "Anomalous blocks by proposer",
+      "description": "Top 15 proposers ranked by count of propagation anomalies (block arrival latency exceeding P95 for its blob-count bucket).",
+      "related": [
+        "anomaly-regression-scatter",
+        "anomalies-by-builder-bar"
+      ],
+      "order": 3,
+      "activeFrom": "2025-12-03",
+      "activeTo": null
+    },
+    "anomalies-by-relay-bar": {
+      "id": "anomalies-by-relay-bar",
+      "topic": "propagation-anomalies",
+      "title": "Anomalous blocks by relay",
+      "description": "Top 15 relays ranked by count of propagation anomalies (block arrival latency exceeding P95 for its blob-count bucket).",
+      "related": [
+        "anomaly-regression-scatter",
+        "anomalies-by-builder-bar"
+      ],
+      "order": 2,
+      "activeFrom": "2025-12-03",
+      "activeTo": null
+    },
+    "anomaly-regression-scatter": {
+      "id": "anomaly-regression-scatter",
+      "topic": "propagation-anomalies",
+      "title": "Block arrival latency: anomaly scatter",
+      "description": "Block arrival latency vs blob count. Anomalies (above P95 for their blob-count bucket) are highlighted. Regression line fitted through normal events only.",
+      "related": [
+        "anomalies-by-blobcount-bar"
+      ],
+      "order": 1,
       "activeFrom": "2025-12-03",
       "activeTo": null
     }
