@@ -1,0 +1,1 @@
+Nine 2D density heatmaps, one per top builder (by slot count). Each grid shows the joint distribution of winning bid latency (x) vs block arrival latency (y), with cell color encoding count density. Axes are shared across all grids for direct comparison. Builders are identified by a truncated pubkey prefix.

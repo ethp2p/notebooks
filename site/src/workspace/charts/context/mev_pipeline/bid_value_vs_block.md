@@ -1,0 +1,1 @@
+Scatter of winning bid value (Gwei, log-scaled x axis) vs block first-seen latency (ms). A log scale on the value axis spreads out the large range of MEV bid sizes. Color encodes blob count. Look for whether high-value bids correlate with faster or slower block propagation.

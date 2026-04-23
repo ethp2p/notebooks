@@ -1,0 +1,1 @@
+Scatter of bidding window duration (x axis) vs block first-seen latency (y axis). Bidding duration is computed as the winning bid timestamp minus the earliest bid received timestamp for the same slot. A long bidding window may indicate competitive relay activity. Color encodes blob count.

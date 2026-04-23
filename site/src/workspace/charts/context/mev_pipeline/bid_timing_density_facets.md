@@ -1,0 +1,1 @@
+2D density heatmaps of winning bid latency vs block arrival latency, faceted by blob count. Each grid shows only slots with that exact blob count, revealing whether high-blob slots have a different timing profile than low-blob slots. Axes are globally shared for cross-facet comparison.

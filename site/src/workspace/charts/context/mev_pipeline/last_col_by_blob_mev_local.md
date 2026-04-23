@@ -1,0 +1,1 @@
+Horizontal grouped boxplots comparing last data column seen latency between MEV blocks and locally built blocks, broken out by blob count. The last column seen latency captures when full data availability is achieved for a slot. Box: 25th-75th percentile. Line: median. Whiskers: min/max excluding outliers.

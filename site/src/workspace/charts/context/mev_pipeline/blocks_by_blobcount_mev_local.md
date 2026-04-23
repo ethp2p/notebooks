@@ -1,0 +1,1 @@
+Horizontal grouped boxplots comparing block first-seen latency between MEV blocks and locally built blocks, for each blob count (0-9). Each pair of boxes at a given blob count shows the full latency distribution for MEV vs local. Box: 25th-75th percentile. Line: median. Whiskers: min/max excluding outliers.

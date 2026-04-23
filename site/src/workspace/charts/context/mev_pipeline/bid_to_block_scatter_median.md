@@ -1,0 +1,1 @@
+Same axes as the winning-bid vs first-seen scatter, with an additional line series showing the median winning-bid latency and median block-arrival latency for each blob count bucket. The line connects medians in blob-count order (0 to 9), providing a summary trend over the individual slot scatter.

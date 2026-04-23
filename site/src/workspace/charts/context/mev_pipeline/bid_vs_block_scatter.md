@@ -1,0 +1,1 @@
+Scatter plot comparing, per slot, the latency of the winning MEV bid (x axis) against the latency of the first observed block (y axis). Color encodes blob count (0-9). Slots above the diagonal indicate blocks that arrived later than the winning bid; slots below indicate the block was seen before the relay declared a winner.

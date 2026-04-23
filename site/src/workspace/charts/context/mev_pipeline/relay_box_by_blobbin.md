@@ -1,0 +1,1 @@
+Grouped boxplots of block first-seen latency, with one group of boxes per blob count bucket (0-8+) and one box per relay within each group. Each box shows the min, 25th percentile, median, 75th percentile, and max latency across all slots that relay won in that blob count bucket. Use this to compare relay-level delivery speed at different blob loads.

@@ -1,0 +1,1 @@
+Heatmap of winning bid latency vs block first-seen latency for all slots, with P95 outliers (slots where either bid latency or arrival latency exceeds the 95th percentile) overlaid as red scatter points. The heatmap reveals the dense core of the distribution; the scatter overlay draws attention to anomalous slots without hiding the majority pattern.

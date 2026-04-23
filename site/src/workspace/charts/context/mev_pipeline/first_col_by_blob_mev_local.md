@@ -1,0 +1,1 @@
+Horizontal grouped boxplots comparing first data column seen latency between MEV blocks and locally built blocks, broken out by blob count. The first column seen marks when the network starts receiving EIP-7594 data columns. Box: 25th-75th percentile. Line: median. Whiskers: min/max excluding outliers.

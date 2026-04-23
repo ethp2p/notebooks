@@ -1,0 +1,1 @@
+Nine 2D density heatmaps, one per relay (by winning bid count). Each grid shows the joint distribution of winning bid latency (x) vs block arrival latency (y), with cell color encoding count density. Axes are shared across all grids so latency distributions can be compared across relays at a glance.

@@ -1,0 +1,1 @@
+Horizontal stacked bar showing how many bids each relay submitted per day, split between the single winning bid and all non-winning bids. A tall non-winning stack relative to the winning stack indicates a relay that participates heavily but seldom wins.
