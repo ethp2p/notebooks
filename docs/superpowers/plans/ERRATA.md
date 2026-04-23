@@ -484,3 +484,27 @@ IBM Plex Sans (Regular 400, Medium 500, Bold 700) was downloaded from `https://g
 **Reason:** Real column availability verified from blob_flow.py.
 
 **Downstream impact:** None relative to chart consumption; `entity` and `relay` field values are the same semantically. The extra JOIN cost is expected given the existing blob_flow query uses the same pattern.
+
+### 2026-04-23 · Plan 04 Task 01 · zod, echarts, apache-arrow installed ahead of their scheduled tasks
+
+**What the plan said:** `bun add echarts` in Task 04, `bun add apache-arrow` in Task 08. `zod` was not explicitly listed for site/ at all (only in observatory/).
+
+**What was done instead:** All three packages (`zod@4.3.6`, `echarts@6.0.0`, `apache-arrow@21.1.0`) were installed in site/ before committing Task 01, because `types.ts` contains `import type { EChartsOption } from 'echarts'`, `import type { Table } from 'apache-arrow'`, and `import type { z } from 'zod'`. Without these packages present, TypeScript cannot resolve the module paths and `bun run typecheck` fails. They were installed in the same commit as Task 01 to keep typecheck green after every commit.
+
+**Reason:** The plan's per-task verification requirement ("typecheck must pass after each commit") is incompatible with importing from packages that will only be installed in later tasks. Installing packages early does not change any file content, only installation order.
+
+**Downstream impact:** Tasks 04 and 08 steps that say `bun add echarts` / `bun add apache-arrow` should be skipped (packages already present). Task 09's use of `zod` in registry/dates loaders is similarly pre-satisfied.
+
+### 2026-04-23 · Plan 04 Task 05 · PlotRenderer tests mock echarts.init instead of asserting real canvas
+
+**What the plan said:** The mount test asserts `container.querySelector('canvas')` is in the document. The plan noted that if ECharts throws due to canvas absence, use `it.skip` or mock `echarts.init` to return a minimal shim.
+
+**What was done instead:** `vi.mock('@/workspace/charts/echarts-setup', ...)` stubs `echarts.init` to manually append a `<canvas>` element and return a mock instance with `setOption`, `resize`, `dispose`. This satisfies the mount assertion and the unmount cleanup assertion. The unmount test passed without mocking (dispose removes the canvas), and the mount test now also passes.
+
+Two stubs were also added to `tests/setup.ts`:
+- `HTMLCanvasElement.prototype.getContext` stubbed to return null (typed via `any` cast to satisfy the overloaded signature).
+- `global.ResizeObserver` stubbed with no-op observe/unobserve/disconnect.
+
+**Reason:** jsdom's CanvasRenderer does not support `getContext('2d')`. When `getContext` returns null, ECharts' CanvasRenderer does not create a `<canvas>` element, so the DOM assertion fails. Mocking `echarts.init` gives the test direct control over the canvas element. The mock approach is explicitly listed in the plan as a valid alternative.
+
+**Downstream impact:** The PlotRenderer tests exercise the React lifecycle (mount/unmount/ref cleanup) correctly. Real ECharts rendering is verified by the Playwright e2e spec (Task 13) where a real browser is available.
