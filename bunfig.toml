@@ -1,0 +1,7 @@
+# bunfig.toml
+[install]
+# Use bun's native package manager; lockfile at bun.lock
+exact = false
+
+[install.scopes]
+# (add private scopes here if needed later)
