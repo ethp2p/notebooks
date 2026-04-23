@@ -194,3 +194,23 @@ IBM Plex Sans (Regular 400, Medium 500, Bold 700) was downloaded from `https://g
 **Reason:** The shadcn ui/ sources are known to use patterns that trip these rules (documented in the task's critical context). Adding the override before running lint avoids a red-green cycle and produces the same end state.
 
 **Downstream impact:** None. The override is scoped to `src/components/ui/**` only.
+
+### 2026-04-23 · Plan 01 Task 13 · `h1, main` locator replaced with `main` to avoid strict mode violation
+
+**What the plan said:** The smoke spec uses `page.locator('h1, main').toContainText(r.match)`.
+
+**What was done instead:** Changed to `page.locator('main').toContainText(r.match)`.
+
+**Reason:** Playwright's `expect(...).toContainText()` operates in strict mode and requires the locator to resolve to exactly one element. On the Home and About pages, both `<main>` and `<h1>` exist in the DOM simultaneously (the `<h1>` is a child of `<main>`), so the CSS selector `h1, main` resolves to 2 elements and Playwright throws a strict mode violation. Using `main` alone always resolves to exactly one element and still contains all page text, so all regex matches hold.
+
+**Downstream impact:** None. The change is scoped to the smoke spec only.
+
+### 2026-04-23 · Plan 01 Task 13 · `--with-deps` dropped from Playwright install
+
+**What the plan said:** Run `bunx playwright install --with-deps chromium`.
+
+**What was done instead:** Ran `bunx playwright install chromium` (without `--with-deps`), as instructed in the task's critical context section.
+
+**Reason:** `--with-deps` invokes `sudo apt-get` to install system libraries and fails on macOS. On macOS, Playwright's system dependencies are already satisfied by the OS. The install succeeded without the flag.
+
+**Downstream impact:** None. CI runs on Linux where the workflow should continue to use `--with-deps`.
