@@ -228,3 +228,17 @@ IBM Plex Sans (Regular 400, Medium 500, Bold 700) was downloaded from `https://g
 **Reason:** The plan's collision rules say new Bun versions win when names collide. `preview` was a natural extension of that rule. Python targets are explicitly out of scope until Plan 07.
 
 **Downstream impact:** Plan 07 is responsible for removing the Python-only targets from `justfile` and retiring `sync.yml`.
+
+### 2026-04-23 · post-Task-10 corrective · gallery theming gaps in tabs, kbd, switch
+
+**What the plan said:** Task 09 stripped rounded/shadow classes from all shadcn primitives but did not rewrite the colour class compositions; shadcn defaults were left in place for `TabsList`, `TabsTrigger`, `Kbd`, and `Switch`.
+
+**What was done instead:** After Task 10 landed the gallery page, three visible bugs were found and fixed in commit 736125b on `plan-01-foundation`:
+
+- `Kbd`: `bg-muted text-muted-foreground` resolved to the same CSS variable (`--3`) for both background and text, making text invisible. Fixed to `bg-bg text-muted border border-border font-mono text-sm` per the Kbd composition in `.impeccable.md`.
+- `TabsList`: `bg-muted` (dark `--3`) as list background, with `data-[state=active]:bg-background` (paper `--0`) for selected trigger, made the selected and unselected states near-indistinguishable. Fixed: list uses a bottom 1px rule only; inactive triggers are `text-muted` with no fill; active triggers use `bg-sel-bg` fill + `outline-sel-border` 1px outline + `text-fg`.
+- `Switch`: off-state track used `bg-input` (`--2`, the border colour) producing a solid filled track; thumb was always `bg-background` (`--0`), making it low-contrast against the similarly-light off track. Fixed: off track is `bg-bg border border-border`; thumb is `bg-fg` when off and `bg-bg` when on; focus uses inset `outline-fg` in line with global focus conventions.
+
+**Reason:** The Task 09 plan scoped post-install cleanup to rounding and shadow removal only; colour compositions inherited from shadcn defaults were not audited. The alias map in `tailwind.config.ts` maps `muted` to `--3` (text colour) and `muted-foreground` also to `--3`, so shadcn's `bg-muted text-muted-foreground` pattern always produces invisible text in this project.
+
+**Downstream impact:** Any future shadcn component addition must audit `bg-muted`, `text-muted-foreground`, `bg-input`, `bg-background`, `bg-primary`, and related alias combinations before committing; the defaults are not safe under this alias map.
