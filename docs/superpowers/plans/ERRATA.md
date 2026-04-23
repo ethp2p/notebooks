@@ -528,3 +528,23 @@ Two stubs were also added to `tests/setup.ts`:
 **Reason:** The observatory `tsconfig.json` `include` array covers only `src` and `tests` within the observatory package. A static `import` from a path outside that directory would require adding it to `include` (or `references`), which would pull in the entire site source tree into observatory's typechecking. The dynamic import at runtime is clean and does not affect typecheck, which only sees the return type as `unknown` (accessed via `mod.TOPIC_REGISTRY as Record<string, TopicDef>`).
 
 **Downstream impact:** None for typecheck. At runtime, Bun must be the executor (it is, per package.json scripts). Node.js would not support this pattern without a TypeScript loader.
+
+### 2026-04-23 · Plan 05 prep Task 5 · visual-regression spec uses `../../public/registry.json` not `../../../build/registry.json`
+
+**What the plan said:** Import registry in `site/tests/e2e/visual-regression.spec.ts` via `import registry from '../../../build/registry.json' assert { type: 'json' }`.
+
+**What was done instead:** Path changed to `../../public/registry.json` and import attribute changed to `with { type: 'json' }`.
+
+**Reason:** `../../../build/registry.json` from `site/tests/e2e/` resolves to `<repo-root>/build/registry.json`, which does not exist. The built registry lives at `site/public/registry.json` (served as a static asset and kept in sync by the `fixtures` script). `with { type: 'json' }` is the correct form for TypeScript 5.3+ and ESNext module resolution; `assert { type: 'json' }` is deprecated and emits a compiler warning in TS 5.9.
+
+**Downstream impact:** Any plan step that references `build/registry.json` as the path for the visual regression import should use `../../public/registry.json` relative to `site/tests/e2e/`.
+
+### 2026-04-23 · Plan 05 prep Task 5 · visual regression tests gated behind VISUAL_REGRESSION env var
+
+**What the plan said:** Use `test.skip(!process.env.VISUAL_REGRESSION, ...)` before the for loop.
+
+**What was done instead:** Same, using `process.env['VISUAL_REGRESSION']` (bracket notation required by `noUncheckedIndexedAccess`). The skip guard is placed immediately after the `ids` derivation, before the for loop. All visual regression tests are skipped on CI unless `VISUAL_REGRESSION=1` is set.
+
+**Reason:** The plan explicitly requested this guard. Bracket notation is required to satisfy `noUncheckedIndexedAccess: true` in tsconfig.
+
+**Downstream impact:** Visual regression baselines must be generated locally with `VISUAL_REGRESSION=1 bun run test:e2e` before they can be used. CI always skips these tests unless the flag is explicitly set in the workflow.
