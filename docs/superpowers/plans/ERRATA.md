@@ -332,3 +332,23 @@ IBM Plex Sans (Regular 400, Medium 500, Bold 700) was downloaded from `https://g
 **Reason:** Babel's `parse()` returns a `File` node that carries a top-level `comments` array containing all comment tokens. This array differs between `// a` and `/* hi */` even after traverse strips `leadingComments` from the `ExportNamedDeclaration` body node. Since `traverse` starts from the `File`'s children (not the `File` itself), the root's `comments`, `loc`, `start`, and `end` survived and caused the hash to differ between comment-only edits.
 
 **Downstream impact:** None. The fix is internal to `hashSource`. The public contract (hash changes when code changes, stable across comment edits) is upheld.
+
+### 2026-04-23 · Plan 02 Task 08 · pipeline.v2.yaml placed in observatory/ not repo root
+
+**What the plan said:** Create `pipeline.v2.yaml` at the repo root and have `fetch.ts` default to loading it from there.
+
+**What was done instead:** Created `pipeline.v2.yaml` at `observatory/pipeline.v2.yaml`. The default `configPath` in `parseArgs` remains `'pipeline.v2.yaml'` (a relative path), which resolves correctly when `bun run fetch` or `just fetch` is invoked with CWD set to `observatory/`. The Python pipeline at repo root continues reading `pipeline.yaml` unchanged.
+
+**Reason:** When `bun run fetch` is executed from inside `observatory/` (as the task's dry-run mandates), the CWD is `observatory/`. A relative path `'pipeline.v2.yaml'` resolves to `observatory/pipeline.v2.yaml`. Placing it at the repo root and referencing it as `'../pipeline.v2.yaml'` would be brittle and break if invoked from a different CWD. Co-locating the config with the CLI is the natural structure for a self-contained package.
+
+**Downstream impact:** Any `just` target or CI step that invokes the observatory fetch CLI must either `cd observatory` first or pass `--config <path>` explicitly. The task description's commit command stages `pipeline.v2.yaml` from the repo root; adjust the git add path to `observatory/pipeline.v2.yaml`.
+
+### 2026-04-23 · Plan 02 Task 08 · argv parsing guarded for noUncheckedIndexedAccess
+
+**What the plan said:** Use `argv[++i]` directly when consuming flag values in `parseArgs`.
+
+**What was done instead:** Introduced a `nextArg(argv, i, flag)` helper that bounds-checks before returning `argv[i + 1]`, throwing a typed `Error` if the value is missing. All flag parsing calls `nextArg` instead of direct index access.
+
+**Reason:** `tsconfig.json` has `"noUncheckedIndexedAccess": true`, which makes `argv[n]` return `string | undefined`. Assigning `string | undefined` to a `string` field fails typechecking. The helper narrows the type at one call site and gives a clear error message if a flag is passed without a value.
+
+**Downstream impact:** None. The public CLI interface is unchanged.
