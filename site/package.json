@@ -11,7 +11,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "fixtures": "bun run scripts/build-chart-fixtures.ts"
   },
   "dependencies": {
     "@radix-ui/react-context-menu": "^2.2.16",
