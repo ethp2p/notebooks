@@ -10,15 +10,19 @@
     "fetch": "bun run src/fetch.ts",
     "manifest": "bun run src/registry-manifest.ts",
     "test": "bun test",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "upload": "bun run src/upload.ts"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1036.0",
+    "@aws-sdk/lib-storage": "^3.1036.0",
     "@babel/parser": "^7.29.2",
     "@babel/traverse": "^7.29.0",
     "@babel/types": "^7.29.0",
     "@clickhouse/client": "^1.7.0",
     "apache-arrow": "^17.0.0",
     "fast-glob": "^3.3.3",
+    "mime": "^4.1.0",
     "p-limit": "^6.1.0",
     "yaml": "^2.6.0",
     "zod": "^3.23.8"
@@ -26,6 +30,7 @@
   "devDependencies": {
     "@types/babel__traverse": "^7.20.6",
     "@types/bun": "^1.1.0",
+    "@types/mime": "^4.0.0",
     "typescript": "^5.6.3"
   }
 }
