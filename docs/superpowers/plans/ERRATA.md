@@ -672,3 +672,33 @@ Two stubs were also added to `tests/setup.ts`:
 **Reason:** Client-side redirects are not network-level events. `goto` with `waitUntil: 'load'` returns after the DOMContentLoaded + network idle, but the React hydration and `<Navigate>` dispatch happen in JavaScript after load. Without `waitForURL`, the test reads `page.url()` before the redirect fires and asserts the original path.
 
 **Downstream impact:** Any future Playwright test that verifies a client-side React Router redirect must use `waitForURL` (or `waitForNavigation`) rather than relying on `goto` alone.
+
+### 2026-04-23 · Plan 07 Task 07 · upload.ts already committed by a prior agent
+
+**What the plan said:** Create `observatory/src/upload.ts` and add `"upload": "bun run src/upload.ts"` to `observatory/package.json` scripts. Commit as `feat(observatory): r2 upload via s3 client in ts`.
+
+**What was done instead:** The file and package.json entry were already present in commit `856da36` (`chore(config): slim pipeline.yaml to dates + settings + parallelism`), committed by a prior agent in the same session before Task 07 was assigned to this agent. This agent installed the required dependencies (`@aws-sdk/client-s3`, `@aws-sdk/lib-storage`, `mime`, `@types/mime`) and verified typecheck passes, but no additional commit was needed.
+
+**Reason:** The prior agent included upload.ts in a broader commit that also slimmed pipeline.yaml. The work was already done.
+
+**Downstream impact:** The Task 07 commit SHA in the session report reflects the pre-existing commit `856da36`, not a new commit from this agent.
+
+### 2026-04-23 · Plan 07 Task 08 · justfile uses inline `{{ if ... }}` form (not bash heredoc)
+
+**What the plan said:** Use `{{ if date == "" { "" } else { "--date " + date } }}` for the `fetch` recipe if Just supports it; otherwise fall back to a `#!/usr/bin/env bash` heredoc recipe.
+
+**What was done instead:** The inline `{{ if ... }}` form was used. Verified against `just 1.45.0` (both `just --justfile ... fetch` and `just --justfile ... fetch 2025-01-01` return correct output). No bash heredoc was needed.
+
+**Reason:** Just 1.45.0 supports inline conditional expressions in recipe bodies.
+
+**Downstream impact:** None. If a future version of Just changes the syntax, the `fetch` recipe in `justfile` may need to be updated.
+
+### 2026-04-23 · Plan 07 Task 09 · CLAUDE.md is a symlink to AGENTS.md
+
+**What the plan said:** Rewrite Python-specific sections in `CLAUDE.md`.
+
+**What was done instead:** `CLAUDE.md` is a symlink to `AGENTS.md`. Writing to `CLAUDE.md` writes through the symlink to `AGENTS.md`. Both files are committed as a single `AGENTS.md` modification. The committed content is identical between the two.
+
+**Reason:** The symlink was set up by a prior session (`ls -la` confirms `CLAUDE.md -> AGENTS.md`). Git tracks the symlink target, not the content; `AGENTS.md` is the actual file in the index.
+
+**Downstream impact:** Any plan step that says to edit `CLAUDE.md` is actually editing `AGENTS.md`. Always stage `AGENTS.md` for git operations.
