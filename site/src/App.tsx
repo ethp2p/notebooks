@@ -4,6 +4,9 @@ import About from '@/routes/About';
 import Archive from '@/routes/Archive';
 import Data from '@/routes/Data';
 import NotFound from '@/routes/NotFound';
+import Gallery from '@/__gallery__/Gallery';
+
+const isDev = import.meta.env.DEV;
 
 export default function App() {
   return (
@@ -12,6 +15,7 @@ export default function App() {
       <Route path="/about" element={<About />} />
       <Route path="/archive" element={<Archive />} />
       <Route path="/data" element={<Data />} />
+      {isDev ? <Route path="/__gallery__" element={<Gallery />} /> : null}
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
