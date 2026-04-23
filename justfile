@@ -1,124 +1,38 @@
-# Eth P2P Notebooks - Pipeline Commands
-
-# Default recipe
 default:
     @just --list
 
-# ============================================
-# Development (site/)
-# ============================================
-
-# Install all dependencies
 install:
-    uv sync
-    cd site && bun install
-    git config core.hooksPath .githooks
+    bun install
 
-# Start development server
+fetch date="":
+    bun run --cwd observatory fetch {{ if date == "" { "" } else { "--date " + date } }}
+
+manifest:
+    bun run --cwd observatory manifest
+
 dev:
-    cd site && bun run dev
+    bun run --cwd site dev
 
-# Preview production build
-preview:
-    cd site && bun run preview
-
-# ============================================
-# Data Pipeline
-# ============================================
-
-# Fetch data: all (default) or specific date (YYYY-MM-DD)
-# Fetch data: all (default) or specific date (YYYY-MM-DD). Support force="true" to force re-fetch.
-fetch target="all" force="false":
-    uv run python scripts/fetch_data.py --output-dir notebooks/data \
-        {{ if target == "all" { "--sync" } else { "--date " + target } }} \
-        {{ if force == "true" { "--force" } else { "" } }}
-
-# Check for stale data without fetching
-check-stale:
-    uv run python scripts/pipeline.py check-stale
-
-# Show resolved date range from config
-show-dates:
-    uv run python scripts/pipeline.py resolve-dates
-
-# Show current query hashes
-show-hashes:
-    uv run python scripts/pipeline.py query-hashes
-
-# ============================================
-# Notebook Rendering
-# ============================================
-
-# Render notebooks: all (default), "latest", or specific date (YYYY-MM-DD). Support force="true" to force re-render.
-render target="all" force="false":
-    uv run python scripts/render_notebooks.py --output-dir site/rendered \
-        {{ if target == "all" { "" } \
-           else if target == "latest" { "--latest-only" } \
-           else { "--date " + target } }} \
-        {{ if force == "true" { "--force" } else { "" } }}
-
-# ============================================
-# Build & Deploy
-# ============================================
-
-# Build site
 build:
-    cd site && bun run build
+    just manifest && bun run --cwd site build
 
-# Copy parquet files to dist for R2 publishing (only rendered dates)
-copy-data:
-    uv run python scripts/copy_data_to_dist.py
-
-# Render all + build site + copy data for publishing
-publish: render build copy-data
-
-# ============================================
-# CI / Full Pipeline
-# ============================================
-
-# Full sync: fetch + render + build
-sync: fetch render build
-
-# CI: Check data staleness (exit 1 if stale)
-check-stale-ci:
-    uv run python scripts/fetch_data.py --output-dir notebooks/data --check-only
-
-# ============================================
-# Site Quality Checks
-# ============================================
-
-# Type check the site
 typecheck:
-    cd site && bun run typecheck
+    bun run --cwd site typecheck && bun run --cwd observatory typecheck
 
-# Lint the site
 lint:
-    cd site && bun run lint
+    bun run --cwd site lint
 
-# Run unit tests
 test:
-    cd site && bun run test
+    bun run --cwd site test && bun run --cwd observatory test
 
-# Run end-to-end tests
 test-e2e:
-    cd site && bun run test:e2e
+    bun run --cwd site test:e2e
 
-# Run typecheck + lint + test
 verify:
     just typecheck && just lint && just test
 
-# ============================================
-# Utilities
-# ============================================
+upload:
+    bun run --cwd observatory upload
 
-# Warn about stale data but don't fail
-check-stale-warn:
-    uv run python scripts/pipeline.py check-stale || echo "Warning: Some data may be stale"
-
-# Clean build artifacts
 clean:
-    rm -rf site/dist
-
-# Clean all (including node_modules and venv)
-clean-all: clean
-    rm -rf site/node_modules .venv
+    rm -rf build site/dist

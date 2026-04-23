@@ -1,0 +1,29 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with: { bun-version: latest }
+      - run: bun install
+      - run: bun run --cwd observatory fetch
+        env:
+          CLICKHOUSE_URL:      ${{ secrets.CLICKHOUSE_URL }}
+          CLICKHOUSE_USERNAME: ${{ secrets.CLICKHOUSE_USERNAME }}
+          CLICKHOUSE_PASSWORD: ${{ secrets.CLICKHOUSE_PASSWORD }}
+      - run: bun run --cwd observatory manifest
+      - run: bun run --cwd site build
+      - run: bun run --cwd observatory upload
+        env:
+          R2_ACCOUNT_ID:   ${{ secrets.R2_ACCOUNT_ID }}
+          R2_ACCESS_KEY:   ${{ secrets.R2_ACCESS_KEY }}
+          R2_SECRET_KEY:   ${{ secrets.R2_SECRET_KEY }}
+          R2_BUCKET:       ${{ secrets.R2_BUCKET }}
+          R2_MANIFEST_KEY: manifests/main.json

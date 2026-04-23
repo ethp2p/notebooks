@@ -5,35 +5,7 @@ on:
   pull_request:
 
 jobs:
-  site:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: oven-sh/setup-bun@v2
-        with: { bun-version: latest }
-      - run: bun install
-        working-directory: site
-      - run: bun install
-        working-directory: observatory
-      - name: Build chart registry
-        run: bun run --cwd observatory manifest
-      - run: bun run typecheck
-        working-directory: site
-      - run: bun run lint
-        working-directory: site
-      - run: bun run test
-        working-directory: site
-      - run: bunx playwright install --with-deps chromium
-        working-directory: site
-      - name: Build fixture data
-        run: bun run fixtures
-        working-directory: site
-      - run: bun run test:e2e
-        working-directory: site
-      - run: bun run build
-        working-directory: site
-
-  observatory:
+  all:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -42,3 +14,12 @@ jobs:
       - run: bun install
       - run: bun run --cwd observatory typecheck
       - run: bun run --cwd observatory test
+      - run: bun run --cwd observatory manifest
+      - run: bun run --cwd site typecheck
+      - run: bun run --cwd site lint
+      - run: bun run --cwd site test
+      - run: bunx playwright install --with-deps chromium
+        working-directory: site
+      - run: bun run --cwd site fixtures
+      - run: bun run --cwd site test:e2e
+      - run: bun run --cwd site build
