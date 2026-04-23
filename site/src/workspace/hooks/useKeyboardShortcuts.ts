@@ -10,7 +10,6 @@ export function useKeyboardShortcuts(): void {
   const focusDirection = useWorkspace((s) => s.focusDirection);
   const ws            = useWorkspace((s) => s.ws);
   const setDateInFocused = useWorkspace((s) => s.setDateInFocused);
-  const toUrl         = useWorkspace((s) => s.toUrl);
 
   useEffect(() => {
     function handler(e: KeyboardEvent): void {
@@ -108,5 +107,5 @@ export function useKeyboardShortcuts(): void {
 
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [openCmdk, toggleSidebar, splitFocused, closeFocused, focusDirection, ws, setDateInFocused, toUrl]);
+  }, [openCmdk, toggleSidebar, splitFocused, closeFocused, focusDirection, ws, setDateInFocused]);
 }

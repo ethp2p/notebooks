@@ -604,3 +604,21 @@ Two stubs were also added to `tests/setup.ts`:
 **Reason:** Subagent prompt didn't spell out the absolute canonical path; it searched too narrowly.
 
 **Downstream impact:** None; content preserved above.
+
+### 2026-04-23 · Plan 06 Task 11 · WorkspaceShell places MobileNav inside main, not as sidebar replacement
+
+**What the plan said:** `WorkspaceShell` renders `{isMobile ? <MobileNav /> : ...}` in the flex-row between the sidebar slot and `<main>`, treating MobileNav as a sidebar substitute in the row layout.
+
+**What was done instead:** MobileNav is rendered inside `<main>` as a horizontal strip above `<PaneTree>`, and the sidebar slot is simply omitted on mobile. The outer flex row contains only `<main>` on mobile; `<main>` itself is `flex-col` so MobileNav stacks above PaneTree.
+
+**Reason:** Placing MobileNav in the row slot alongside main would give it full height and a fixed width, which is wrong for a horizontal tab strip. The correct layout is: MobileNav as a top strip within the main content area, with PaneTree filling the remaining height below.
+
+**Downstream impact:** None. The visual result matches the plan's stated intent (horizontal scrollable tab strip above panes on mobile).
+
+### 2026-04-23 · Plan 06 Task 11 · `toUrl` removed from useKeyboardShortcuts dependency array
+
+**What the plan said:** `useKeyboardShortcuts` uses `toUrl` in the handler for Cmd+Shift+S (save). The plan listed `toUrl` among the dependency array entries.
+
+**What was done instead:** `toUrl` is not called in the keydown handler (save uses `saveAs(name, ws)` with the already-captured `ws`). The `toUrl` import in the hook is removed to avoid an unused variable lint error. The lint rule prohibits unused variables without exception.
+
+**Downstream impact:** None. `toUrl` is available from the store wherever sharing logic is needed (Header uses it for the share button).
