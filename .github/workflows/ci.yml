@@ -1,0 +1,27 @@
+name: CI
+
+on:
+  push: { branches: [main] }
+  pull_request:
+
+jobs:
+  site:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with: { bun-version: latest }
+      - run: bun install
+        working-directory: site
+      - run: bun run typecheck
+        working-directory: site
+      - run: bun run lint
+        working-directory: site
+      - run: bun run test
+        working-directory: site
+      - run: bunx playwright install --with-deps chromium
+        working-directory: site
+      - run: bun run test:e2e
+        working-directory: site
+      - run: bun run build
+        working-directory: site

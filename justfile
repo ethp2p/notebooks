@@ -5,22 +5,22 @@ default:
     @just --list
 
 # ============================================
-# Development
+# Development (site/)
 # ============================================
-
-# Start Astro development server
-dev:
-    cd site && pnpm dev
-
-# Preview production build
-preview:
-    cd site && pnpm preview
 
 # Install all dependencies
 install:
     uv sync
-    cd site && pnpm install
+    cd site && bun install
     git config core.hooksPath .githooks
+
+# Start development server
+dev:
+    cd site && bun run dev
+
+# Preview production build
+preview:
+    cd site && bun run preview
 
 # ============================================
 # Data Pipeline
@@ -61,15 +61,15 @@ render target="all" force="false":
 # Build & Deploy
 # ============================================
 
-# Build Astro site
+# Build site
 build:
-    cd site && pnpm build
+    cd site && bun run build
 
 # Copy parquet files to dist for R2 publishing (only rendered dates)
 copy-data:
     uv run python scripts/copy_data_to_dist.py
 
-# Render all + build Astro + copy data for publishing
+# Render all + build site + copy data for publishing
 publish: render build copy-data
 
 # ============================================
@@ -84,16 +84,36 @@ check-stale-ci:
     uv run python scripts/fetch_data.py --output-dir notebooks/data --check-only
 
 # ============================================
+# Site Quality Checks
+# ============================================
+
+# Type check the site
+typecheck:
+    cd site && bun run typecheck
+
+# Lint the site
+lint:
+    cd site && bun run lint
+
+# Run unit tests
+test:
+    cd site && bun run test
+
+# Run end-to-end tests
+test-e2e:
+    cd site && bun run test:e2e
+
+# Run typecheck + lint + test
+verify:
+    just typecheck && just lint && just test
+
+# ============================================
 # Utilities
 # ============================================
 
 # Warn about stale data but don't fail
 check-stale-warn:
     uv run python scripts/pipeline.py check-stale || echo "Warning: Some data may be stale"
-
-# Type check the Astro site
-typecheck:
-    cd site && pnpm typecheck
 
 # Clean build artifacts
 clean:

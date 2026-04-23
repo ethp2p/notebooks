@@ -214,3 +214,17 @@ IBM Plex Sans (Regular 400, Medium 500, Bold 700) was downloaded from `https://g
 **Reason:** `--with-deps` invokes `sudo apt-get` to install system libraries and fails on macOS. On macOS, Playwright's system dependencies are already satisfied by the OS. The install succeeded without the flag.
 
 **Downstream impact:** None. CI runs on Linux where the workflow should continue to use `--with-deps`.
+
+### 2026-04-23 · Plan 01 Task 14 · justfile targets updated to Bun; Python-only targets preserved
+
+**What the plan said:** Replace `install`, `dev`, `build`, `typecheck` with Bun-targeting versions; add `lint`, `test`, `test-e2e`, `verify`.
+
+**What was done instead:** Same, with the following specifics:
+- `install` now runs `uv sync && cd site && bun install` (uv sync preserved for the Python pipeline side).
+- `preview` was not in the new target list but existed pointing to `pnpm preview`; updated to `bun run preview` to stay consistent. Preserved in the justfile under Development.
+- Python-only targets (`fetch`, `check-stale`, `show-dates`, `show-hashes`, `render`, `copy-data`, `publish`, `sync`, `check-stale-ci`, `check-stale-warn`, `clean`, `clean-all`) are preserved verbatim; they will be removed in Plan 07.
+- `ci.yml` was created as a new file alongside `sync.yml`; `sync.yml` was not modified.
+
+**Reason:** The plan's collision rules say new Bun versions win when names collide. `preview` was a natural extension of that rule. Python targets are explicitly out of scope until Plan 07.
+
+**Downstream impact:** Plan 07 is responsible for removing the Python-only targets from `justfile` and retiring `sync.yml`.
