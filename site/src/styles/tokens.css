@@ -1,0 +1,21 @@
+:root {
+  --0: #f4f0e8;
+  --1: #e8e3d8;
+  --2: #d0c9ba;
+  --3: #7a7165;             /* bumped for WCAG AA vs original #9e9585 */
+  --fg: #2c2822;
+  --hi: #1a1714;
+  --hover: #ede8df;
+  --sel-bg: #e8e3d8;
+  --sel-border: #2c2822;
+
+  --t-xs: 10px;
+  --t-sm: 12px;
+  --t-md: 13px;
+  --t-lg: 16px;
+
+  --track-caps: 0.06em;
+
+  --lh-dense: 1.2;
+  --lh-body: 1.4;
+}
